@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+    <string name="pref_header_general">General</string>
+
+
+    <string name="pref_title_size_very_small">Very small</string>
+    <string name="pref_title_size_small">Small</string>
+    <string name="pref_title_size_medium">Medium</string>
+    <string name="pref_title_size_large">Large</string>
+    <string name="pref_title_size_very_large">Very large</string>
+    <string name="pref_title_size_enormous">Enormous</string>
+
+    <string name="pref_title_backdrop_size">Backdrop size</string>
+    <!-- values taken from TMDb configuration
+        "backdrop_sizes": [
+          "w300",
+          "w780",
+          "w1280",
+          "original"
+        ],
+        see https://developers.themoviedb.org/3/configuration/get-api-configuration -->
+    <string-array name="pref_backdrop_size_values" translatable="false">
+        <item>300</item>
+        <item>780</item>
+        <item>1280</item>
+    </string-array>
+    <string name="pref_backdrop_size_key" translatable="false">backdrop_size</string>
+    <string name="pref_backdrop_size_dlft_value" translatable="false">300</string>
+
+    <string name="pref_title_poster_size">Poster size</string>
+    <!-- values taken from TMDb configuration
+        these are the poster width in pixels, and the aspect ratio of 3:2 (1.5) is used, so e.g. w92 gives h138
+        "poster_sizes": [
+            "w92",
+            "w154",
+            "w185",
+            "w342",
+            "w500",
+            "w780",
+            "original"
+            ],
+        see https://developers.themoviedb.org/3/configuration/get-api-configuration -->
+    <string-array name="pref_poster_size_values" translatable="false">
+        <item>154</item>
+        <item>185</item>
+        <item>342</item>
+        <item>500</item>
+        <item>780</item>
+    </string-array>
+    <string name="pref_poster_size_key" translatable="false">poster_size</string>
+    <string name="pref_poster_size_dlft_value" translatable="false">185</string>
+    <string name="pref_thumbnail_size" translatable="false">154</string>
+
+    <string name="pref_title_movie_list">Movie list</string>
+    <string name="pref_movie_list_popular" translatable="false">popular</string>
+    <string name="pref_movie_list_top_rated" translatable="false">top_rated</string>
+    <string-array name="pref_movie_list_titles">
+        <item>Popular Movies</item>
+        <item>Top Rated</item>
+    </string-array>
+    <string-array name="pref_movie_list_values">
+        <item>@string/pref_movie_list_popular</item>
+        <item>@string/pref_movie_list_top_rated</item>
+    </string-array>
+    <string name="pref_movie_list_key" translatable="false">movie_list</string>
+    <string name="pref_movie_list_dlft_value" translatable="false">popular</string>
+
+    <string name="pref_title_show_position">Display position</string>
+    <string name="pref_description_show_position_on">Display movie position on movie card</string>
+    <string name="pref_description_show_position_off">Don\'t display movie position on movie card</string>
+    <string name="pref_show_position_key" translatable="false">show_position_on_card</string>
+
+</resources>

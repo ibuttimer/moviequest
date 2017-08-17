@@ -1,0 +1,38 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:defaultValue="@string/pref_movie_list_dlft_value"
+        android:entries="@array/pref_movie_list_titles"
+        android:entryValues="@array/pref_movie_list_values"
+        android:key="@string/pref_movie_list_key"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/pref_title_movie_list" />
+
+    <ListPreference
+        android:defaultValue="@string/pref_poster_size_dlft_value"
+        android:entries="@array/pref_poster_size_titles"
+        android:entryValues="@array/pref_poster_size_values"
+        android:key="@string/pref_poster_size_key"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/pref_title_poster_size" />
+
+    <!--<ListPreference-->
+        <!--android:defaultValue="@string/pref_backdrop_size_dlft_value"-->
+        <!--android:entries="@array/pref_backdrop_size_titles"-->
+        <!--android:entryValues="@array/pref_backdrop_size_values"-->
+        <!--android:key="@string/pref_backdrop_size_key"-->
+        <!--android:negativeButtonText="@null"-->
+        <!--android:positiveButtonText="@null"-->
+        <!--android:title="@string/pref_title_backdrop_size" />-->
+
+    <SwitchPreferenceCompat
+        android:defaultValue="@bool/pref_show_position_dflt_value"
+        android:key="@string/pref_show_position_key"
+        android:summaryOn="@string/pref_description_show_position_on"
+        android:summaryOff="@string/pref_description_show_position_off"
+        android:title="@string/pref_title_show_position" />
+
+</PreferenceScreen>
+

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <array name="pref_backdrop_size_titles">
+        <item>@string/pref_title_size_small</item>
+        <item>@string/pref_title_size_medium</item>
+        <item>@string/pref_title_size_large</item>
+    </array>
+    <array name="pref_poster_size_titles">
+        <item>@string/pref_title_size_small</item>
+        <item>@string/pref_title_size_medium</item>
+        <item>@string/pref_title_size_large</item>
+        <item>@string/pref_title_size_very_large</item>
+        <item>@string/pref_title_size_enormous</item>
+    </array>
+</resources>

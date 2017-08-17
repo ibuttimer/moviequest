@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="title_activity_moviedetails">Details</string>
+
+    <!-- Note: to be parsed by MessageFormat, play particular attention to quotes -->
+    <string name="movie_num_stars">{0}/10</string>
+    <string name="movie_running_time">{0} min</string>
+
+    <string name="moviedetails_title">Title</string>
+    <string name="moviedetails_plot">Plot</string>
+    <string name="moviedetails_rating">User Rating</string>
+    <string name="moviedetails_release_date">Release Date</string>
+    <string name="moviedetails_genres">Genres</string>
+    <string name="moviedetails_homepage">Web site</string>
+    <string name="moviedetails_revenue">Revenue</string>
+    <string name="moviedetails_collection">Collection</string>
+</resources>

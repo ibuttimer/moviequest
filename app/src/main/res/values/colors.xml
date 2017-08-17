@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="colorCardviewBackground">#6697ec</color>
+    <color name="colorBadgeBackground">#000000</color>
+    <color name="colorBadgeText">#ffffff</color>
+    <color name="colorTitleBarBackground">#000000</color>
+    <color name="colorTitleBarText">#ffffff</color>
+    <color name="colorBannerTitleBarBackground">#2f000000</color>
+    <color name="colorBannerTitleBarText">#ffffff</color>
+</resources>

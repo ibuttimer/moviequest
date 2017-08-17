@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">MovieQuest</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_about">About</string>
+
+    <!-- Note: to be parsed by MessageFormat, play particular attention to quotes -->
+    <string name="movie_range">Showing {0}-{1} of {2}</string>
+
+    <string name="unavailable">Unavailable</string>
+    <string name="no_response">No response received.\nPlease check the network state.</string>
+    <string name="invalid_response">Invalid response received.\nPlease try again later.</string>
+    <string name="network_na">Network unavailable. Please check Wifi and/or mobile data settings.</string>
+
+</resources>
