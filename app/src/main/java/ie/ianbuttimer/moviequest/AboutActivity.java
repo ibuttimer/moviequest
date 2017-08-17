@@ -15,9 +15,12 @@
  */
 package ie.ianbuttimer.moviequest;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.LinkMovementMethod;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.TextView;
 
 import ie.ianbuttimer.moviequest.utils.Utils;
@@ -40,5 +43,20 @@ public class AboutActivity extends AppCompatActivity {
             tv = (TextView) findViewById(id);
             tv.setMovementMethod(LinkMovementMethod.getInstance());
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_about, menu);
+
+        // set intent for about activity
+        MenuItem menuItem = menu.findItem(R.id.action_home);
+        menuItem.setIntent(new Intent(this, MainActivity.class));
+
+        return true;
     }
 }
