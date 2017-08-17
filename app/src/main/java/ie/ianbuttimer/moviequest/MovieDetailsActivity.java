@@ -56,7 +56,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
     private static final int[] mTextViewIds = new int[] {
         R.id.tv_year_moviedetailsA, R.id.tv_plot_moviedetailsA,
         R.id.tv_releasedate_moviedetailsA, R.id.tv_rating_moviedetailsA,
-        R.id.tv_banner_title_movie_detailsA
+        R.id.tv_banner_title_movie_detailsA, R.id.tv_originaltitle_moviedetailsA
     };
     // ids of text views that are populated from movie details info returned from server
     private static final int[] mTextViewDetailsIds = new int[] {
@@ -159,6 +159,9 @@ public class MovieDetailsActivity extends AppCompatActivity {
                         text = MessageFormat.format(getString(R.string.movie_num_stars),
                                 movie.getVoteAverage().toString());
                         break;
+                    case R.id.tv_originaltitle_moviedetailsA:
+                        text = movie.getOriginalTitle();
+                        break;
                     default:
                         text = "";
                         break;
@@ -169,6 +172,15 @@ public class MovieDetailsActivity extends AppCompatActivity {
             RatingBar rb = (RatingBar) findViewById(R.id.rb_rating_moviedetailsA);
             rb.setRating(new Float(movie.getVoteAverage().floatValue()));
 
+            getImages(movie);
+        }
+    }
+
+    /**
+     * Download & display images
+     */
+    private void getImages(MovieInfo movie) {
+        if (movie != null) {
             // load background
             backdropLoader = getImageLoader(R.id.iv_background_movie_detailsA, R.id.pb_banner_movie_detailsA);
             backdropLoader.loadBackdropImage(this, movie);
@@ -211,7 +223,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
                             text = collection.getName();
                             ll.setVisibility(View.VISIBLE);
                         } else {
-                            ll.setVisibility(View.GONE);
+                            ll.setVisibility(View.INVISIBLE);
                         }
                         break;
                     default:
@@ -228,6 +240,8 @@ public class MovieDetailsActivity extends AppCompatActivity {
     private void setInfoAndDetails() {
         if (mMovie == null) {
             setInfo(mDetails);
+        } else {
+            setInfo(mMovie);
         }
         setDetails();
     }

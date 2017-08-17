@@ -15,4 +15,5 @@
     <string name="moviedetails_homepage">Web site</string>
     <string name="moviedetails_revenue">Revenue</string>
     <string name="moviedetails_collection">Collection</string>
+    <string name="moviedetails_original_title">Original Title</string>
 </resources>
