@@ -2,6 +2,8 @@
 <resources>
 
     <string name="title_activity_moviedetails">Details</string>
+    <string name="banner_image_movie_detailsA">Banner image</string>
+    <string name="thumbnail_image_movie_detailsA">Thumbnail image</string>
 
     <!-- Note: to be parsed by MessageFormat, play particular attention to quotes -->
     <string name="movie_num_stars">{0}/10</string>
@@ -16,4 +18,9 @@
     <string name="moviedetails_revenue">Revenue</string>
     <string name="moviedetails_collection">Collection</string>
     <string name="moviedetails_original_title">Original Title</string>
+    <string name="moviedetails_original_language">Original Language</string>
+    <string name="moviedetails_languages">Spoken Languages</string>
+    <string name="moviedetails_companies">Production Companies</string>
+    <string name="moviedetails_countries">Production Countries</string>
+    <string name="moviedetails_budget">Budget</string>
 </resources>
