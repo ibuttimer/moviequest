@@ -57,12 +57,16 @@ public class MovieDetailsActivity extends AppCompatActivity {
         R.id.tv_year_moviedetailsA, R.id.tv_plot_moviedetailsA,
         R.id.tv_releasedate_moviedetailsA, R.id.tv_rating_moviedetailsA,
         R.id.tv_banner_title_movie_detailsA, R.id.tv_originaltitle_moviedetailsA
+
     };
     // ids of text views that are populated from movie details info returned from server
     private static final int[] mTextViewDetailsIds = new int[] {
         R.id.tv_runningtime_moviedetailsA, R.id.tv_genres_moviedetailsA,
         R.id.tv_homepage_moviedetailsA, R.id.tv_revenue_moviedetailsA,
-        R.id.tv_collection_moviedetailsA
+        R.id.tv_collection_moviedetailsA, R.id.tv_originallang_moviedetailsA,
+        R.id.tv_budget_moviedetailsA, R.id.tv_languages_moviedetailsA,
+        R.id.tv_companies_moviedetailsA, R.id.tv_countries_moviedetailsA,
+        R.id.tv_tagline_movie_detailsA
     };
 
     private MovieInfo mMovie;
@@ -199,6 +203,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         if (mDetails != null) {
             for (int id : mTextViewDetailsIds) {
                 boolean set = true;
+                boolean hide = false;
                 String text = "";
                 switch (id) {
                     case R.id.tv_runningtime_moviedetailsA:
@@ -206,14 +211,25 @@ public class MovieDetailsActivity extends AppCompatActivity {
                                 mDetails.getRuntime().toString());
                         break;
                     case R.id.tv_genres_moviedetailsA:
-                        text = Arrays.toString(mDetails.getGenreNames());
-                        text = text.substring(1, text.length() - 1);    // drop braces
+                        text = listString(mDetails.getGenreNames(), null);
+                        break;
+                    case R.id.tv_languages_moviedetailsA:
+                        text = listString(mDetails.getSpokenLanguageNames(), null);
+                        break;
+                    case R.id.tv_companies_moviedetailsA:
+                        text = listString(mDetails.getProductionCompaniesNames(), "\n");
+                        break;
+                    case R.id.tv_countries_moviedetailsA:
+                        text = listString(mDetails.getProductionCountriesNames(), "\n");
                         break;
                     case R.id.tv_homepage_moviedetailsA:
                         text = mDetails.getHomepage();
                         break;
                     case R.id.tv_revenue_moviedetailsA:
-                        text = mDetails.getRevenueFormatted();
+                        text = monetaryString(mDetails.getRevenue(), mDetails.getRevenueFormatted());
+                        break;
+                    case R.id.tv_budget_moviedetailsA:
+                        text = monetaryString(mDetails.getBudget(), mDetails.getBudgetFormatted());
                         break;
                     case R.id.tv_collection_moviedetailsA:
                         LinearLayout ll = (LinearLayout) findViewById(R.id.ll_collection_moviedetailsA);
@@ -226,15 +242,63 @@ public class MovieDetailsActivity extends AppCompatActivity {
                             ll.setVisibility(View.INVISIBLE);
                         }
                         break;
+                    case R.id.tv_originallang_moviedetailsA:
+                        text = mDetails.getOriginalLanguageName();
+                        break;
+                    case R.id.tv_tagline_movie_detailsA:
+                        text = mDetails.getTagline();
+                        hide = text.equals("");
+                        set = !hide;
+                        break;
                     default:
                         text = "";
                         break;
                 }
                 if (set) {
                     setTextViewText(id, text);
+                } else if (hide) {
+                    setTextViewVisibility(id, View.GONE);
                 }
             }
         }
+    }
+
+    /**
+     * Return formatted monetary amount or unavailable text
+     * @param amount    Monetary amount
+     * @param formatted Formatted amount
+     * @return  Monetary text to display
+     */
+    private String monetaryString(int amount, String formatted) {
+        String text;
+        if (amount > 0) {
+            text = formatted;
+        } else {
+            text = getString(R.string.unavailable);
+        }
+        return text;
+    }
+
+    /**
+     * Convert a String array to text
+     * @param list      Array to convert
+     * @param separator Item separator
+     * @return  Text to display
+     */
+    private String listString(String[] list, String separator) {
+        String text = "";
+        if (separator == null) {
+            // default array to string comma seperated list
+            text = Arrays.toString(list);
+            text = text.substring(1, text.length() - 1);    // drop braces
+        } else {
+            int limit = list.length - 1;
+            for (int i = 0; i < limit; i++) {
+                text += list[i] + separator;
+            }
+            text += list[list.length - 1];
+        }
+        return text;
     }
 
     private void setInfoAndDetails() {
@@ -246,10 +310,24 @@ public class MovieDetailsActivity extends AppCompatActivity {
         setDetails();
     }
 
-
+    /**
+     * Set the text for a TextView
+     * @param id    Id of TextView
+     * @param text  Text to display
+     */
     private void setTextViewText(int id, String text) {
         TextView tv = (TextView) findViewById(id);
         tv.setText(text);
+    }
+
+    /**
+     * Set a TextView visibility
+     * @param id            Id of TextView
+     * @param visibility    View visibility
+     */
+    private void setTextViewVisibility(int id, int visibility) {
+        TextView tv = (TextView) findViewById(id);
+        tv.setVisibility(visibility);
     }
 
     /**

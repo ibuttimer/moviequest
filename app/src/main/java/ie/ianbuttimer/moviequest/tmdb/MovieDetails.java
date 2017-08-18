@@ -231,13 +231,17 @@ public class MovieDetails extends MovieInfo implements Parcelable {
         return genres;
     }
 
-    public String[] getGenreNames() {
-        int len = genres.length;
+    private String[] getIdNames(IdName[] array) {
+        int len = array.length;
         String[] names = new String[len];
         for (int i = 0; i < len; i++) {
-            names[i] = genres[i].getName();
+            names[i] = array[i].getName();
         }
         return names;
+    }
+
+    public String[] getGenreNames() {
+        return getIdNames(genres);
     }
 
     public void setGenres(Genre[] genres) {
@@ -279,6 +283,10 @@ public class MovieDetails extends MovieInfo implements Parcelable {
         return productionCompanies;
     }
 
+    public String[] getProductionCompaniesNames() {
+        return getIdNames(productionCompanies);
+    }
+
     public void setProductionCompanies(ProdCompany[] productionCompanies) {
         this.productionCompanies = productionCompanies;
     }
@@ -300,6 +308,10 @@ public class MovieDetails extends MovieInfo implements Parcelable {
 
     public ProdCountry[] getProductionCountries() {
         return productionCountries;
+    }
+
+    public String[] getProductionCountriesNames() {
+        return getIsoNames(productionCountries);
     }
 
     public void setProductionCountries(ProdCountry[] productionCountries) {
@@ -343,6 +355,31 @@ public class MovieDetails extends MovieInfo implements Parcelable {
 
     public Language[] getSpokenLanguages() {
         return spokenLanguages;
+    }
+
+    private String[] getIsoNames(IsoName[] array) {
+        int len = array.length;
+        String[] names = new String[len];
+        for (int i = 0; i < len; i++) {
+            names[i] = array[i].getName();
+        }
+        return names;
+    }
+
+    public String[] getSpokenLanguageNames() {
+        return getIsoNames(spokenLanguages);
+    }
+
+    public String getOriginalLanguageName() {
+        String code = getOriginalLanguage();
+        String name = "";
+        for (int i = 0; i < spokenLanguages.length; i++) {
+            if (code.equals(spokenLanguages[i].getIso())) {
+                name =  spokenLanguages[i].getName();
+                break;
+            }
+        }
+        return name;
     }
 
     public void setSpokenLanguages(Language[] spokenLanguages) {

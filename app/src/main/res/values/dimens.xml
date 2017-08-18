@@ -3,7 +3,10 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="sml_margin">5dp</dimen>
     <dimen name="sml_padding">5dp</dimen>
+    <dimen name="table_padding">3dp</dimen>
     <dimen name="badge_padding">3dp</dimen>
     <dimen name="text_margin">16dp</dimen>
     <dimen name="cardview_corner">4dp</dimen>
+    <dimen name="large_text">20sp</dimen>
+    <dimen name="medium_text">15sp</dimen>
 </resources>
