@@ -53,7 +53,9 @@
     </string-array>
     <string name="pref_poster_size_key" translatable="false">poster_size</string>
     <string name="pref_poster_size_dlft_value" translatable="false">185</string>
-    <string name="pref_thumbnail_size" translatable="false">154</string>
+
+    <string name="pref_thumbnail_size_key" translatable="false">thumbnail_size</string>
+    <string name="pref_thumbnail_size_dlft_value" translatable="false">154</string>
 
     <string name="pref_title_movie_list">Movie list</string>
     <string name="pref_movie_list_popular" translatable="false">popular</string>

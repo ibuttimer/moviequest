@@ -23,16 +23,9 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Point;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.widget.ImageView;
-
-import com.squareup.picasso.Callback;
-import com.squareup.picasso.MemoryPolicy;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.RequestCreator;
 
 import java.text.MessageFormat;
 
@@ -126,39 +119,6 @@ public class Utils {
             activity.startActivityForResult(intent, requestCode);
         }
         return resolved;
-    }
-
-    /**
-     * Loads an image into an ImageView
-     * @param context   The current context
-     * @param uri       URI for image
-     * @param imageView ImageView to load into
-     * @param callback  Callback to invoke when finished
-     * <p>
-     * <b>Note: </b>The Callback param is a strong reference and will prevent your Activity or Fragment from being garbage collected. If you use this method, it is strongly recommended you invoke an adjacent <a href="https://square.github.io/picasso/2.x/picasso/com/squareup/picasso/Picasso.html#cancelRequest-android.widget.ImageView-">Picasso.cancelRequest(ImageView)</a> call to prevent temporary leaking.
-     * </p>
-     * @see <a href="https://square.github.io/picasso/2.x/picasso/com/squareup/picasso/RequestCreator.html#into-android.widget.ImageView-com.squareup.picasso.Callback-">Pacasso.into(ImageView, Callback)</a>
-     */
-    public static void loadImage(Context context, Uri uri, ImageView imageView, Callback callback){
-        RequestCreator request = Picasso.with(context)
-                .load(uri)
-                .placeholder(R.mipmap.download_from_cloud)
-                .error(R.mipmap.no_image_available);
-        if (callback != null) {
-//            request.memoryPolicy(MemoryPolicy.NO_CACHE);
-            request.into(imageView, callback);
-        } else {
-            request.into(imageView);
-        }
-    }
-
-    /**
-     * Cancel any existing requests for the specified target ImageView
-     * @param context   The current context
-     * @param imageView ImageView to load into
-     */
-    public static void cancelImageLoad(Context context, ImageView imageView){
-        Picasso.with(context).cancelRequest(imageView);
     }
 
     /**
@@ -278,5 +238,28 @@ public class Utils {
     public static boolean isSmallScreen(Context context) {
         return isSize(context, Configuration.SCREENLAYOUT_SIZE_SMALL);
     }
+
+    /**
+     * Set the backdrop size preference for the app
+     * @param context
+     */
+    public static void setBackdropPreference(Context context) {
+        /* set the backdrop size depending on screen size
+            its setup as a preference (but not currently shown in settings), so save as preference
+         */
+        String[] array = context.getResources().getStringArray(R.array.pref_backdrop_size_values);
+        int sizeIndex = -1;
+        if (isXLargeScreen(context)) {
+            sizeIndex = 2;
+        } else if (isLargeScreen(context)) {
+            sizeIndex = 1;
+        } else {
+            sizeIndex = 0;
+        }
+        if ((sizeIndex >= 0) && (sizeIndex < array.length)) {
+            PreferenceControl.setSharedStringPreference(context, R.string.pref_backdrop_size_key, array[sizeIndex]);
+        }
+    }
+
 
 }

@@ -50,7 +50,7 @@ public class MovieListResponse {
      * @param json  The JSON object to read
      * @return  A MovieListResponse object
      */
-    public static MovieListResponse getMovieInfoFromJson(JSONObject json) {
+    public static MovieListResponse getMovieListFromJson(JSONObject json) {
         MovieListResponse response = new MovieListResponse();
 
         if (json != null) {
@@ -89,11 +89,11 @@ public class MovieListResponse {
      * @param jsonString  The JSON string to read
      * @return  A MovieListResponse object
      */
-    public static MovieListResponse getMovieInfoFromJsonString(String jsonString) {
+    public static MovieListResponse getMovieListFromJsonString(String jsonString) {
         MovieListResponse response = new MovieListResponse();
         try {
             JSONObject json = new JSONObject(jsonString);
-            response = getMovieInfoFromJson(json);
+            response = getMovieListFromJson(json);
         }
         catch (JSONException e) {
             e.printStackTrace();

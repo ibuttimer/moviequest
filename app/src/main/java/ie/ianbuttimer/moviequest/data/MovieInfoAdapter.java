@@ -29,12 +29,12 @@ import java.util.Collection;
 import java.util.List;
 
 import ie.ianbuttimer.moviequest.R;
-import ie.ianbuttimer.moviequest.tmdb.MovieInfo;
+import ie.ianbuttimer.moviequest.tmdb.MovieInfoModel;
 
 /**
  * Adapter class for a RecyclerView of movies
  */
-public class MovieInfoAdapter<T extends MovieInfo> extends RecyclerView.Adapter<MovieInfoViewHolder> {
+public class MovieInfoAdapter<T extends MovieInfoModel> extends RecyclerView.Adapter<MovieInfoViewHolder> {
 
         private List<T> mMovieList;         // list of objects represented by this adapter
         private MovieInfoAdapterOnClickHandler mClickHandler;
@@ -61,14 +61,14 @@ public class MovieInfoAdapter<T extends MovieInfo> extends RecyclerView.Adapter<
          * @return A new MovieInfoViewHolder that holds the View for each list item
          */
         @Override
-        public MovieInfoViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+        public MovieInfoViewHolder<? extends MovieInfoModel> onCreateViewHolder(ViewGroup viewGroup, int viewType) {
             Context context = viewGroup.getContext();
             LayoutInflater inflater = LayoutInflater.from(context);
             boolean attachImmediately = false;
 
             View view = inflater.inflate(R.layout.movie_info_list_item, viewGroup, attachImmediately);
 
-            return new MovieInfoViewHolder(view, mClickHandler);
+            return new MovieInfoViewHolder<T>(view, mClickHandler);
         }
 
         /**
@@ -89,9 +89,6 @@ public class MovieInfoAdapter<T extends MovieInfo> extends RecyclerView.Adapter<
                 viewHolder.itemView.setTag(R.id.movie_id_tag, movie);
                 viewHolder.setViewInfo(movie);      // set the view's elements to the movie's info
             }
-
-
-
         }
 
         /**

@@ -10,6 +10,8 @@
     <string name="unavailable">Unavailable</string>
     <string name="no_response">No response received.\nPlease check the network state.</string>
     <string name="invalid_response">Invalid response received.\nPlease try again later.</string>
-    <string name="network_na">Network unavailable. Please check Wifi and/or mobile data settings.</string>
+    <string name="network_na">Network unavailable.\nPlease check Wifi and/or mobile data settings.</string>
+    <string name="cant_contact_server">Unable to contact server.\nPlease check Wifi and/or mobile data settings.</string>
+    <string name="retry">Retry</string>
 
 </resources>

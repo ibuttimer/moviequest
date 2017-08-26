@@ -24,18 +24,25 @@ import android.widget.ProgressBar;
 
 import com.squareup.picasso.Callback;
 
-import ie.ianbuttimer.moviequest.R;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfo;
 
 /**
  * Image loading utility class
  */
-public class ImageLoader implements Callback {
+public abstract class ImageLoader implements Callback {
 
     private ImageView imageView;
     private ProgressBar progressBar;
     private Callback callback;
     private Context context;
+    private String tag;             // tag used in image cache
+
+    /**
+     * Default constructor
+     */
+    public ImageLoader() {
+        init();
+    }
 
     /**
      * Constructor
@@ -56,6 +63,7 @@ public class ImageLoader implements Callback {
         this.progressBar = null;
         this.callback = null;
         this.context = null;
+        this.tag = "";
     }
 
     /**
@@ -67,89 +75,185 @@ public class ImageLoader implements Callback {
     }
 
     /**
-     * Loads a poster image into an ImageView
-     * @param context   The current context
-     * @param movie     Movie to get poster for
-     * @param callback  Callback to invoke when finished
-     */
-    public void loadPosterImage(Context context, MovieInfo movie, Callback callback) {
-        String size = PreferenceControl.getSharedStringPreference(context,
-                R.string.pref_poster_size_key, R.string.pref_poster_size_dlft_value);
-        loadPosterImage(context, size, movie, callback);
-    }
-
-    /**
-     * Loads a poster image into an ImageView
-     * @param context   The current context
-     * @param movie     Movie to get poster for
-     */
-    public void loadPosterImage(Context context, MovieInfo movie) {
-        loadPosterImage(context, movie, null);
-    }
-
-    /**
-     * Loads a poster image into an ImageView
+     * Get an image Uri
      * @param context   The current context
      * @param size      Image size to request
-     * @param movie     Movie to get poster for
-     * @param callback  Callback to invoke when finished
      */
-    public void loadPosterImage(Context context, String size, MovieInfo movie, Callback callback) {
-        Uri uri = TMDbNetworkUtils.buildGetImageUri(context, size, movie.getPosterPath());
+    public static Uri getImageUri(Context context, String size, String path) {
+		return TMDbNetworkUtils.buildGetImageUri(context, size, path);
+    }
+
+    /**
+     * Get a image Uri
+     * @param context   The current context
+     * @param size      Image size to request
+     * @param movie     Movie to get Uri for
+     */
+    public Uri getImageUri(Context context, String size, MovieInfo movie) {
+        return getImageUri(context, size, getImagePath(movie));
+    }
+
+    /**
+     * Get a image Uri
+     * @param context   The current context
+     * @param movie     Movie to get Uri for
+     */
+    public Uri getImageUri(Context context, MovieInfo movie) {
+        return getImageUri(context, getImageSize(context, movie), movie);
+    }
+
+   /**
+     * Get a image size
+     * @param context   The current context
+     * @param movie     Movie to get size for
+     */
+    public abstract String getImageSize(Context context, MovieInfo movie);
+
+    /**
+     * Get a image path
+     * @param movie     Movie to get path for
+     */
+    public abstract String getImagePath(MovieInfo movie);
+
+
+    public ImageView getImageView() {
+        return imageView;
+    }
+
+    public void setImageView(ImageView imageView) {
+        this.imageView = imageView;
+    }
+
+    public ProgressBar getProgressBar() {
+        return progressBar;
+    }
+
+    public void setProgressBar(ProgressBar progressBar) {
+        this.progressBar = progressBar;
+    }
+
+    /**
+     * Loads a image into an ImageView
+     * @param context   The current context
+     * @param movie     Movie to get image for
+     * @param callback  Callback to invoke when finished
+     * @return Request tag
+     */
+    public String loadImage(Context context, MovieInfo movie, Callback callback) {
+        return loadImage(context, getImageSize(context, movie), movie, callback);
+    }
+
+    /**
+     * Loads a image into an ImageView
+     * @param context   The current context
+     * @param movie     Movie to get image for
+     * @return Request tag
+     */
+    public String loadImage(Context context, MovieInfo movie) {
+        return loadImage(context, movie, null);
+    }
+
+    /**
+     * Loads a image into an ImageView
+     * @param context   The current context
+     * @param size      Image size to request
+     * @param movie     Movie to get image for
+     * @param callback  Callback to invoke when finished
+     * @return Request tag
+     */
+    public String loadImage(Context context, String size, MovieInfo movie, Callback callback) {
+        Uri uri = getImageUri(context, size, movie);
         start(context, callback);
-        Utils.loadImage(context, uri, imageView, this);
+        tag = PicassoUtil.loadImage(context, uri, imageView, this);
+        return tag;
     }
 
     /**
-     * Loads a poster image into an ImageView
+     * Loads a image into an ImageView
      * @param context   The current context
      * @param size      Image size to request
-     * @param movie     Movie to get poster for
+     * @param movie     Movie to get image for
+     * @return Request tag
      */
-    public void loadPosterImage(Context context, String size, MovieInfo movie) {
-        loadPosterImage(context, size, movie, null);
+    public String loadImage(Context context, String size, MovieInfo movie) {
+        return loadImage(context, size, movie, null);
     }
 
     /**
-     * Loads a backdrop image into an ImageView
+     * Fetches a image
      * @param context   The current context
-     * @param movie     Movie to get backdrop for
+     * @param movie     Movie to get image for
      * @param callback  Callback to invoke when finished
+     * @return Request tag
      */
-    public void loadBackdropImage(Context context, MovieInfo movie, Callback callback) {
-        String size = PreferenceControl.getSharedStringPreference(context,
-                R.string.pref_backdrop_size_key, R.string.pref_backdrop_size_dlft_value);
-        loadBackdropImage(context, size, movie, callback);
+    public String fetchImage(Context context, MovieInfo movie, Callback callback) {
+        return fetchImage(context, getImageSize(context, movie), movie, callback);
     }
 
     /**
-     * Loads a backdrop image into an ImageView
+     * Fetches a image
      * @param context   The current context
-     * @param movie     Movie to get backdrop for
+     * @param movie     Movie to get image for
+     * @return Request tag
      */
-    public void loadBackdropImage(Context context, MovieInfo movie) {
-        loadBackdropImage(context, movie, null);
+    public String fetchImage(Context context, MovieInfo movie) {
+        return fetchImage(context, movie, null);
     }
 
     /**
-     * Loads a backdrop image into an ImageView
+     * Fetches a image
      * @param context   The current context
      * @param size      Image size to request
-     * @param movie     Movie to get backdrop for
+     * @param movie     Movie to get image for
      * @param callback  Callback to invoke when finished
+     * @return Request tag
      */
-    public void loadBackdropImage(Context context, String size, MovieInfo movie, Callback callback) {
-        Uri uri = TMDbNetworkUtils.buildGetImageUri(context, size, movie.getBackdropPath());
+    public String fetchImage(Context context, String size, MovieInfo movie, Callback callback) {
+        Uri uri = getImageUri(context, size, movie);
         start(context, callback);
-        Utils.loadImage(context, uri, imageView, this);
+        tag = PicassoUtil.fetchImage(context, uri, this);
+        return tag;
+    }
+
+    /**
+     * Fetches a image
+     * @param context   The current context
+     * @param size      Image size to request
+     * @param movie     Movie to get image for
+     * @return Request tag
+     */
+    public String fetchImage(Context context, String size, MovieInfo movie) {
+        return fetchImage(context, size, movie, null);
     }
 
     /**
      * Cancel any existing requests for the target ImageView
      */
     public void cancelImageLoad() {
-        Utils.cancelImageLoad(context, imageView);
+        PicassoUtil.cancelImageLoad(context, imageView);
         end();
+    }
+
+    /**
+     * Cancel any existing requests for the request tag
+     */
+    public void cancel() {
+        PicassoUtil.cancelTag(context, tag);
+        end();
+    }
+
+    /**
+     * Pause any existing requests for the request tag
+     */
+    public void pause() {
+        PicassoUtil.pauseTag(context, tag);
+    }
+
+    /**
+     * Resume any existing requests for the request tag
+     */
+    public void resume() {
+        PicassoUtil.resumeTag(context, tag);
     }
 
     /**
@@ -209,5 +313,21 @@ public class ImageLoader implements Callback {
         if (progressBar != null) {
             progressBar.setVisibility(View.INVISIBLE);
         }
+    }
+
+    /**
+     * Get the tag for this object
+     * @return  tag
+     */
+    public String getTag() {
+        return tag;
+    }
+
+    /**
+     * Get the tag for this object
+     * @param tag   Tag to set
+     */
+    public void setTag(String tag) {
+        this.tag = tag;
     }
 }

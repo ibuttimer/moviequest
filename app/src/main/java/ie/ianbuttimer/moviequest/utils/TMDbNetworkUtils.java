@@ -35,7 +35,7 @@ public class TMDbNetworkUtils {
     private static final String TAG = TMDbNetworkUtils.class.getSimpleName();
 
     // Url of TMDb API.
-    private static final String TMDB_BASE_URL = "https://api.themoviedb.org/3/";
+    public static final String TMDB_BASE_URL = "https://api.themoviedb.org/3/";
 
     // query arguments for all endpoints of the TMDb API
     final static String API_KEY_PARAM = "api_key";
@@ -60,7 +60,7 @@ public class TMDbNetworkUtils {
     private static final String GET_CONFIGURATION = "configuration";
 
     // Url of TMDb images.
-    private static final String IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";
+    public static final String IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";
 
 
     /**
@@ -305,9 +305,23 @@ public class TMDbNetworkUtils {
         return NetworkUtils.convertUriToUrl(uri);
     }
 
-    private static String sizePath(String size) {
+    /**
+     * Convert a raw size to the size path portion of an image url
+     * @param size  Raw size
+     * @return  Size path
+     */
+    public static String sizePath(String size) {
         // Note: the size element of a TMDb image url is 'w<size>'
         return "w" + size;
+    }
+
+    /**
+     * Convert a raw size to the size path portion of an image url
+     * @param size  Raw size
+     * @return  Size path
+     */
+    public static String sizePath(int size) {
+        return sizePath(String.valueOf(size));
     }
 
     /**

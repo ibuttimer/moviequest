@@ -16,8 +16,9 @@
  */
 package ie.ianbuttimer.moviequest;
 
+import android.app.Activity;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -27,7 +28,7 @@ import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
-import java.net.URL;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
@@ -36,12 +37,18 @@ import java.util.Arrays;
 import ie.ianbuttimer.moviequest.tmdb.CollectionInfo;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfo;
 import ie.ianbuttimer.moviequest.tmdb.MovieDetails;
-import ie.ianbuttimer.moviequest.utils.Dialog;
+import ie.ianbuttimer.moviequest.tmdb.MovieInfoModel;
+import ie.ianbuttimer.moviequest.utils.AsyncCallback;
+import ie.ianbuttimer.moviequest.utils.BackdropImageLoader;
+import ie.ianbuttimer.moviequest.utils.ICallback;
 import ie.ianbuttimer.moviequest.utils.ImageLoader;
 import ie.ianbuttimer.moviequest.utils.NetworkUtils;
-import ie.ianbuttimer.moviequest.utils.PreferenceControl;
+import ie.ianbuttimer.moviequest.utils.PicassoUtil;
+import ie.ianbuttimer.moviequest.utils.ResponseHandler;
 import ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils;
-import ie.ianbuttimer.moviequest.utils.Utils;
+import ie.ianbuttimer.moviequest.utils.ThumbnailImageLoader;
+import okhttp3.Call;
+import okhttp3.Response;
 
 import static ie.ianbuttimer.moviequest.Constants.MOVIE_DETAIL_OBJ;
 import static ie.ianbuttimer.moviequest.Constants.MOVIE_ID;
@@ -69,7 +76,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         R.id.tv_tagline_movie_detailsA
     };
 
-    private MovieInfo mMovie;
+    private MovieInfoModel mMovie;
     private ImageLoader backdropLoader;
     private ImageLoader thumbnailLoader;
 
@@ -97,22 +104,6 @@ public class MovieDetailsActivity extends AppCompatActivity {
             if (intent.hasExtra(MOVIE_ID)) {
                 movieId = intent.getIntExtra(MOVIE_ID, 0);
             }
-        }
-
-        /* set the backdrop size depending on screen size
-            its setup as a preference (but not currently shown in settings), so save as preference
-         */
-        String[] array = getResources().getStringArray(R.array.pref_backdrop_size_values);
-        int sizeIndex = -1;
-        if (Utils.isXLargeScreen((this))) {
-            sizeIndex = 2;
-        } else if (Utils.isLargeScreen((this))) {
-            sizeIndex = 1;
-        } else {
-            sizeIndex = 0;
-        }
-        if ((sizeIndex >= 0) && (sizeIndex < array.length)) {
-            PreferenceControl.setSharedStringPreference(this, R.string.pref_backdrop_size_key, array[sizeIndex]);
         }
 
         if (mDetails == null) {
@@ -185,14 +176,30 @@ public class MovieDetailsActivity extends AppCompatActivity {
      */
     private void getImages(MovieInfo movie) {
         if (movie != null) {
-            // load background
-            backdropLoader = getImageLoader(R.id.iv_background_movie_detailsA, R.id.pb_banner_movie_detailsA);
-            backdropLoader.loadBackdropImage(this, movie);
+            boolean haveNetwork = NetworkUtils.isInternetAvailable(this);
+            Bitmap image;
 
+            // load background
+            image = PicassoUtil.getImage(mMovie.getBackdropUri());
+            if (image == null) {
+                if (haveNetwork) {
+                    backdropLoader = setImageLoader(new BackdropImageLoader(), R.id.iv_background_movie_detailsA, R.id.pb_banner_movie_detailsA);
+                    backdropLoader.loadImage(this, movie);
+                }
+            } else {
+                setImageViewImage(R.id.iv_background_movie_detailsA, image);
+            }
             // load thumbnail
-            thumbnailLoader = getImageLoader(R.id.iv_movie_thumbnail_detailsA, R.id.pb_thumbnail_movie_detailsA);
-            String size = getString(R.string.pref_thumbnail_size);
-            thumbnailLoader.loadPosterImage(this, size, movie);
+            image = PicassoUtil.getImage(mMovie.getThumbnailUri());
+            if (image == null) {
+                if (haveNetwork) {
+                    thumbnailLoader = setImageLoader(new ThumbnailImageLoader(), R.id.iv_movie_thumbnail_detailsA, R.id.pb_thumbnail_movie_detailsA);
+                    String size = getString(R.string.pref_thumbnail_size_dlft_value);
+                    thumbnailLoader.loadImage(this, size, movie);
+                }
+            } else {
+                setImageViewImage(R.id.iv_movie_thumbnail_detailsA, image);
+            }
         }
     }
 
@@ -200,7 +207,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
      * Display info available only in movie details
      */
     private void setDetails() {
-        if (mDetails != null) {
+        if ((mDetails != null) && !mDetails.isEmpty()) {
             for (int id : mTextViewDetailsIds) {
                 boolean set = true;
                 boolean hide = false;
@@ -288,7 +295,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
     private String listString(String[] list, String separator) {
         String text = "";
         if (separator == null) {
-            // default array to string comma seperated list
+            // default array to string comma separated list
             text = Arrays.toString(list);
             text = text.substring(1, text.length() - 1);    // drop braces
         } else {
@@ -296,11 +303,16 @@ public class MovieDetailsActivity extends AppCompatActivity {
             for (int i = 0; i < limit; i++) {
                 text += list[i] + separator;
             }
-            text += list[list.length - 1];
+            if (limit >= 0) {
+                text += list[list.length - 1];
+            }
         }
         return text;
     }
 
+    /**
+     * Set the basic movie info and details
+     */
     private void setInfoAndDetails() {
         if (mMovie == null) {
             setInfo(mDetails);
@@ -331,6 +343,18 @@ public class MovieDetailsActivity extends AppCompatActivity {
     }
 
     /**
+     * Set the image for an ImageView
+     * @param id    Id of TextView
+     * @param image Image to display
+     */
+    private void setImageViewImage(int id, Bitmap image) {
+        if (image != null) {
+            ImageView iv = (ImageView) findViewById(R.id.iv_movie_thumbnail_detailsA);
+            iv.setImageBitmap(image);
+        }
+    }
+
+    /**
      * Request the movies
      */
     private void requestDetails(MovieInfo mMovie) {
@@ -341,7 +365,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
      * Request the movies
      */
     private void requestDetails(int id) {
-        new GetMovieDetails().execute(TMDbNetworkUtils.buildGetDetailsUrl(this, id));
+        responseHandler.request(TMDbNetworkUtils.buildGetDetailsUrl(this, id));
     }
 
 
@@ -365,59 +389,84 @@ public class MovieDetailsActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private ImageLoader getImageLoader(int viewId, int barId) {
-        ImageView iv = (ImageView) findViewById(viewId);
-        ProgressBar pb = null;
+    /**
+     * Set the ImageView and ProgressBar for the specified loader
+     * @param loader    Loader to update
+     * @param viewId    Resource id of ImageView
+     * @param barId     Resource id of ProgressBar or <code>0</code> to not set
+     * @return  Loader
+     */
+    private ImageLoader setImageLoader(ImageLoader loader, int viewId, int barId) {
+        loader.setImageView((ImageView) findViewById(viewId));
         if (barId > 0) {
-            pb = (ProgressBar) findViewById(barId);
+            loader.setProgressBar((ProgressBar) findViewById(barId));
         }
-        return new ImageLoader(iv, pb);
+        return loader;
     }
 
-
     /**
-     * AsyncTask to request movies
+     * Asynchronous request and response handler
      */
-    class GetMovieDetails extends AsyncTask<URL, Void, MovieDetails> {
+    private ICallback responseHandler = new AsyncCallback() {
 
         @Override
-        protected MovieDetails doInBackground(URL... params) {
+        public void onFailure(Call call, IOException e) {
+            super.onFailure(call, e);
+            onMovieResponse(new MovieDetails(), getErrorId(call, e));
+        }
 
-            /* If there's no url, there's nothing to look up. */
-            if (params.length == 0) {
-                return null;
+        @Override
+        public void onResponse(Object result) {
+            MovieDetails response = null;
+            if (result != null) {
+                response = (MovieDetails) result;
             }
-
-            try {
-                String jsonResponse = NetworkUtils.getResponseFromHttpUrl(params[0]);
-
-                return MovieDetails.getInstance(jsonResponse);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
+            onMovieResponse(response, 0);
         }
 
         /**
-         * {@inheritDoc}
+         * Convert the http response into a MovieDetails object
+         * @param response  Response from the server
+         * @return
          */
         @Override
-        protected void onPostExecute(MovieDetails response) {
-            if (response == null) {
-                showNoResponse();
+        public Object processResponse(Response response) {
+            Object result = null;
+            try {
+                String jsonResponse = response.body().string();
+                result = MovieDetails.getInstance(jsonResponse);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            mDetails = response;
-            setInfoAndDetails();
+            return result;
+        }
+    };
+
+    /**
+     * Class to update the ui with response details
+     */
+    private class MovieResponseHandler extends ResponseHandler<MovieDetails> implements Runnable {
+
+        public MovieResponseHandler(Activity activity, MovieDetails response, int errorId) {
+            super(activity, response, errorId);
         }
 
+        @Override
+        public void run() {
+            super.run();
+
+            mDetails = getResponse();
+            setInfoAndDetails();
+        }
     }
 
     /**
-     * Show no response dialog
+     * Handle a list response
+     * @param response  Response object
      */
-    private void showNoResponse() {
-        Dialog.showNoResponseDialog(this);
+    protected void onMovieResponse(MovieDetails response, int msgId) {
+        // ui updates need to be on ui thread
+        MovieDetailsActivity.this.runOnUiThread(new MovieResponseHandler(MovieDetailsActivity.this, response, msgId));
     }
 
 }

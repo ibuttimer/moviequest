@@ -16,6 +16,7 @@
  */
 package ie.ianbuttimer.moviequest.tmdb;
 
+import android.net.Uri;
 import android.os.Parcel;
 import android.support.test.filters.SmallTest;
 import android.support.test.runner.AndroidJUnit4;
@@ -23,6 +24,9 @@ import android.support.test.runner.AndroidJUnit4;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import ie.ianbuttimer.moviequest.utils.NetworkUtils;
+import ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils;
 
 import static org.junit.Assert.assertEquals;
 
@@ -34,13 +38,39 @@ import static org.junit.Assert.assertEquals;
 public class MovieInfoModelTest extends MovieInfoTest {
 
     private MovieInfoModel movieModel;
+    private Uri posterUri;
+    private Uri backgropUri;
+    private Uri thumbnailUri;
     private TestMovieInfoModelInstance provider = new TestMovieInfoModelInstance();
 
 
     @Before
     public void createObject() {
-//        movieModel = setupObject(new MovieInfoModel());
         movieModel = provider.setupObject();
+        thumbnailUri = Uri.parse(
+                NetworkUtils.joinUrlPaths(new String[] {
+                        TMDbNetworkUtils.IMAGE_BASE_URL,
+                        TMDbNetworkUtils.sizePath(154),
+                        movieModel.getPosterPath()
+                })
+        );
+        posterUri = Uri.parse(
+                NetworkUtils.joinUrlPaths(new String[] {
+                        TMDbNetworkUtils.IMAGE_BASE_URL,
+                        TMDbNetworkUtils.sizePath(185),
+                        movieModel.getPosterPath()
+                })
+        );
+        backgropUri = Uri.parse(
+                NetworkUtils.joinUrlPaths(new String[] {
+                        TMDbNetworkUtils.IMAGE_BASE_URL,
+                        TMDbNetworkUtils.sizePath(300),
+                        movieModel.getPosterPath()
+                })
+        );
+        movieModel.setThumbnailUri(thumbnailUri);
+        movieModel.setPosterUri(posterUri);
+        movieModel.setBackdropUri(backgropUri);
     }
 
     @Override
@@ -76,6 +106,12 @@ public class MovieInfoModelTest extends MovieInfoTest {
 
         assertEquals(makeAssertMessage("Index"),
                 createdFromParcel.getIndex(), original.getIndex());
+        assertEquals(makeAssertMessage("Thumbnail"),
+                createdFromParcel.getThumbnailUri(), original.getThumbnailUri());
+        assertEquals(makeAssertMessage("Poster"),
+                createdFromParcel.getPosterUri(), original.getPosterUri());
+        assertEquals(makeAssertMessage("Backdrop"),
+                createdFromParcel.getBackdropUri(), original.getBackdropUri());
     }
 
 }

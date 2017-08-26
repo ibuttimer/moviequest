@@ -23,22 +23,25 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import ie.ianbuttimer.moviequest.R;
-import ie.ianbuttimer.moviequest.tmdb.MovieInfo;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfoModel;
-import ie.ianbuttimer.moviequest.utils.ImageLoader;
+import ie.ianbuttimer.moviequest.utils.PosterImageLoader;
 import ie.ianbuttimer.moviequest.utils.PreferenceControl;
+import ie.ianbuttimer.moviequest.utils.ThumbnailImageLoader;
 
 
 /**
  * A RecyclerView.ViewHolder for MovieInfo objects
  */
 
-class MovieInfoViewHolder<T extends MovieInfo> extends RecyclerView.ViewHolder implements View.OnClickListener {
+class MovieInfoViewHolder<T extends MovieInfoModel> extends RecyclerView.ViewHolder implements View.OnClickListener {
 
     protected final View mView;
     protected final TextView mIndexTextView;
     protected final ImageView mPosterImageView;
     private MovieInfoAdapter.MovieInfoAdapterOnClickHandler mClickHandler;
+
+    private PosterImageLoader mPosterLoader;
+    private ThumbnailImageLoader mThumbnailLoader;
 
     /**
      * Constructor
@@ -67,30 +70,30 @@ class MovieInfoViewHolder<T extends MovieInfo> extends RecyclerView.ViewHolder i
 
     /**
      * Set the movie details to display
-     * @param movie Movie object to use
+     * @param model Movie object to use
      */
-    public void setViewInfo(T movie) {
+    public void setViewInfo(T model) {
         Context context = getContext();
 
-        ImageLoader imageLoader = new ImageLoader(mPosterImageView);
-        imageLoader.loadPosterImage(context, movie);
+        // request poster image
+        mPosterLoader = new PosterImageLoader(mPosterImageView);
+        model.setPosterUri(mPosterLoader.getImageUri(context, model));
+        mPosterLoader.loadImage(context, model);
 
+        // set index number
         boolean show = PreferenceControl.getSharedBooleanPreference(
                 context, R.string.pref_show_position_key, R.bool.pref_show_position_dflt_value);
         if (show) {
-            // YUCK!!!!!
-            try {
-                MovieInfoModel model = MovieInfoModel.class.cast(movie);
-                mIndexTextView.setText(String.valueOf(model.getIndex()));
-                mIndexTextView.setVisibility(View.VISIBLE);
-            }
-            catch (ClassCastException e) {
-                mIndexTextView.setVisibility(View.GONE);
-            }
+            mIndexTextView.setText(String.valueOf(model.getIndex()));
+            mIndexTextView.setVisibility(View.VISIBLE);
         } else {
             mIndexTextView.setVisibility(View.GONE);
         }
 
+        // request thumbnail image
+        mThumbnailLoader = new ThumbnailImageLoader();
+        model.setThumbnailUri(mThumbnailLoader.getImageUri(context, model));
+        mThumbnailLoader.fetchImage(context, model);
     }
 
     @Override
@@ -98,4 +101,11 @@ class MovieInfoViewHolder<T extends MovieInfo> extends RecyclerView.ViewHolder i
         // pass the click onto the click handler
         mClickHandler.onItemClick(v);
     }
+
+    public void cancel() {
+        if (mThumbnailLoader != null) {
+            mThumbnailLoader.cancelImageLoad();
+        }
+    }
+
 }

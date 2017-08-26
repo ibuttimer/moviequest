@@ -22,7 +22,6 @@ import org.json.JSONObject;
 
 import java.text.NumberFormat;
 import java.util.Arrays;
-import java.util.Currency;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -433,6 +432,59 @@ public class MovieDetails extends MovieInfo implements Parcelable {
         NumberFormat formatter = NumberFormat.getCurrencyInstance(Locale.US);
         formatter.setMinimumFractionDigits(0);
         return formatter.format(amount);
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        MovieDetails that = (MovieDetails) o;
+
+        if (collection != null ? !collection.equals(that.collection) : that.collection != null)
+            return false;
+        if (budget != null ? !budget.equals(that.budget) : that.budget != null) return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        if (!Arrays.equals(genres, that.genres)) return false;
+        if (homepage != null ? !homepage.equals(that.homepage) : that.homepage != null)
+            return false;
+        if (imdbId != null ? !imdbId.equals(that.imdbId) : that.imdbId != null) return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        if (!Arrays.equals(productionCompanies, that.productionCompanies)) return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        if (!Arrays.equals(productionCountries, that.productionCountries)) return false;
+        if (revenue != null ? !revenue.equals(that.revenue) : that.revenue != null) return false;
+        if (runtime != null ? !runtime.equals(that.runtime) : that.runtime != null) return false;
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        if (!Arrays.equals(spokenLanguages, that.spokenLanguages)) return false;
+        if (status != null ? !status.equals(that.status) : that.status != null) return false;
+        return tagline != null ? tagline.equals(that.tagline) : that.tagline == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (collection != null ? collection.hashCode() : 0);
+        result = 31 * result + (budget != null ? budget.hashCode() : 0);
+        result = 31 * result + Arrays.hashCode(genres);
+        result = 31 * result + (homepage != null ? homepage.hashCode() : 0);
+        result = 31 * result + (imdbId != null ? imdbId.hashCode() : 0);
+        result = 31 * result + Arrays.hashCode(productionCompanies);
+        result = 31 * result + Arrays.hashCode(productionCountries);
+        result = 31 * result + (revenue != null ? revenue.hashCode() : 0);
+        result = 31 * result + (runtime != null ? runtime.hashCode() : 0);
+        result = 31 * result + Arrays.hashCode(spokenLanguages);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (tagline != null ? tagline.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return equals(new MovieDetails());
     }
 
 

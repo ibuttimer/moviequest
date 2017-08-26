@@ -18,6 +18,7 @@ package ie.ianbuttimer.moviequest.tmdb;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.net.Uri;
 
 import org.json.JSONObject;
 
@@ -37,16 +38,25 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
     private static HashMap<String, MemberEntry> jsonMemberMap;  // map of JSON property names to class setter method & JSON getter method names
 
     private int index;   // index of this object in a movies response
+	private Uri posterUri;		// movie card image uri
+	private Uri backdropUri;	// details backdrop image uri
+	private Uri thumbnailUri;	// thumbnail image uri
 
     protected static final int FIRST_MOVIE_MODEL_MEMBER = LAST_MOVIE_INFO_MEMBER + 1;
     protected static final int INDEX = FIRST_MOVIE_MODEL_MEMBER;
-    protected static final int LAST_MOVIE_MODEL_MEMBER = INDEX;
+    protected static final int POSTER_URI = FIRST_MOVIE_MODEL_MEMBER + 1;
+    protected static final int BACKDROP_URI = FIRST_MOVIE_MODEL_MEMBER + 2;
+    protected static final int THUMBNAIL_URI = FIRST_MOVIE_MODEL_MEMBER + 3;
+    protected static final int LAST_MOVIE_MODEL_MEMBER = THUMBNAIL_URI;
 
     private static final String[] FIELD_NAMES;  // NOTE order must follow the order of the indices in super class & above!!!!
 
     static {
         FIELD_NAMES = Arrays.copyOf(MovieInfo.getFieldNamesArray(), LAST_MOVIE_MODEL_MEMBER + 1);
         FIELD_NAMES[INDEX] = "nonTMDb_index";    // field not returned from TMDb
+        FIELD_NAMES[POSTER_URI] = "nonTMDb_posterUri"; // field not returned from TMDb
+        FIELD_NAMES[BACKDROP_URI] = "nonTMDb_backdropUri"; // field not returned from TMDb
+        FIELD_NAMES[THUMBNAIL_URI] = "nonTMDb_thumbnailUri";	// field not returned from TMDb
 
         // get members from super class
         jsonMemberMap = MovieInfo.generateMemberMap(null);
@@ -58,6 +68,9 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         jsonMemberMap = generateMemberMap(null);
         // append this object's
         jsonMemberMap.put(FIELD_NAMES[INDEX], intTemplate.copy("setIndex", "index"));
+        jsonMemberMap.put(FIELD_NAMES[POSTER_URI], stringTemplate.copy("setPosterUri", "posterUri"));
+        jsonMemberMap.put(FIELD_NAMES[BACKDROP_URI], stringTemplate.copy("setBackdropUri", "backdropUri"));
+        jsonMemberMap.put(FIELD_NAMES[THUMBNAIL_URI], stringTemplate.copy("setThumbnailUri", "thumbnailUri"));
     }
 
     @Override
@@ -85,6 +98,9 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
     public MovieInfoModel() {
         super();
         index = 0;
+		posterUri = null;
+        backdropUri = null;
+		thumbnailUri = null;
     }
 
     /**
@@ -113,6 +129,30 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         this.index = index;
     }
 
+    public Uri getPosterUri() {
+        return posterUri;
+    }
+
+    public void setPosterUri(Uri posterUri) {
+        this.posterUri = posterUri;
+    }
+
+    public Uri getBackdropUri() {
+        return backdropUri;
+    }
+
+    public void setBackdropUri(Uri backdropUri) {
+        this.backdropUri = backdropUri;
+    }
+
+    public Uri getThumbnailUri() {
+        return thumbnailUri;
+    }
+
+    public void setThumbnailUri(Uri thumbnailUri) {
+        this.thumbnailUri = thumbnailUri;
+    }
+
 
     @Override
     public int describeContents() {
@@ -123,6 +163,9 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
     public void writeToParcel(Parcel parcel, int flags) {
         super.writeToParcel(parcel, flags);
         parcel.writeInt(index);
+        parcel.writeParcelable(posterUri, flags);
+        parcel.writeParcelable(thumbnailUri, flags);
+        parcel.writeParcelable(backdropUri, flags);
     }
 
     public static final Parcelable.Creator<MovieInfoModel> CREATOR
@@ -137,13 +180,16 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
     };
 
     /**
-     * Populate the specified object from the specified PArcel
+     * Populate the specified object from the specified Parcel
      * @param in    Parcel to read
      * @param obj   Object to populate
      */
     void readFromParcel(Parcel in, MovieInfoModel obj) {
         super.readFromParcel(in, obj);
         obj.index = in.readInt();
+        obj.posterUri = in.readParcelable(Uri.class.getClassLoader());
+        obj.thumbnailUri = in.readParcelable(Uri.class.getClassLoader());
+        obj.backdropUri = in.readParcelable(Uri.class.getClassLoader());
     }
 
     /**

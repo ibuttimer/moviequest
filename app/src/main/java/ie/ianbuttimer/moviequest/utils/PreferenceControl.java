@@ -30,7 +30,7 @@ public class PreferenceControl {
     /**
      * Return the application preferences
      * @param context   The current context
-     * @return
+     * @return SharedPreference instance
      */
     public static SharedPreferences getSharedPreferences(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
@@ -41,7 +41,7 @@ public class PreferenceControl {
      * @param context   The current context
      * @param key       The preference key           
      * @param dfltValue Default value to return if preference not available 
-     * @return
+     * @return preference value
      */
     public static String getSharedStringPreference(Context context, String key, String dfltValue) {
         SharedPreferences prefs = getSharedPreferences(context);
@@ -53,7 +53,7 @@ public class PreferenceControl {
      * @param context   The current context
      * @param keyResId  Resource id of preference key
      * @param dfltValue Default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static String getSharedStringPreference(Context context, int keyResId, String dfltValue) {
         String keyValue = context.getString(keyResId);
@@ -65,7 +65,7 @@ public class PreferenceControl {
      * @param context   The current context
      * @param key       The preference key
      * @param dfltResId Resource id of default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static String getSharedStringPreference(Context context, String key, int dfltResId) {
         String dfltValue = context.getString(dfltResId);
@@ -77,7 +77,7 @@ public class PreferenceControl {
      * @param context   The current context
      * @param keyResId  Resource id of preference key
      * @param dfltResId Resource id of default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static String getSharedStringPreference(Context context, int keyResId, int dfltResId) {
         String dfltValue = context.getString(dfltResId);
@@ -112,7 +112,7 @@ public class PreferenceControl {
      * @param context   The current context
      * @param key       The preference key
      * @param dfltValue Default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static boolean getSharedBooleanPreference(Context context, String key, boolean dfltValue) {
         SharedPreferences prefs = getSharedPreferences(context);
@@ -124,7 +124,7 @@ public class PreferenceControl {
      * @param context   The current context
      * @param keyResId  Resource id of preference key
      * @param dfltValue Default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static boolean getSharedBooleanPreference(Context context, int keyResId, boolean dfltValue) {
         String keyValue = context.getString(keyResId);
@@ -136,7 +136,7 @@ public class PreferenceControl {
      * @param context   The current context
      * @param key       The preference key
      * @param dfltResId Resource id of default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static boolean getSharedBooleanPreference(Context context, String key, int dfltResId) {
         boolean dfltValue = context.getResources().getBoolean(dfltResId);
@@ -148,7 +148,7 @@ public class PreferenceControl {
      * @param context   The current context
      * @param keyResId  Resource id of preference key
      * @param dfltResId Resource id of default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static boolean getSharedBooleanPreference(Context context, int keyResId, int dfltResId) {
         String keyValue = context.getString(keyResId);
@@ -157,8 +157,8 @@ public class PreferenceControl {
 
     /**
      * Registers a callback to be invoked when a change happens to a preference.
-     * @param context
-     * @param listener
+     * @param context   The current context
+     * @param listener  Listener to register
      */
     public static void registerOnSharedPreferenceChangeListener(Context context, SharedPreferences.OnSharedPreferenceChangeListener listener) {
         SharedPreferences prefs = getSharedPreferences(context);
@@ -167,8 +167,8 @@ public class PreferenceControl {
 
     /**
      * Unregisters a previous callback.
-     * @param context
-     * @param listener
+     * @param context   The current context
+     * @param listener  Listener to unregister
      */
     public static void	unregisterOnSharedPreferenceChangeListener(Context context, SharedPreferences.OnSharedPreferenceChangeListener listener) {
         SharedPreferences prefs = getSharedPreferences(context);
@@ -214,7 +214,7 @@ public class PreferenceControl {
      * @param activity  The current activity
      * @param key       The preference key
      * @param dfltResId Resource id of default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static String getStringPreference(Activity activity, String key, int dfltResId) {
         String dfltValue = activity.getString(dfltResId);
@@ -226,7 +226,7 @@ public class PreferenceControl {
      * @param activity  The current activity
      * @param keyResId  Resource id of preference key
      * @param dfltResId Resource id of default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static String getStringPreference(Activity activity, int keyResId, int dfltResId) {
         String keyValue = activity.getString(keyResId);
@@ -281,7 +281,7 @@ public class PreferenceControl {
      * @param activity  The current activity
      * @param key       The preference key
      * @param dfltValue Default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static boolean getBooleanPreference(Activity activity, String key, boolean dfltValue) {
         SharedPreferences prefs = getPreferences(activity);
@@ -293,7 +293,7 @@ public class PreferenceControl {
      * @param activity  The current activity
      * @param keyResId  Resource id of preference key
      * @param dfltValue Default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static boolean getBooleanPreference(Activity activity, int keyResId, boolean dfltValue) {
         String keyValue = activity.getString(keyResId);
@@ -305,7 +305,7 @@ public class PreferenceControl {
      * @param activity  The current activity
      * @param key       The preference key
      * @param dfltResId Resource id of default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static boolean getBooleanPreference(Activity activity, String key, int dfltResId) {
         boolean dfltValue = activity.getResources().getBoolean(dfltResId);
@@ -317,7 +317,7 @@ public class PreferenceControl {
      * @param activity  The current activity
      * @param keyResId  Resource id of preference key
      * @param dfltResId Resource id of default value to return if preference not available
-     * @return
+     * @return preference value
      */
     public static boolean getBooleanPreference(Activity activity, int keyResId, int dfltResId) {
         String keyValue = activity.getString(keyResId);

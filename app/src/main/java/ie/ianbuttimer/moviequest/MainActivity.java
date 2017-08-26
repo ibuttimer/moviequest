@@ -16,10 +16,10 @@
  */
 package ie.ianbuttimer.moviequest;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -30,23 +30,28 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.net.URL;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 
-import ie.ianbuttimer.moviequest.tmdb.MovieInfo;
 import ie.ianbuttimer.moviequest.data.MovieInfoAdapter;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfoModel;
 import ie.ianbuttimer.moviequest.tmdb.MovieListResponse;
+import ie.ianbuttimer.moviequest.utils.AsyncCallback;
 import ie.ianbuttimer.moviequest.utils.Dialog;
+import ie.ianbuttimer.moviequest.utils.ICallback;
 import ie.ianbuttimer.moviequest.utils.NetworkUtils;
 import ie.ianbuttimer.moviequest.utils.PreferenceControl;
+import ie.ianbuttimer.moviequest.utils.ResponseHandler;
 import ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils;
 import ie.ianbuttimer.moviequest.utils.Utils;
+import okhttp3.Call;
+import okhttp3.Response;
 
 
 import static ie.ianbuttimer.moviequest.Constants.MOVIE_ID;
@@ -73,6 +78,8 @@ public class MainActivity extends AppCompatActivity implements
 
     private ProgressBar mProgressBar;
     private TextView mErrorTextView;
+    private Button mRetry;
+
 
     /**
      * {@inheritDoc}
@@ -141,12 +148,22 @@ public class MainActivity extends AppCompatActivity implements
             mMovieRangeTextView.setText(savedInstanceState .getString(MOVIE_RANGE));
         }
 
+        mRetry = (Button) findViewById(R.id.button_retry_mainA);
+        mRetry.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requestMovies();
+            }
+        });
+
+
         // request the movie info
         if (mMovieList.size() == 0) {
             requestMovies();
         }
 
         // watch for preference changes
+        Utils.setBackdropPreference(this);
         PreferenceControl.registerOnSharedPreferenceChangeListener(this, preferenceChangeListener);
     }
 
@@ -159,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements
 
         showInProgress();
 
-        new GetMovies().execute(TMDbNetworkUtils.buildGetMovieListUrl(this, mListSelection));
+        responseHandler.request(TMDbNetworkUtils.buildGetMovieListUrl(this, mListSelection));
     }
 
     /**
@@ -186,17 +203,13 @@ public class MainActivity extends AppCompatActivity implements
      */
     @Override
     public void onItemClick(View view) {
-        if (NetworkUtils.isInternetAvailable(this)) {
-            Intent intent = new Intent(this, MovieDetailsActivity.class);
-            // add the movie object to the intent so it doesn't have to be requested
-            MovieInfo movie = (MovieInfo) view.getTag(R.id.movie_id_tag);
-            intent.putExtra(MOVIE_ID, movie.getId());   // pass id to request movie details
-            intent.putExtra(MOVIE_OBJ, movie);          // pass movie info to at least display what we have
+        Intent intent = new Intent(this, MovieDetailsActivity.class);
+        // add the movie object to the intent so it doesn't have to be requested
+        MovieInfoModel movie = (MovieInfoModel) view.getTag(R.id.movie_id_tag);
+        intent.putExtra(MOVIE_ID, movie.getId());   // pass id to request movie details
+        intent.putExtra(MOVIE_OBJ, movie);          // pass movie info to at least display what we have
 
-            Utils.startActivity(this, intent);
-        } else {
-            Dialog.showNoNetworkDialog(this);
-        }
+        Utils.startActivity(this, intent);
     }
 
     /**
@@ -217,55 +230,72 @@ public class MainActivity extends AppCompatActivity implements
         return true;
     }
 
-
     /**
-     * AsyncTask to request movies
+     * Asynchronous request and response handler
      */
-    class GetMovies extends AsyncTask<URL, Void, MovieListResponse> {
+    private ICallback responseHandler = new AsyncCallback() {
 
         @Override
-        protected MovieListResponse doInBackground(URL... params) {
+        public void onFailure(Call call, IOException e) {
+            super.onFailure(call, e);
+            onListResponse(new MovieListResponse(), getErrorId(call, e));    // default list object will not pass valid range test
+        }
 
-            /* If there's no url, there's nothing to look up. */
-            if (params.length == 0) {
-                return null;
+        @Override
+        public void onResponse(Object result) {
+            MovieListResponse response = null;
+            if (result != null) {
+                response = (MovieListResponse) result;
             }
-
-            try {
-                String jsonResponse = NetworkUtils.getResponseFromHttpUrl(params[0]);
-
-                return MovieListResponse.getMovieInfoFromJsonString(jsonResponse);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
+            onListResponse(response, 0);
         }
 
         /**
-         * {@inheritDoc}
+         * Convert the http response into a MovieListResponse object
+         * @param response  Response from the server
+         * @return
          */
         @Override
-        protected void onPostExecute(MovieListResponse response) {
-            boolean rangeIsValid = false;
-            if (response == null) {
-                // no response received
-                showNoResponse();
-            } else {
-                rangeIsValid = response.rangeIsValid();
+        public Object processResponse(Response response) {
+            Object result = null;
+            try {
+                String jsonResponse = response.body().string();
+                result = MovieListResponse.getMovieListFromJsonString(jsonResponse);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            if (rangeIsValid) {
-                clearInProgress();
+            return result;
+        }
+    };
 
-                String range = MessageFormat.format(getResources().getString(R.string.movie_range),
-                        response.getRangeStart(), response.getRangeEnd(), response.getTotalResults());
-                mMovieRangeTextView.setText(range);
-            } else {
-                if (response != null) {
-                    showError(R.string.invalid_response);
+    /**
+     * Class to update the ui with response list details
+     */
+    private class ListResponseHandler extends ResponseHandler<MovieListResponse> implements Runnable {
+
+        public ListResponseHandler(Activity activity, MovieListResponse response, int errorId) {
+            super(activity, response, errorId);
+        }
+
+        @Override
+        public void run() {
+            MovieListResponse response = getResponse();
+            String range = "";
+
+            super.run();
+
+            if (response != null) {
+                if (response.rangeIsValid()) {
+                    clearInProgress();
+
+                    range = MessageFormat.format(getResources().getString(R.string.movie_range),
+                            response.getRangeStart(), response.getRangeEnd(), response.getTotalResults());
                 }
+            }
+            mMovieRangeTextView.setText(range);
 
-                mMovieRangeTextView.setText("");
+            if (hasDialog()) {
+                showError(getErrorId());
             }
 
             mMovieAdapter.clear();
@@ -274,7 +304,15 @@ public class MainActivity extends AppCompatActivity implements
             }
             mMovieAdapter.notifyDataSetChanged();
         }
+    }
 
+    /**
+     * Handle a list response
+     * @param response  Response object
+     */
+    protected void onListResponse(MovieListResponse response, int msgId) {
+        // ui updates need to be on ui thread
+        MainActivity.this.runOnUiThread(new ListResponseHandler(MainActivity.this, response, msgId));
     }
 
     /**
@@ -283,6 +321,7 @@ public class MainActivity extends AppCompatActivity implements
     private void showInProgress() {
         mProgressBar.setVisibility(View.VISIBLE);
         mErrorTextView.setVisibility(View.INVISIBLE);
+        mRetry.setVisibility(View.INVISIBLE);
     }
 
     /**
@@ -291,6 +330,7 @@ public class MainActivity extends AppCompatActivity implements
     private void clearInProgress() {
         mProgressBar.setVisibility(View.INVISIBLE);
         mErrorTextView.setVisibility(View.INVISIBLE);
+        mRetry.setVisibility(View.INVISIBLE);
     }
 
     /**
@@ -300,15 +340,9 @@ public class MainActivity extends AppCompatActivity implements
         mErrorTextView.setText(getString(msgResId));
         mProgressBar.setVisibility(View.INVISIBLE);
         mErrorTextView.setVisibility(View.VISIBLE);
+        mRetry.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * Show no response dialog
-     */
-    private void showNoResponse() {
-        Dialog.showNoResponseDialog(this);
-        showError(R.string.no_response);
-    }
     /**
      * {@inheritDoc}
      */
@@ -361,6 +395,9 @@ public class MainActivity extends AppCompatActivity implements
         // noop
     }
 
+    /**
+     * Preference change listener to refresh display
+     */
     private SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener =
             new SharedPreferences.OnSharedPreferenceChangeListener() {
                 @Override

@@ -14,21 +14,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ie.ianbuttimer.moviequest.tmdb;
 
+package ie.ianbuttimer.moviequest.utils;
+
+import java.net.URL;
+
+import okhttp3.Callback;
+import okhttp3.Response;
 
 /**
- * Base class for parcel classes
+ * Extended okhttp Callback interface
  */
-public abstract class ParcelTest {
 
+public interface ICallback extends Callback {
 
     /**
-     * Make a message to use for an assert
-     * @param msg   Message text
-     * @return
+     * Process the response
+     * @param result    Response received from the server
      */
-    protected String makeAssertMessage(String msg) {
-        return getClass().getSimpleName() + ": " + msg;
-    }
+    void onResponse(Object result);
+
+    /**
+     * Send a request using the specified Url
+     * @param url   Url to send
+     */
+    void request(URL url);
+
+    /**
+     * Process the response received
+     * @param response  Response from the server
+     * @return  Response object
+     */
+    Object processResponse(Response response);
+
 }

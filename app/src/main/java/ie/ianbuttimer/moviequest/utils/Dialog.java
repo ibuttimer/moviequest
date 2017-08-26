@@ -80,10 +80,10 @@ public class Dialog {
                                          int positiveText, DialogInterface.OnClickListener positiveListener,
                                          int negativeText, DialogInterface.OnClickListener negativeListener,
                                          int neutralText, DialogInterface.OnClickListener nettralListener) {
-        AlertDialog dialod = buildAlert(activity, titleResId, msgResId,
+        AlertDialog dialog = buildAlert(activity, titleResId, msgResId,
                                         positiveText, positiveListener, negativeText, negativeListener,
                                         neutralText, nettralListener);
-        dialod.show();
+        dialog.show();
     }
 
     /**
@@ -100,10 +100,10 @@ public class Dialog {
     public static void showAlert(Activity activity, int titleResId, int msgResId,
                                          int positiveText, DialogInterface.OnClickListener positiveListener,
                                          int negativeText, DialogInterface.OnClickListener negativeListener) {
-        AlertDialog dialod = buildAlert(activity, titleResId, msgResId,
+        AlertDialog dialog = buildAlert(activity, titleResId, msgResId,
                                         positiveText, positiveListener, negativeText, negativeListener,
                                         0, null);
-        dialod.show();
+        dialog.show();
     }
 
     /**
@@ -117,27 +117,45 @@ public class Dialog {
      */
     public static void showAlert(Activity activity, int titleResId, int msgResId,
                                          int positiveText, DialogInterface.OnClickListener positiveListener) {
-        AlertDialog dialod = buildAlert(activity, titleResId, msgResId,
+        AlertDialog dialog = buildAlert(activity, titleResId, msgResId,
                                         positiveText, positiveListener, 0, null, 0, null);
-        dialod.show();
+        dialog.show();
     }
 
     /**
      * Display a basic no response received dialog
-     * @param activity          The current activity
+     * @param activity  The current activity
+     * @param msgId     The resource id of the message to display
      */
-    public static void showNoResponseDialog(Activity activity) {
-        showAlert(activity, android.R.string.dialog_alert_title, R.string.no_response,
+    public static void showAlertDialog(Activity activity, int msgId) {
+        showAlert(activity, android.R.string.dialog_alert_title, msgId,
                 android.R.string.ok, null);
     }
 
     /**
+     * Display a basic no response received dialog
+     * @param activity  The current activity
+     */
+    public static void showNoResponseDialog(Activity activity) {
+        showAlertDialog(activity, R.string.no_response);
+    }
+
+    /**
      * Display a network unavailable dialog
-     * @param activity          The current activity
+     * @param activity  The current activity
      */
     public static void showNoNetworkDialog(Activity activity) {
-        showAlert(activity, android.R.string.dialog_alert_title, R.string.network_na,
-                android.R.string.ok, null);
+        showAlertDialog(activity, R.string.network_na);
     }
+
+    /**
+     * Display a can't contact server dialog
+     * @param activity  The current activity
+     */
+    public static void showCantConatctServerDialog(Activity activity) {
+        showAlertDialog(activity, R.string.cant_contact_server);
+    }
+
+
 
 }
