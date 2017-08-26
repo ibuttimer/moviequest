@@ -44,7 +44,7 @@
                 android:textAlignment="center"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 android:textColor="@color/colorBannerTitleBarText"
-                android:textSize="40sp"
+                android:textSize="@dimen/banner_text"
                 android:textStyle="bold|italic"
                 android:typeface="normal" />
             
@@ -171,7 +171,7 @@
             android:layout_marginRight="@dimen/fab_margin"
             android:background="@drawable/line_primary_dark"
             android:layout_width="match_parent"
-            android:layout_height="1dp"/>
+            android:layout_height="@dimen/separator_line"/>
 
 
         <TableLayout
