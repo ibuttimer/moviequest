@@ -41,13 +41,15 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
 	private Uri posterUri;		// movie card image uri
 	private Uri backdropUri;	// details backdrop image uri
 	private Uri thumbnailUri;	// thumbnail image uri
+    private MovieDetails details;   // movie details
 
     protected static final int FIRST_MOVIE_MODEL_MEMBER = LAST_MOVIE_INFO_MEMBER + 1;
     protected static final int INDEX = FIRST_MOVIE_MODEL_MEMBER;
     protected static final int POSTER_URI = FIRST_MOVIE_MODEL_MEMBER + 1;
     protected static final int BACKDROP_URI = FIRST_MOVIE_MODEL_MEMBER + 2;
     protected static final int THUMBNAIL_URI = FIRST_MOVIE_MODEL_MEMBER + 3;
-    protected static final int LAST_MOVIE_MODEL_MEMBER = THUMBNAIL_URI;
+    protected static final int DETAILS = FIRST_MOVIE_MODEL_MEMBER + 4;
+    protected static final int LAST_MOVIE_MODEL_MEMBER = DETAILS;
 
     private static final String[] FIELD_NAMES;  // NOTE order must follow the order of the indices in super class & above!!!!
 
@@ -57,6 +59,7 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         FIELD_NAMES[POSTER_URI] = "nonTMDb_posterUri"; // field not returned from TMDb
         FIELD_NAMES[BACKDROP_URI] = "nonTMDb_backdropUri"; // field not returned from TMDb
         FIELD_NAMES[THUMBNAIL_URI] = "nonTMDb_thumbnailUri";	// field not returned from TMDb
+        FIELD_NAMES[DETAILS] = "nonTMDb_Details";	// field not returned from TMDb
 
         // get members from super class
         jsonMemberMap = MovieInfo.generateMemberMap(null);
@@ -71,6 +74,7 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         jsonMemberMap.put(FIELD_NAMES[POSTER_URI], stringTemplate.copy("setPosterUri", "posterUri"));
         jsonMemberMap.put(FIELD_NAMES[BACKDROP_URI], stringTemplate.copy("setBackdropUri", "backdropUri"));
         jsonMemberMap.put(FIELD_NAMES[THUMBNAIL_URI], stringTemplate.copy("setThumbnailUri", "thumbnailUri"));
+        jsonMemberMap.put(FIELD_NAMES[DETAILS], stringTemplate.copy("setDetails", "details"));
     }
 
     @Override
@@ -101,6 +105,7 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
 		posterUri = null;
         backdropUri = null;
 		thumbnailUri = null;
+        details = null;
     }
 
     /**
@@ -153,6 +158,13 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         this.thumbnailUri = thumbnailUri;
     }
 
+    public MovieDetails getDetails() {
+        return details;
+    }
+
+    public void setDetails(MovieDetails details) {
+        this.details = details;
+    }
 
     @Override
     public int describeContents() {
@@ -166,6 +178,7 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         parcel.writeParcelable(posterUri, flags);
         parcel.writeParcelable(thumbnailUri, flags);
         parcel.writeParcelable(backdropUri, flags);
+        parcel.writeParcelable(details, flags);
     }
 
     public static final Parcelable.Creator<MovieInfoModel> CREATOR
@@ -190,6 +203,7 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         obj.posterUri = in.readParcelable(Uri.class.getClassLoader());
         obj.thumbnailUri = in.readParcelable(Uri.class.getClassLoader());
         obj.backdropUri = in.readParcelable(Uri.class.getClassLoader());
+        obj.details = in.readParcelable(MovieDetails.class.getClassLoader());
     }
 
     /**

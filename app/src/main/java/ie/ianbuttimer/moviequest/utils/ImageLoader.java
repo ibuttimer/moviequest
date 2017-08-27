@@ -17,6 +17,7 @@
 package ie.ianbuttimer.moviequest.utils;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.view.View;
 import android.widget.ImageView;
@@ -224,6 +225,29 @@ public abstract class ImageLoader implements Callback {
      */
     public String fetchImage(Context context, String size, MovieInfo movie) {
         return fetchImage(context, size, movie, null);
+    }
+
+    /**
+     * Gets an image from cache
+     * @param context   The current context
+     * @param movie     Movie to get image for
+     * @return Request tag
+     */
+    public Bitmap getImage(Context context, MovieInfo movie) {
+        Uri uri = getImageUri(context, movie);
+        return PicassoUtil.getImage(uri);
+    }
+
+    /**
+     * Gets an image from cache
+     * @param context   The current context
+     * @param size      Image size to request
+     * @param movie     Movie to get image for
+     * @return Image or <code>null</code> if not available
+     */
+    public Bitmap getImage(Context context, String size, MovieInfo movie) {
+        Uri uri = getImageUri(context, size, movie);
+        return PicassoUtil.getImage(uri);
     }
 
     /**

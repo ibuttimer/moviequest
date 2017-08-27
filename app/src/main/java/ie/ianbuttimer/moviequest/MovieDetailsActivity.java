@@ -23,10 +23,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
+
+import com.squareup.picasso.Callback;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -47,6 +48,7 @@ import ie.ianbuttimer.moviequest.utils.PicassoUtil;
 import ie.ianbuttimer.moviequest.utils.ResponseHandler;
 import ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils;
 import ie.ianbuttimer.moviequest.utils.ThumbnailImageLoader;
+import ie.ianbuttimer.moviequest.utils.Utils;
 import okhttp3.Call;
 import okhttp3.Response;
 
@@ -59,24 +61,92 @@ import static ie.ianbuttimer.moviequest.Constants.MOVIE_OBJ;
  */
 public class MovieDetailsActivity extends AppCompatActivity {
 
-    // ids of text views that can be populated from movie info provided in intent
-    private static final int[] mTextViewIds = new int[] {
-        R.id.tv_year_moviedetailsA, R.id.tv_plot_moviedetailsA,
-        R.id.tv_releasedate_moviedetailsA, R.id.tv_rating_moviedetailsA,
-        R.id.tv_banner_title_movie_detailsA, R.id.tv_originaltitle_moviedetailsA
+    private static final int TV_IDX = 0;        // text view id index
+    private static final int PORTRAIT_IDX = 1;  // portrait orientation container id index
+    private static final int LANDSCAPE_IDX = 2; // landscape orientation container id index
 
+    private int orientationIdx;     // current orientation; PORTRAIT_IDX or LANDSCAPE_IDX
+
+    // ids of items that can be populated from movie info provided in intent
+    private static final int[][] mInfoTextViewIds = new int[][] {
+        // ids of text views that can be populated from movie info provided in intent
+        { R.id.tv_year_moviedetailsA, 
+            R.id.tv_plot_moviedetailsA,
+            R.id.tv_releasedate_moviedetailsA,
+            R.id.tv_rating_moviedetailsA,
+            R.id.tv_banner_title_movie_detailsA, 
+            R.id.tv_originaltitle_moviedetailsA },
+        // ids of container views in portrait orientation
+        { R.id.tv_year_moviedetailsA,   // no container
+            R.id.tv_plot_moviedetailsA, // no container
+            R.id.tr_releasedate_moviedetailsA,
+            R.id.tv_rating_moviedetailsA,   // no container
+            R.id.tv_banner_title_movie_detailsA,    // no container
+            R.id.tr_originaltitle_moviedetailsA },
+        // ids of container views in landscape orientation
+        { R.id.tv_year_moviedetailsA,   // no container
+            R.id.tv_plot_moviedetailsA, // no container
+            R.id.ll_releasedate_moviedetailsA,
+            R.id.tv_rating_moviedetailsA,   // no container
+            R.id.tv_banner_title_movie_detailsA,    // no container
+            R.id.ll_originaltitle_moviedetailsA },
     };
-    // ids of text views that are populated from movie details info returned from server
-    private static final int[] mTextViewDetailsIds = new int[] {
-        R.id.tv_runningtime_moviedetailsA, R.id.tv_genres_moviedetailsA,
-        R.id.tv_homepage_moviedetailsA, R.id.tv_revenue_moviedetailsA,
-        R.id.tv_collection_moviedetailsA, R.id.tv_originallang_moviedetailsA,
-        R.id.tv_budget_moviedetailsA, R.id.tv_languages_moviedetailsA,
-        R.id.tv_companies_moviedetailsA, R.id.tv_countries_moviedetailsA,
-        R.id.tv_tagline_movie_detailsA
+    // ids of items that are populated from movie details info returned from server
+    private static final int[][] mDetailsTextViewIds = new int[][] {
+        // ids of text views that are populated from movie details info returned from server
+        { R.id.tv_runningtime_moviedetailsA,
+            R.id.tv_genres_moviedetailsA,
+            R.id.tv_homepage_moviedetailsA,
+            R.id.tv_revenue_moviedetailsA,
+            R.id.tv_collection_moviedetailsA,
+            R.id.tv_originallang_moviedetailsA,
+            R.id.tv_budget_moviedetailsA,
+            R.id.tv_languages_moviedetailsA,
+            R.id.tv_companies_moviedetailsA,
+            R.id.tv_countries_moviedetailsA,
+            R.id.tv_tagline_movie_detailsA },
+        // ids of container views in portrait orientation
+        { R.id.tv_runningtime_moviedetailsA,    // no container
+            R.id.tr_genres_moviedetailsA,
+            R.id.tr_homepage_moviedetailsA,
+            R.id.tr_revenue_moviedetailsA,
+            R.id.tr_collection_moviedetailsA,
+            R.id.tr_originallang_moviedetailsA,
+            R.id.tr_budget_moviedetailsA,
+            R.id.tr_languages_moviedetailsA,
+            R.id.tr_companies_moviedetailsA,
+            R.id.tr_countries_moviedetailsA,
+            R.id.tv_tagline_movie_detailsA },   // no container
+        // ids of container views in landscape orientation
+        { R.id.tv_runningtime_moviedetailsA,    // no container
+            R.id.ll_genres_moviedetailsA,
+            R.id.ll_homepage_moviedetailsA,
+            R.id.ll_revenue_moviedetailsA,
+            R.id.ll_collection_moviedetailsA,
+            R.id.ll_originallang_moviedetailsA,
+            R.id.ll_budget_moviedetailsA,
+            R.id.ll_languages_moviedetailsA,
+            R.id.ll_companies_moviedetailsA,
+            R.id.ll_countries_moviedetailsA,
+            R.id.tv_tagline_movie_detailsA }    // no container
     };
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
 
     private MovieInfoModel mMovie;
+    private ImageView backdropImageView;
     private ImageLoader backdropLoader;
     private ImageLoader thumbnailLoader;
 
@@ -87,6 +157,8 @@ public class MovieDetailsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
+
+        orientationIdx = (Utils.isPotraitScreen(this) ? PORTRAIT_IDX : LANDSCAPE_IDX);
 
         if (savedInstanceState != null) {
             // get movie object from saved bundle
@@ -106,6 +178,10 @@ public class MovieDetailsActivity extends AppCompatActivity {
             }
         }
 
+        if ((mDetails == null) && (mMovie != null)) {
+            mDetails = mMovie.getDetails();
+        }
+
         if (mDetails == null) {
             if (mMovie != null) {
                 requestDetails(mMovie);     // request using movie info
@@ -114,10 +190,10 @@ public class MovieDetailsActivity extends AppCompatActivity {
                 requestDetails(movieId);    // request using id
             } else {
                 // no movie info so clear text view texts
-                for (int id : mTextViewIds) {
+                for (int id : mInfoTextViewIds[TV_IDX]) {
                     setTextViewText(id, "");
                 }
-                for (int id : mTextViewDetailsIds) {
+                for (int id : mDetailsTextViewIds[TV_IDX]) {
                     setTextViewText(id, "");
                 }
             }
@@ -135,7 +211,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
             DateFormat df = DateFormat.getDateInstance(DateFormat.MEDIUM);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy");
 
-            for (int id : mTextViewIds) {
+            for (int id : mInfoTextViewIds[TV_IDX]) {
                 String text;
                 switch (id) {
                     case R.id.tv_year_moviedetailsA:
@@ -184,10 +260,23 @@ public class MovieDetailsActivity extends AppCompatActivity {
             if (image == null) {
                 if (haveNetwork) {
                     backdropLoader = setImageLoader(new BackdropImageLoader(), R.id.iv_background_movie_detailsA, R.id.pb_banner_movie_detailsA);
-                    backdropLoader.loadImage(this, movie);
+                    backdropImageView = backdropLoader.getImageView();
+                    backdropLoader.loadImage(this, movie, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            backdropImageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                            backdropImageView.setAdjustViewBounds(true);
+                        }
+
+                        @Override
+                        public void onError() {
+                        }
+                    });
+                } else {
+                    backdropImageView = (ImageView) findViewById(R.id.iv_background_movie_detailsA);
                 }
             } else {
-                setImageViewImage(R.id.iv_background_movie_detailsA, image);
+                backdropImageView = setImageViewImage(R.id.iv_background_movie_detailsA, image);
             }
             // load thumbnail
             image = PicassoUtil.getImage(mMovie.getThumbnailUri());
@@ -208,9 +297,12 @@ public class MovieDetailsActivity extends AppCompatActivity {
      */
     private void setDetails() {
         if ((mDetails != null) && !mDetails.isEmpty()) {
-            for (int id : mTextViewDetailsIds) {
+            for (int i = 0, ll = mDetailsTextViewIds[TV_IDX].length; i < ll; ++i) {
+                int id = mDetailsTextViewIds[TV_IDX][i];
+                int containerId = mDetailsTextViewIds[orientationIdx][i];
                 boolean set = true;
                 boolean hide = false;
+                int visibility;
                 String text = "";
                 switch (id) {
                     case R.id.tv_runningtime_moviedetailsA:
@@ -239,15 +331,15 @@ public class MovieDetailsActivity extends AppCompatActivity {
                         text = monetaryString(mDetails.getBudget(), mDetails.getBudgetFormatted());
                         break;
                     case R.id.tv_collection_moviedetailsA:
-                        LinearLayout ll = (LinearLayout) findViewById(R.id.ll_collection_moviedetailsA);
                         CollectionInfo collection = mDetails.getCollection();
                         set = !CollectionInfo.isEmpty(collection);
                         if (set) {
                             text = collection.getName();
-                            ll.setVisibility(View.VISIBLE);
+                            visibility = View.VISIBLE;
                         } else {
-                            ll.setVisibility(View.INVISIBLE);
+                            visibility = View.INVISIBLE;
                         }
+                        setViewVisibility(R.id.ll_collection_moviedetailsA, visibility);
                         break;
                     case R.id.tv_originallang_moviedetailsA:
                         text = mDetails.getOriginalLanguageName();
@@ -262,11 +354,14 @@ public class MovieDetailsActivity extends AppCompatActivity {
                         break;
                 }
                 if (set) {
+                    setViewOpacity(containerId, 1f);
                     setTextViewText(id, text);
                 } else if (hide) {
-                    setTextViewVisibility(id, View.GONE);
+                    setViewVisibility(id, View.GONE);
                 }
             }
+        } else {
+            setViewOpacity(mDetailsTextViewIds, 0.5f);
         }
     }
 
@@ -330,16 +425,71 @@ public class MovieDetailsActivity extends AppCompatActivity {
     private void setTextViewText(int id, String text) {
         TextView tv = (TextView) findViewById(id);
         tv.setText(text);
+        tv.setVisibility(View.VISIBLE);
     }
 
     /**
-     * Set a TextView visibility
-     * @param id            Id of TextView
+     * Set a View's visibility
+     * @param id            Id of View
      * @param visibility    View visibility
      */
-    private void setTextViewVisibility(int id, int visibility) {
-        TextView tv = (TextView) findViewById(id);
-        tv.setVisibility(visibility);
+    private void setViewVisibility(int id, int visibility) {
+        View view = findViewById(id);
+        view.setVisibility(visibility);
+    }
+
+    /**
+     * Set View's opacity
+     * @param ids      Array of view ids
+     * @param visibility    View visibility
+     */
+    private void setViewVisibility(int[] ids, int visibility) {
+        for (int id : ids) {
+            if (id > 0) {
+                setViewVisibility(id, visibility);
+            }
+        }
+    }
+
+    /**
+     * Set View's opacity
+     * @param ids      Array of view ids
+     * @param visibility    View visibility
+     */
+    private void setViewVisibility(int[][] ids, int visibility) {
+        setViewVisibility(ids[orientationIdx], visibility);
+    }
+
+    /**
+     * Set a View's opacity
+     * @param id       Id of View
+     * @param alpha    View opacity
+     */
+    private void setViewOpacity(int id, float alpha) {
+        View view = findViewById(id);
+        view.setAlpha(alpha);
+    }
+
+    /**
+     * Set View's opacity
+     * @param ids      Array of view ids
+     * @param alpha    View opacity
+     */
+    private void setViewOpacity(int[] ids, float alpha) {
+        for (int id : ids) {
+            if (id > 0) {
+                setViewOpacity(id, alpha);
+            }
+        }
+    }
+
+    /**
+     * Set View's opacity
+     * @param ids      Array of view ids
+     * @param alpha    View opacity
+     */
+    private void setViewOpacity(int[][] ids, float alpha) {
+        setViewOpacity(ids[orientationIdx], alpha);
     }
 
     /**
@@ -347,11 +497,12 @@ public class MovieDetailsActivity extends AppCompatActivity {
      * @param id    Id of TextView
      * @param image Image to display
      */
-    private void setImageViewImage(int id, Bitmap image) {
+    private ImageView setImageViewImage(int id, Bitmap image) {
+        ImageView iv = (ImageView) findViewById(R.id.iv_movie_thumbnail_detailsA);
         if (image != null) {
-            ImageView iv = (ImageView) findViewById(R.id.iv_movie_thumbnail_detailsA);
             iv.setImageBitmap(image);
         }
+        return iv;
     }
 
     /**
@@ -365,7 +516,10 @@ public class MovieDetailsActivity extends AppCompatActivity {
      * Request the movies
      */
     private void requestDetails(int id) {
-        responseHandler.request(TMDbNetworkUtils.buildGetDetailsUrl(this, id));
+        setViewOpacity(mDetailsTextViewIds, 0.5f);  // dim details currently n/a
+        if (NetworkUtils.isInternetAvailable(this)) {
+            responseHandler.request(TMDbNetworkUtils.buildGetDetailsUrl(this, id));
+        }
     }
 
 
@@ -456,6 +610,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
             super.run();
 
             mDetails = getResponse();
+            mMovie.setDetails(mDetails);
             setInfoAndDetails();
         }
     }

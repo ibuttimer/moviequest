@@ -240,6 +240,15 @@ public class Utils {
     }
 
     /**
+     * Determine if the device screen is in portrait orientation
+     * @param context   The current context
+     * @return <code>true</code> if screen is in portrait orientation, <code>false</code> otherwise
+     */
+    public static boolean isPotraitScreen(Context context) {
+        return (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT);
+    }
+
+    /**
      * Set the backdrop size preference for the app
      * @param context
      */

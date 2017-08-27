@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 
 /**
  * Class for MovieInfoModel test object
+ * NOTE: not really required as TMDb server does not send this object type
  */
 public class TestMovieInfoModelInstance extends TestMovieInfoInstance {
 

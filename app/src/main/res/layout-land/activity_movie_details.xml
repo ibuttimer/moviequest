@@ -24,9 +24,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:adjustViewBounds="true"
+                android:adjustViewBounds="false"
                 android:contentDescription="@string/banner_image_movie_detailsA"
-                android:scaleType="fitXY"
                 android:theme="@style/Base.AlertDialog.AppCompat"
                 app:srcCompat="@mipmap/no_image_available" />
 
@@ -134,7 +133,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
-                        android:text="@string/unavailable" />
+                        android:text="@string/movie_running_time_na" />
 
                     <RatingBar
                         android:id="@+id/rb_rating_moviedetailsA"
@@ -200,37 +199,53 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <TextView
+                <LinearLayout
+                    android:id="@+id/ll_originaltitle_moviedetailsA"
+                    android:orientation="horizontal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".15"
-                    android:text="@string/moviedetails_original_title"/>
+                    android:layout_weight=".5">
 
-                <TextView
-                    android:id="@+id/tv_originaltitle_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".35"
-                    android:text="@string/unavailable"/>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:textStyle="bold|italic"
+                        android:layout_weight=".3"
+                        android:text="@string/moviedetails_original_title"/>
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".15"
-                    android:text="@string/moviedetails_original_language"/>
+                    <TextView
+                        android:id="@+id/tv_originaltitle_moviedetailsA"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight=".7"
+                        android:text="@string/unavailable"/>
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_originallang_moviedetailsA"
+                <LinearLayout
+                    android:id="@+id/ll_originallang_moviedetailsA"
+                    android:orientation="horizontal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".35"
-                    android:text="@string/unavailable"/>
+                    android:layout_weight=".5">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:textStyle="bold|italic"
+                        android:layout_weight=".3"
+                        android:text="@string/moviedetails_original_language"/>
+
+                    <TextView
+                        android:id="@+id/tv_originallang_moviedetailsA"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight=".7"
+                        android:text="@string/unavailable"/>
+                </LinearLayout>
 
             </TableRow>
 
@@ -239,38 +254,54 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <TextView
+                <LinearLayout
+                    android:id="@+id/ll_releasedate_moviedetailsA"
+                    android:orientation="horizontal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".15"
-                    android:text="@string/moviedetails_release_date"/>
+                    android:layout_weight=".5">
 
-                <TextView
-                    android:id="@+id/tv_releasedate_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".35"
-                    android:text="@string/unavailable"/>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:textStyle="bold|italic"
+                        android:layout_weight=".3"
+                        android:text="@string/moviedetails_release_date"/>
 
-                <TextView
-                    android:layout_marginRight="@dimen/sml_margin"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".15"
-                    android:text="@string/moviedetails_genres"/>
+                    <TextView
+                        android:id="@+id/tv_releasedate_moviedetailsA"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight=".7"
+                        android:text="@string/unavailable"/>
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_genres_moviedetailsA"
+                <LinearLayout
+                    android:id="@+id/ll_genres_moviedetailsA"
+                    android:orientation="horizontal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".35"
-                    android:text="@string/unavailable"/>
+                    android:layout_weight=".5">
+
+                    <TextView
+                        android:layout_marginRight="@dimen/sml_margin"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:textStyle="bold|italic"
+                        android:layout_weight=".3"
+                        android:text="@string/moviedetails_genres"/>
+
+                    <TextView
+                        android:id="@+id/tv_genres_moviedetailsA"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight=".7"
+                        android:text="@string/unavailable"/>
+                </LinearLayout>
 
             </TableRow>
 
@@ -279,39 +310,55 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <TextView
+                <LinearLayout
+                    android:id="@+id/ll_homepage_moviedetailsA"
+                    android:orientation="horizontal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".15"
-                    android:text="@string/moviedetails_homepage"/>
+                    android:layout_weight=".5">
 
-                <TextView
-                    android:id="@+id/tv_homepage_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".35"
-                    android:autoLink="web"
-                    android:text="@string/unavailable"/>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:textStyle="bold|italic"
+                        android:layout_weight=".3"
+                        android:text="@string/moviedetails_homepage"/>
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".15"
-                    android:text="@string/moviedetails_languages"/>
+                    <TextView
+                        android:id="@+id/tv_homepage_moviedetailsA"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight=".7"
+                        android:autoLink="web"
+                        android:text="@string/unavailable"/>
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_languages_moviedetailsA"
+                <LinearLayout
+                    android:id="@+id/ll_languages_moviedetailsA"
+                    android:orientation="horizontal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".35"
-                    android:autoLink="web"
-                    android:text="@string/unavailable"/>
+                    android:layout_weight=".5">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:textStyle="bold|italic"
+                        android:layout_weight=".3"
+                        android:text="@string/moviedetails_languages"/>
+
+                    <TextView
+                        android:id="@+id/tv_languages_moviedetailsA"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight=".7"
+                        android:autoLink="web"
+                        android:text="@string/unavailable"/>
+                </LinearLayout>
 
             </TableRow>
 
@@ -320,37 +367,53 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <TextView
+                <LinearLayout
+                    android:id="@+id/ll_revenue_moviedetailsA"
+                    android:orientation="horizontal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".15"
-                    android:text="@string/moviedetails_revenue"/>
+                    android:layout_weight=".5">
 
-                <TextView
-                    android:id="@+id/tv_revenue_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".35"
-                    android:text="@string/unavailable"/>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:textStyle="bold|italic"
+                        android:layout_weight=".3"
+                        android:text="@string/moviedetails_revenue"/>
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".15"
-                    android:text="@string/moviedetails_budget"/>
+                    <TextView
+                        android:id="@+id/tv_revenue_moviedetailsA"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight=".7"
+                        android:text="@string/unavailable"/>
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_budget_moviedetailsA"
+                <LinearLayout
+                    android:id="@+id/ll_budget_moviedetailsA"
+                    android:orientation="horizontal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".35"
-                    android:text="@string/unavailable"/>
+                    android:layout_weight=".5">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:textStyle="bold|italic"
+                        android:layout_weight=".3"
+                        android:text="@string/moviedetails_budget"/>
+
+                    <TextView
+                        android:id="@+id/tv_budget_moviedetailsA"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight=".7"
+                        android:text="@string/unavailable"/>
+                </LinearLayout>
             </TableRow>
 
             <TableRow
@@ -358,37 +421,53 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <TextView
+                <LinearLayout
+                    android:id="@+id/ll_companies_moviedetailsA"
+                    android:orientation="horizontal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".15"
-                    android:text="@string/moviedetails_companies"/>
+                    android:layout_weight=".5">
 
-                <TextView
-                    android:id="@+id/tv_companies_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".35"
-                    android:text="@string/unavailable"/>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:textStyle="bold|italic"
+                        android:layout_weight=".3"
+                        android:text="@string/moviedetails_companies"/>
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".15"
-                    android:text="@string/moviedetails_countries"/>
+                    <TextView
+                        android:id="@+id/tv_companies_moviedetailsA"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight=".7"
+                        android:text="@string/unavailable"/>
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_countries_moviedetailsA"
+                <LinearLayout
+                    android:id="@+id/ll_countries_moviedetailsA"
+                    android:orientation="horizontal"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".35"
-                    android:text="@string/unavailable"/>
+                    android:layout_weight=".5">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:textStyle="bold|italic"
+                        android:layout_weight=".3"
+                        android:text="@string/moviedetails_countries"/>
+
+                    <TextView
+                        android:id="@+id/tv_countries_moviedetailsA"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:layout_weight=".7"
+                        android:text="@string/unavailable"/>
+                </LinearLayout>
 
             </TableRow>
 

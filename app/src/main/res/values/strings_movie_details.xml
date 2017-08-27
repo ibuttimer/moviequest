@@ -9,6 +9,8 @@
     <string name="movie_num_stars">{0}/10</string>
     <string name="movie_running_time">{0} min</string>
 
+    <string name="movie_running_time_na">Running time unavailable</string>
+
     <string name="moviedetails_title">Title</string>
     <string name="moviedetails_plot">Plot</string>
     <string name="moviedetails_rating">User Rating</string>

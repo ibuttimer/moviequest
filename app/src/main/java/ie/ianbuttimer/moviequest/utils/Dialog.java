@@ -39,13 +39,38 @@ public class Dialog {
      * @param negativeText      Resource id of negative button text
      * @param negativeListener  Negative button listener
      * @param neutralText       Resource id of neutral button text
-     * @param nettralListener   Neutral button listener
+     * @param neutralListener   Neutral button listener
      * @return  Alert dialog
      */
     public static AlertDialog buildAlert(Activity activity, int titleResId, int msgResId,
                                  int positiveText, DialogInterface.OnClickListener positiveListener,
                                  int negativeText, DialogInterface.OnClickListener negativeListener,
-                                 int neutralText, DialogInterface.OnClickListener nettralListener) {
+                                 int neutralText, DialogInterface.OnClickListener neutralListener) {
+        AlertDialog.Builder builder = buildAlert(activity, titleResId,
+                                                    positiveText, positiveListener,
+                                                    negativeText, negativeListener,
+                                                    neutralText, neutralListener);
+        builder.setMessage(msgResId);
+        // Create the AlertDialog
+        return builder.create();
+    }
+
+    /**
+     * Build an AlertDialog
+     * @param activity          The current activity
+     * @param titleResId        Resource id of title
+     * @param positiveText      Resource id of positive button text
+     * @param positiveListener  Positive button listener
+     * @param negativeText      Resource id of negative button text
+     * @param negativeListener  Negative button listener
+     * @param neutralText       Resource id of neutral button text
+     * @param neutralListener   Neutral button listener
+     * @return  Alert dialog
+     */
+    private static AlertDialog.Builder buildAlert(Activity activity, int titleResId,
+                                 int positiveText, DialogInterface.OnClickListener positiveListener,
+                                 int negativeText, DialogInterface.OnClickListener negativeListener,
+                                 int neutralText, DialogInterface.OnClickListener neutralListener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         // Add the buttons
         if (positiveText != 0) {
@@ -55,10 +80,35 @@ public class Dialog {
             builder.setNegativeButton(negativeText, negativeListener);
         }
         if (neutralText != 0) {
-            builder.setNeutralButton(neutralText, nettralListener);
+            builder.setNeutralButton(neutralText, neutralListener);
         }
         builder.setTitle(titleResId);
-        builder.setMessage(msgResId);
+        // Create the AlertDialog
+        return builder;
+    }
+
+    /**
+     * Build an AlertDialog
+     * @param activity          The current activity
+     * @param titleResId        Resource id of title
+     * @param msg               Message
+     * @param positiveText      Resource id of positive button text
+     * @param positiveListener  Positive button listener
+     * @param negativeText      Resource id of negative button text
+     * @param negativeListener  Negative button listener
+     * @param neutralText       Resource id of neutral button text
+     * @param neutralListener   Neutral button listener
+     * @return  Alert dialog
+     */
+    public static AlertDialog buildAlert(Activity activity, int titleResId, String msg,
+                                 int positiveText, DialogInterface.OnClickListener positiveListener,
+                                 int negativeText, DialogInterface.OnClickListener negativeListener,
+                                 int neutralText, DialogInterface.OnClickListener neutralListener) {
+        AlertDialog.Builder builder = buildAlert(activity, titleResId,
+                positiveText, positiveListener,
+                negativeText, negativeListener,
+                neutralText, neutralListener);
+        builder.setMessage(msg);
         // Create the AlertDialog
         return builder.create();
     }
@@ -73,16 +123,16 @@ public class Dialog {
      * @param negativeText      Resource id of negative button text
      * @param negativeListener  Negative button listener
      * @param neutralText       Resource id of neutral button text
-     * @param nettralListener   Neutral button listener
+     * @param neutralListener   Neutral button listener
      * @return  Alert dialog
      */
     public static void showAlert(Activity activity, int titleResId, int msgResId,
                                          int positiveText, DialogInterface.OnClickListener positiveListener,
                                          int negativeText, DialogInterface.OnClickListener negativeListener,
-                                         int neutralText, DialogInterface.OnClickListener nettralListener) {
+                                         int neutralText, DialogInterface.OnClickListener neutralListener) {
         AlertDialog dialog = buildAlert(activity, titleResId, msgResId,
                                         positiveText, positiveListener, negativeText, negativeListener,
-                                        neutralText, nettralListener);
+                                        neutralText, neutralListener);
         dialog.show();
     }
 

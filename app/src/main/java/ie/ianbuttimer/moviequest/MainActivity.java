@@ -210,6 +210,8 @@ public class MainActivity extends AppCompatActivity implements
         intent.putExtra(MOVIE_OBJ, movie);          // pass movie info to at least display what we have
 
         Utils.startActivity(this, intent);
+
+        // TODO use startActivityForResult, return MovieInfoModel & update MovieInfoModel so no need to request again
     }
 
     /**

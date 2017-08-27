@@ -24,9 +24,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:adjustViewBounds="true"
+                android:adjustViewBounds="false"
                 android:contentDescription="@string/banner_image_movie_detailsA"
-                android:scaleType="fitXY"
                 android:theme="@style/Base.AlertDialog.AppCompat"
                 app:srcCompat="@mipmap/no_image_available" />
 
@@ -134,7 +133,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
-                        android:text="@string/unavailable" />
+                        android:text="@string/movie_running_time_na" />
 
                     <RatingBar
                         android:id="@+id/rb_rating_moviedetailsA"
@@ -180,6 +179,7 @@
             android:layout_margin="@dimen/sml_margin">
 
             <TableRow
+                android:id="@+id/tr_originaltitle_moviedetailsA"
                 android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -202,6 +202,7 @@
             </TableRow>
 
             <TableRow
+                android:id="@+id/tr_originallang_moviedetailsA"
                 android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -224,6 +225,7 @@
             </TableRow>
 
             <TableRow
+                android:id="@+id/tr_releasedate_moviedetailsA"
                 android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -246,6 +248,7 @@
             </TableRow>
 
             <TableRow
+                android:id="@+id/tr_genres_moviedetailsA"
                 android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -268,6 +271,7 @@
             </TableRow>
 
             <TableRow
+                android:id="@+id/tr_homepage_moviedetailsA"
                 android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -291,6 +295,7 @@
             </TableRow>
 
             <TableRow
+                android:id="@+id/tr_languages_moviedetailsA"
                 android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -315,6 +320,7 @@
             </TableRow>
 
             <TableRow
+                android:id="@+id/tr_revenue_moviedetailsA"
                 android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -337,6 +343,7 @@
             </TableRow>
 
             <TableRow
+                android:id="@+id/tr_budget_moviedetailsA"
                 android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -359,6 +366,7 @@
             </TableRow>
 
             <TableRow
+                android:id="@+id/tr_companies_moviedetailsA"
                 android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -381,6 +389,7 @@
             </TableRow>
 
             <TableRow
+                android:id="@+id/tr_countries_moviedetailsA"
                 android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -403,6 +412,7 @@
             </TableRow>
 
             <TableRow
+                android:id="@+id/tr_collection_moviedetailsA"
                 android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">

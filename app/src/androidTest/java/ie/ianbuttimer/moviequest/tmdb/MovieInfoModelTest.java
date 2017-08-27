@@ -38,15 +38,18 @@ import static org.junit.Assert.assertEquals;
 public class MovieInfoModelTest extends MovieInfoTest {
 
     private MovieInfoModel movieModel;
+    private MovieDetails movieDetails;
     private Uri posterUri;
     private Uri backgropUri;
     private Uri thumbnailUri;
-    private TestMovieInfoModelInstance provider = new TestMovieInfoModelInstance();
+    private TestMovieInfoModelInstance modelProvider = new TestMovieInfoModelInstance();
+    private TestMovieDetailInstance detailProvider = new TestMovieDetailInstance();
 
 
     @Before
     public void createObject() {
-        movieModel = provider.setupObject();
+        movieModel = modelProvider.setupObject();
+        movieDetails = detailProvider.setupObject();
         thumbnailUri = Uri.parse(
                 NetworkUtils.joinUrlPaths(new String[] {
                         TMDbNetworkUtils.IMAGE_BASE_URL,
@@ -71,6 +74,7 @@ public class MovieInfoModelTest extends MovieInfoTest {
         movieModel.setThumbnailUri(thumbnailUri);
         movieModel.setPosterUri(posterUri);
         movieModel.setBackdropUri(backgropUri);
+        movieModel.setDetails(movieDetails);
     }
 
     @Override
@@ -112,6 +116,8 @@ public class MovieInfoModelTest extends MovieInfoTest {
                 createdFromParcel.getPosterUri(), original.getPosterUri());
         assertEquals(makeAssertMessage("Backdrop"),
                 createdFromParcel.getBackdropUri(), original.getBackdropUri());
+        assertEquals(makeAssertMessage("Details"),
+                createdFromParcel.getDetails(), original.getDetails());
     }
 
 }
