@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,6 +26,9 @@ import android.preference.PreferenceManager;
  */
 
 public class PreferenceControl {
+
+    @SuppressWarnings("unused")
+    public enum PreferenceTypes { BOOLEAN, FLOAT, INTEGER, LONG, STRING }
 
     /**
      * Return the application preferences
@@ -67,6 +70,7 @@ public class PreferenceControl {
      * @param dfltResId Resource id of default value to return if preference not available
      * @return preference value
      */
+    @SuppressWarnings("unused")
     public static String getSharedStringPreference(Context context, String key, int dfltResId) {
         String dfltValue = context.getString(dfltResId);
         return getSharedStringPreference(context, key, dfltValue);
@@ -126,6 +130,7 @@ public class PreferenceControl {
      * @param dfltValue Default value to return if preference not available
      * @return preference value
      */
+    @SuppressWarnings("unused")
     public static boolean getSharedBooleanPreference(Context context, int keyResId, boolean dfltValue) {
         String keyValue = context.getString(keyResId);
         return getSharedBooleanPreference(context, keyValue, dfltValue);
@@ -153,6 +158,30 @@ public class PreferenceControl {
     public static boolean getSharedBooleanPreference(Context context, int keyResId, int dfltResId) {
         String keyValue = context.getString(keyResId);
         return getSharedBooleanPreference(context, keyValue, dfltResId);
+    }
+
+    /**
+     * Return the value of a boolean preference
+     * @param context   The current context
+     * @param type      Preference type
+     * @param keyResId  Resource id of preference key
+     * @param dfltResId Resource id of default value to return if preference not available
+     * @return preference value
+     */
+    public static Object getSharedPreference(Context context, PreferenceTypes type, int keyResId, int dfltResId) {
+        Object value;
+        switch (type) {
+            case STRING:
+                value = getSharedStringPreference(context, keyResId, dfltResId);
+                break;
+            case BOOLEAN:
+                value = getSharedBooleanPreference(context, keyResId, dfltResId);
+                break;
+            default:
+                value = null;
+                break;
+        }
+        return value;
     }
 
     /**
@@ -228,6 +257,7 @@ public class PreferenceControl {
      * @param dfltResId Resource id of default value to return if preference not available
      * @return preference value
      */
+    @SuppressWarnings("unused")
     public static String getStringPreference(Activity activity, int keyResId, int dfltResId) {
         String keyValue = activity.getString(keyResId);
         return getStringPreference(activity, keyValue, dfltResId);
@@ -260,6 +290,7 @@ public class PreferenceControl {
      * @param value     The preference value to save
      * @return <code>false</code>
      */
+    @SuppressWarnings("unused")
     public static boolean setStringPreference(Activity activity, String key, String value) {
         return setStringPreference(getPreferences(activity), key, value, false);
     }
@@ -295,6 +326,7 @@ public class PreferenceControl {
      * @param dfltValue Default value to return if preference not available
      * @return preference value
      */
+    @SuppressWarnings("unused")
     public static boolean getBooleanPreference(Activity activity, int keyResId, boolean dfltValue) {
         String keyValue = activity.getString(keyResId);
         return getBooleanPreference(activity, keyValue, dfltValue);
@@ -319,6 +351,7 @@ public class PreferenceControl {
      * @param dfltResId Resource id of default value to return if preference not available
      * @return preference value
      */
+    @SuppressWarnings("unused")
     public static boolean getBooleanPreference(Activity activity, int keyResId, int dfltResId) {
         String keyValue = activity.getString(keyResId);
         return getBooleanPreference(activity, keyValue, dfltResId);

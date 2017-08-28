@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,6 +39,7 @@ import android.widget.TextView;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import ie.ianbuttimer.moviequest.data.MovieInfoAdapter;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfoModel;
@@ -49,13 +51,17 @@ import ie.ianbuttimer.moviequest.utils.NetworkUtils;
 import ie.ianbuttimer.moviequest.utils.PreferenceControl;
 import ie.ianbuttimer.moviequest.utils.ResponseHandler;
 import ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils;
+import ie.ianbuttimer.moviequest.utils.Tuple;
 import ie.ianbuttimer.moviequest.utils.Utils;
 import okhttp3.Call;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 
 import static ie.ianbuttimer.moviequest.Constants.MOVIE_ID;
 import static ie.ianbuttimer.moviequest.Constants.MOVIE_OBJ;
+import static ie.ianbuttimer.moviequest.utils.PreferenceControl.PreferenceTypes.BOOLEAN;
+import static ie.ianbuttimer.moviequest.utils.PreferenceControl.PreferenceTypes.STRING;
 
 /**
  * Main application activity
@@ -63,14 +69,16 @@ import static ie.ianbuttimer.moviequest.Constants.MOVIE_OBJ;
 public class MainActivity extends AppCompatActivity implements
         MovieInfoAdapter.MovieInfoAdapterOnClickHandler, AdapterView.OnItemSelectedListener {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
+
     private MovieInfoAdapter<MovieInfoModel> mMovieAdapter;
     private ArrayList<MovieInfoModel> mMovieList;  // movie data list
     private static String MOVIE_ARRAY = "movie_array";
-    private RecyclerView mRecyclerView;
 
     private GridLayoutManager mLayoutManager;
 
-    private String mListSelection;          // current movie list (popular/top rated)selection
+    private Spinner mMovieListSpinner;
+    private String mListSelection;          // current movie list (popular/top rated) selection
     private String[] mListSelectionArray;   // current movie list selection options
 
     private TextView mMovieRangeTextView;
@@ -80,52 +88,70 @@ public class MainActivity extends AppCompatActivity implements
     private TextView mErrorTextView;
     private Button mRetry;
 
+    private static boolean PREFERENCE_UPDATED = false;  // flag to indicate that preferences have changed
+    private static HashMap<String, Object> PREFERENCES; // map of preferences and current values
+
+    @SuppressWarnings("unchecked")
+    private static final Tuple<Integer, Integer, PreferenceControl.PreferenceTypes>[] PREFERENCE_LIST =
+        new Tuple[] {
+            new Tuple<>(R.string.pref_poster_size_key, R.string.pref_poster_size_dlft_value, STRING),
+            new Tuple<>(R.string.pref_movie_list_key, R.string.pref_movie_list_dlft_value, STRING),     // Note this is the default NOT the currently displayed (mListSelection)
+            new Tuple<>(R.string.pref_show_position_key, R.bool.pref_show_position_dflt_value, BOOLEAN),
+        };
 
     /**
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("unchecked")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         if (savedInstanceState != null) {
             mListSelection = savedInstanceState.getString(getString(R.string.pref_movie_list_key));
-            mMovieList = (ArrayList<MovieInfoModel>)savedInstanceState.getSerializable(MOVIE_ARRAY);
+            Object obj = savedInstanceState.getSerializable(MOVIE_ARRAY);
+            if (obj != null) {
+                if (obj instanceof ArrayList) {
+                    mMovieList = (ArrayList<MovieInfoModel>) obj;
+                } else {
+                    Log.e(TAG, MOVIE_ARRAY + " from bundle is incorrect type; " + obj.getClass().getName());
+                    obj = null;
+                }
+            }
+            if (obj == null) {
+                mMovieList = new ArrayList<>();
+            }
         } else {
             // get the user's last list selection or the app default
             String appDflt = PreferenceControl.getSharedStringPreference(this,
                     R.string.pref_movie_list_key, R.string.pref_movie_list_dlft_value);
             mListSelection = PreferenceControl.getStringPreference(this, R.string.pref_movie_list_key, appDflt);
-
-            mMovieList = new ArrayList<MovieInfoModel>();
+            mMovieList = new ArrayList<>();
         }
+
+        setupPreferenceMap();
 
         Resources resources = getResources();
 
         // setup the movie list spinner
-        Spinner movieListSpinner = (Spinner) findViewById(R.id.spin_movie_list_mainA);
+        mMovieListSpinner = (Spinner) findViewById(R.id.spin_movie_list_mainA);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.pref_movie_list_titles, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        movieListSpinner.setAdapter(adapter);
+        mMovieListSpinner.setAdapter(adapter);
 
         // get values corresponding to entries in spinner
         mListSelectionArray = resources.getStringArray(R.array.pref_movie_list_values);
         // set the spinner index
-        for (int i = 0; i < mListSelectionArray.length; i++) {
-            if (mListSelectionArray[i].equals(mListSelection)) {
-                movieListSpinner.setSelection(i);
-                break;
-            }
-        }
-        movieListSpinner.setOnItemSelectedListener(this);
+        setSpinnerIndex(mListSelection);
+        mMovieListSpinner.setOnItemSelectedListener(this);
 
         mProgressBar = (ProgressBar) findViewById(R.id.pb_mainA);
         mErrorTextView = (TextView) findViewById(R.id.tv_error_mainA);
 
         // setup the recycler view
-        mRecyclerView = (RecyclerView) findViewById(R.id.rv_movies_mainA);
+        RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.rv_movies_mainA);
         mLayoutManager =
                 new GridLayoutManager(this, calcNumColumns(), LinearLayoutManager.VERTICAL, false);
 
@@ -138,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements
 //        mRecyclerView.setHasFixedSize(true);
 
         // get adapter to responsible for linking data with the Views that display it
-        mMovieAdapter = new MovieInfoAdapter<MovieInfoModel>(mMovieList, this);
+        mMovieAdapter = new MovieInfoAdapter<>(mMovieList, this);
 
         /* Setting the adapter attaches it to the RecyclerView in our layout. */
         mRecyclerView.setAdapter(mMovieAdapter);
@@ -255,14 +281,17 @@ public class MainActivity extends AppCompatActivity implements
         /**
          * Convert the http response into a MovieListResponse object
          * @param response  Response from the server
-         * @return
+         * @return MovieListResponse object or <code>null</code>
          */
         @Override
         public Object processResponse(Response response) {
             Object result = null;
             try {
-                String jsonResponse = response.body().string();
-                result = MovieListResponse.getMovieListFromJsonString(jsonResponse);
+                ResponseBody body = response.body();
+                if (body != null) {
+                    String jsonResponse = body.string();
+                    result = MovieListResponse.getMovieListFromJsonString(jsonResponse);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -275,7 +304,7 @@ public class MainActivity extends AppCompatActivity implements
      */
     private class ListResponseHandler extends ResponseHandler<MovieListResponse> implements Runnable {
 
-        public ListResponseHandler(Activity activity, MovieListResponse response, int errorId) {
+        ListResponseHandler(Activity activity, MovieListResponse response, int errorId) {
             super(activity, response, errorId);
         }
 
@@ -349,6 +378,17 @@ public class MainActivity extends AppCompatActivity implements
      * {@inheritDoc}
      */
     @Override
+    protected void onStart() {
+        super.onStart();
+        if (PREFERENCE_UPDATED) {
+            processPreferenceChange();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected void onDestroy() {
         // save list user is currently viewing
         PreferenceControl.unregisterOnSharedPreferenceChangeListener(this, preferenceChangeListener);
@@ -398,34 +438,95 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
+     * Set the movie list spinner to match the setting
+     * @param setting   Setting value
+     */
+    private void setSpinnerIndex(String setting) {
+        // set the spinner index
+        for (int i = 0; i < mListSelectionArray.length; i++) {
+            if (mListSelectionArray[i].equals(setting)) {
+                mMovieListSpinner.setSelection(i);
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Set the movie list spinner to match the setting
+     * @param setting   Setting value
+     */
+    private void setSpinnerIndexSuppressListener(String setting) {
+        // clear the listener before setting to avoid double request
+        mMovieListSpinner.setOnItemSelectedListener(null);
+        setSpinnerIndex(setting);
+        mMovieListSpinner.setOnItemSelectedListener(this);
+    }
+
+    /**
      * Preference change listener to refresh display
      */
     private SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener =
             new SharedPreferences.OnSharedPreferenceChangeListener() {
                 @Override
                 public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                    boolean request = false;    // request movies flag
-                    boolean redraw = false;     // redraw movie cards flag
-                    if (key.equals(getString(R.string.pref_poster_size_key))) {
-                        // poster size has changed, request again
-                        setNumColumns();
-                        request = true;
-                    } else if (key.equals(getString(R.string.pref_movie_list_key))) {
-                        // movie list selection has changed
-                        String newValue = sharedPreferences.getString(key, getString(R.string.pref_movie_list_dlft_value));
-                        if (!mListSelection.equals(newValue)) {
-                            request = true;
-                            mListSelection = newValue;
-                        }
-                    } else if (key.equals(getString(R.string.pref_show_position_key))) {
-                        // movie card display option has changed
-                        redraw = true;
-                    }
-                    if (request) {
-                        requestMovies();  // request movies again
-                    } else if (redraw) {
-                        mMovieAdapter.notifyDataSetChanged();   // force redraw
-                    }
+                    PREFERENCE_UPDATED = true;  // flag preference change
                 }
             };
+
+    /**
+     * Initialise the map of current preference settings
+     */
+    private void setupPreferenceMap() {
+        PREFERENCES = new HashMap<>();
+        for (Tuple<Integer, Integer, PreferenceControl.PreferenceTypes> entry : PREFERENCE_LIST) {
+            int keyId = entry.getT1();
+            String key = getString(keyId);
+            Object setting = PreferenceControl.getSharedPreference(this, entry.getT3(), keyId, entry.getT2());
+            if (setting != null) {
+                PREFERENCES.put(key, setting);
+            }
+        }
+    }
+
+    /**
+     * Process a preference change
+     */
+    private void processPreferenceChange() {
+
+        boolean request = false;    // request movies flag
+        boolean redraw = false;     // redraw movie cards flag
+
+        for (Tuple<Integer, Integer, PreferenceControl.PreferenceTypes> entry : PREFERENCE_LIST) {
+            int keyId = entry.getT1();
+            String key = getString(keyId);
+            Object setting = PreferenceControl.getSharedPreference(this, entry.getT3(), keyId, entry.getT2());
+            Object current = PREFERENCES.get(key);
+
+            if ((setting != null) && !setting.equals(current)) {
+                if (key.equals(getString(R.string.pref_poster_size_key))) {
+                    // poster size has changed, request again
+                    setNumColumns();
+                    request = true;
+                } else if (key.equals(getString(R.string.pref_movie_list_key))) {
+                    // default movie list selection has changed
+                    if (!mListSelection.equals(setting)) {
+                        request = true;
+                        mListSelection = (String)setting;
+                        setSpinnerIndexSuppressListener(mListSelection);
+                    }
+                } else if (key.equals(getString(R.string.pref_show_position_key))) {
+                    // movie card display option has changed
+                    redraw = true;
+                }
+
+                PREFERENCES.put(key, setting);
+            }
+        }
+        PREFERENCE_UPDATED = false;
+        if (request) {
+            requestMovies();  // request movies again
+        } else if (redraw) {
+            mMovieAdapter.notifyDataSetChanged();   // force redraw
+        }
+    }
 }
