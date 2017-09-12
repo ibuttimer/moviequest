@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,9 +27,10 @@ import static org.junit.Assert.fail;
  * Class for MovieInfoModel test object
  * NOTE: not really required as TMDb server does not send this object type
  */
+@SuppressWarnings("unused")
 public class TestMovieInfoModelInstance extends TestMovieInfoInstance {
 
-    /** @see {@link TestMovieInfoInstance} regarding test data */
+    /** @see TestMovieInfoInstance regarding test data */
 
     public static final int index = 10;
 
@@ -39,7 +40,7 @@ public class TestMovieInfoModelInstance extends TestMovieInfoInstance {
     /**
      * Set the properties of the specified object for test
      * @param movie     Object to setup
-     * @return
+     * @return  initialised object
      */
     public MovieInfoModel setupObject(MovieInfoModel movie) {
         if (movie == null) {
@@ -52,7 +53,7 @@ public class TestMovieInfoModelInstance extends TestMovieInfoInstance {
 
     /**
      * Set the properties of the specified object for test
-     * @return
+     * @return  initialised object
      */
     public MovieInfoModel setupObject() {
         return setupObject(null);
@@ -93,7 +94,7 @@ public class TestMovieInfoModelInstance extends TestMovieInfoInstance {
      * Get the field name as returned by the TMDb server
      * @param index     Index of field
      * @return  field name or empty string if invalid index
-     * @see {@link TMDbObject#getFieldName(int)}
+     * @see TMDbObject#getFieldName(int)
      */
     @Override
     public String getFieldName(int index) {
@@ -104,7 +105,7 @@ public class TestMovieInfoModelInstance extends TestMovieInfoInstance {
      * Get the object property name associated with the specified index
      * @param index     Index of field
      * @return  property name or empty string if invalid index
-     * @see {@link TMDbObject#getFieldName(int)}
+     * @see TMDbObject#getFieldName(int)
      */
     @Override
     protected String getPropertyName(int index) {

@@ -6,12 +6,25 @@
 
     <!-- Note: to be parsed by MessageFormat, play particular attention to quotes -->
     <string name="movie_range">Showing {0}-{1} of {2}</string>
+    <string name="movie_info_na">Information for {0} is currently not available</string>
 
     <string name="unavailable">Unavailable</string>
     <string name="no_response">No response received.\nPlease check the network state.</string>
     <string name="invalid_response">Invalid response received.\nPlease try again later.</string>
     <string name="network_na">Network unavailable.\nPlease check Wifi and/or mobile data settings.</string>
     <string name="cant_contact_server">Unable to contact server.\nPlease check Wifi and/or mobile data settings.</string>
+    <string name="no_movies_in_list">There are no movies in the list.</string>
+    <string name="no_movies_favourites">No movies have been added to the favourites list.</string>
     <string name="retry">Retry</string>
+
+    <string name="just_now">just now</string>
+
+    <string name="no_movies_to_del">No movies to delete.</string>
+    <plurals name="deleted_movies">
+        <item quantity="one">%d movie deleted.</item>
+        <item quantity="other">%d movies deleted.</item>
+    </plurals>
+
+    <string name="card_image_mainA">Movie image</string>
 
 </resources>

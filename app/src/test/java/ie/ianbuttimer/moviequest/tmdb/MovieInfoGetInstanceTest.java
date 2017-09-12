@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.ADULT;
 import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.BACKDROP_PATH;
@@ -48,7 +49,7 @@ public class MovieInfoGetInstanceTest extends GetInstanceTest {
 
     private MovieInfo movieInfo;
     private TestMovieInfoInstance provider = new TestMovieInfoInstance();
-    private SimpleDateFormat tmdbDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private SimpleDateFormat tmdbDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
 
 
     @Before

@@ -1,13 +1,16 @@
 /*
  * Copyright (C) 2017  Ian Buttimer
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -28,6 +31,7 @@ import java.util.HashMap;
 public class ProdCountry extends IsoName implements Parcelable {
 
     private static HashMap<String, MemberEntry> jsonMemberMap;  // map of JSON property names to class setter method & JSON getter method names
+    private static HashMap<String, MemberEntry> placeholderMemberMap;  // map of default value fields for a placeholder
 
     private static final String[] FIELD_NAMES = new String[] {
         // NOTE must follow the order of the indices in super class
@@ -36,14 +40,16 @@ public class ProdCountry extends IsoName implements Parcelable {
     };
 
     static {
-        jsonMemberMap = generateMemberMap(FIELD_NAMES);
+        jsonMemberMap = generateMemberMap(FIELD_NAMES, null);
+        placeholderMemberMap = generateMemberMap(FIELD_NAMES, new int[] {
+                ISO
+        });
     }
 
     @Override
     protected HashMap<String, MemberEntry> getMemberMap() {
         return jsonMemberMap;
     }
-
 
     @Override
     protected String[] getFieldNames() {
@@ -69,13 +75,23 @@ public class ProdCountry extends IsoName implements Parcelable {
         return equals(new ProdCountry());
     }
 
+    @Override
+    public boolean isPlaceHolder() {
+        return isDefault(placeholderMemberMap, this);
+    }
+
+    @Override
+    public <T extends TMDbObject> void copy(T from, int[] fields) {
+        copy(from, this, fields);
+    }
+
     /**
      * Create an ProdCountry object from JSON data
      * @param jsonData  JSON data object
      * @return  new ProdCountry object or null if no data
      */
     public static ProdCountry getInstance(JSONObject jsonData) {
-        return (ProdCountry)TMDbObject.getInstance(jsonMemberMap, jsonData, ProdCountry.class, new ProdCountry());
+        return TMDbObject.getInstance(jsonMemberMap, jsonData, new ProdCountry());
     }
 
     // just provide the creator and parcel constructor as other parcelable ,ethods are in super class

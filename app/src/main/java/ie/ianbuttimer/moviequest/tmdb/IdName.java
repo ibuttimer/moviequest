@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,13 +19,18 @@ package ie.ianbuttimer.moviequest.tmdb;
 
 import android.os.Parcel;
 
+import java.util.Arrays;
 import java.util.HashMap;
+
+import ie.ianbuttimer.moviequest.utils.Utils;
 
 /**
  * Class representing an id/name pair as utilised by the TMDb API
  */
-
+@SuppressWarnings("unused")
 public abstract class IdName extends TMDbObject {
+
+    private static HashMap<String, MemberEntry> placeholderMemberMap;  // map of default value fields for a placeholder
 
     private Integer id;
     private String name;
@@ -35,21 +40,48 @@ public abstract class IdName extends TMDbObject {
     protected static final int NAME = 1;
     protected static final int LAST_IDNAME_MEMBER = NAME;
 
+    private static final int[] sAllFields;  // list of all fields
+
     private static final String[] FIELD_NAMES = new String[] {
         // NOTE must follow the order of the indices above!!!!
         "id",
         "name"
     };
 
+    static {
+        placeholderMemberMap = generateMemberMap(new int[] {
+            ID
+        });
+
+        sAllFields = makeFieldIdsArray(FIRST_MEMBER, LAST_IDNAME_MEMBER);
+    }
+
     /**
      * Generate the member map representing this object
      */
-    protected static HashMap<String, MemberEntry> generateMemberMap() {
-        HashMap<String, MemberEntry> memberMap = new HashMap<String, MemberEntry>();
+    protected static HashMap<String, MemberEntry> generateMemberMap(int[] exclude) {
+        HashMap<String, MemberEntry> memberMap = new HashMap<>();
+        int[] sortedExclude = Utils.getSortedArray(exclude);
 
-        memberMap.put(FIELD_NAMES[ID], intTemplate.copy("setId", "id"));
-        memberMap.put(FIELD_NAMES[NAME], stringTemplate.copy("setName", "name"));
+        for (int i = FIRST_MEMBER; i <= LAST_IDNAME_MEMBER ; i++) {
+            if (Arrays.binarySearch(sortedExclude, i) < 0) {
+                String key = FIELD_NAMES[i];
+                switch (i) {
+                    case NAME:
+                        memberMap.put(key, stringTemplate.copy("setName", "getName", "name"));
+                        break;
+                    case ID:
+                        memberMap.put(key, intTemplate.copy("setId", "getId", "id"));
+                        break;
+                }
+            }
+        }
         return memberMap;
+    }
+
+    @Override
+    public int[] getFieldIds() {
+        return sAllFields;
     }
 
     /**
@@ -96,6 +128,16 @@ public abstract class IdName extends TMDbObject {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public boolean isPlaceHolder() {
+        return isDefault(placeholderMemberMap, this);
+    }
+
+    @Override
+    public <T extends TMDbObject> void copy(T from, int[] fields) {
+        copy(from, this, fields);
     }
 
     @Override

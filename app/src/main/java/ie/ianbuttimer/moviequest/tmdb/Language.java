@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,6 +31,7 @@ import java.util.HashMap;
 public class Language extends IsoName implements Parcelable {
 
     private static HashMap<String, MemberEntry> jsonMemberMap;  // map of JSON property names to class setter method & JSON getter method names
+    private static HashMap<String, MemberEntry> placeholderMemberMap;  // map of default value fields for a placeholder
 
     private static final String[] FIELD_NAMES = new String[] {
         // NOTE must follow the order of the indices in super class
@@ -38,9 +39,11 @@ public class Language extends IsoName implements Parcelable {
         "name"
     };
 
-
     static {
-        jsonMemberMap = generateMemberMap(FIELD_NAMES);
+        jsonMemberMap = generateMemberMap(FIELD_NAMES, null);
+        placeholderMemberMap = generateMemberMap(FIELD_NAMES, new int[] {
+                ISO
+        });
     }
 
     @Override
@@ -72,13 +75,18 @@ public class Language extends IsoName implements Parcelable {
         return equals(new Language());
     }
 
+    @Override
+    public boolean isPlaceHolder() {
+        return isDefault(placeholderMemberMap, this);
+    }
+
     /**
      * Create an Language object from JSON data
      * @param jsonData  JSON data object
      * @return  new Language object or null if no data
      */
     public static Language getInstance(JSONObject jsonData) {
-        return (Language)TMDbObject.getInstance(jsonMemberMap, jsonData, Language.class, new Language());
+        return TMDbObject.getInstance(jsonMemberMap, jsonData, new Language());
     }
 
     // just provide the creator and parcel constructor as other parcelable ,ethods are in super class

@@ -12,7 +12,8 @@
     <string name="acknowledgements">Acknowledgements</string>
     <string name="ack_tmdb">&#x2022; Movie data and images courtesy <a href="https://www.themoviedb.org">The Movie DB</a>.</string>
     <string name="ack_logomaker">&#x2022; 3d Graphics graphic by <a href="http://www.flaticon.com/authors/freepik">freepik</a> from <a href="http://www.flaticon.com/">Flaticon</a> is licensed under <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY 3.0</a>. Check out the new logo that I created on <a href="http://logomakr.com" title="Logo Maker">LogoMaker.com</a> https://logomakr.com/7nWqSQ7nWqSQ.</string>
-    <string name="ack_icons">&#x2022; Other icons courtesy of icons8 (<a href="http://icons8.com/">icons8.com</a>) licensed under the (<a href="http://creativecommons.org/licenses/by-nd/3.0//">Creative Commons Attribution-NoDerivs 3.0 Unported License</a>).</string>
+    <string name="ack_icons1">&#x2022; Some icons courtesy of icons8 (<a href="http://icons8.com/">icons8.com</a>) licensed under the (<a href="http://creativecommons.org/licenses/by-nd/3.0/">Creative Commons Attribution-NoDerivs 3.0 Unported License</a>).</string>
+    <string name="ack_icons2">&#x2022; Some icons courtesy of Material Design (<a href="https://material.io/icons/">material.io</a>) licensed under the (<a href="https://github.com/google/material-design-icons/blob/master/LICENSE">Apache License, Version 2.0</a>).</string>
 
 
 </resources>

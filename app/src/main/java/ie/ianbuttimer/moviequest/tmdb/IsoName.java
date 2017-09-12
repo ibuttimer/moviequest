@@ -1,13 +1,16 @@
 /*
  * Copyright (C) 2017  Ian Buttimer
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -16,12 +19,15 @@ package ie.ianbuttimer.moviequest.tmdb;
 
 import android.os.Parcel;
 
+import java.util.Arrays;
 import java.util.HashMap;
+
+import ie.ianbuttimer.moviequest.utils.Utils;
 
 /**
  * Class representing an iso designator/name pair as utilised by the TMDb API
  */
-
+@SuppressWarnings("unused")
 public abstract class IsoName extends TMDbObject {
 
     private String iso;
@@ -32,22 +38,36 @@ public abstract class IsoName extends TMDbObject {
     protected static final int NAME = 1;
     protected static final int LAST_ISONAME_MEMBER = NAME;
 
+    private static final int[] sAllFields;  // list of all fields
+
+    static {
+        sAllFields = makeFieldIdsArray(FIRST_MEMBER, LAST_ISONAME_MEMBER);
+    }
+
+    @Override
+    public int[] getFieldIds() {
+        return sAllFields;
+    }
+
     /**
      * Generate the member map representing this object
      * @param fieldNames    Array of fields names used by TMDb server
      */
-    protected static HashMap<String, MemberEntry> generateMemberMap(String[] fieldNames) {
-        HashMap<String, MemberEntry> memberMap = new HashMap<String, MemberEntry>();
+    protected static HashMap<String, MemberEntry> generateMemberMap(String[] fieldNames, int[] exclude) {
+        HashMap<String, MemberEntry> memberMap = new HashMap<>();
+        int[] sortedExclude = Utils.getSortedArray(exclude);
 
         for (int i = FIRST_MEMBER; i <= LAST_ISONAME_MEMBER ; i++) {
-            String key = fieldNames[i];
-            switch (i) {
-                case ISO:
-                    memberMap.put(key, stringTemplate.copy("setIso", "iso"));
-                    break;
-                case NAME:
-                    memberMap.put(key, stringTemplate.copy("setName", "name"));
-                    break;
+            if (Arrays.binarySearch(sortedExclude, i) < 0) {
+                String key = fieldNames[i];
+                switch (i) {
+                    case ISO:
+                        memberMap.put(key, stringTemplate.copy("setIso", "getIso", "iso"));
+                        break;
+                    case NAME:
+                        memberMap.put(key, stringTemplate.copy("setName", "getName", "name"));
+                        break;
+                }
             }
         }
         return memberMap;
@@ -93,6 +113,11 @@ public abstract class IsoName extends TMDbObject {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public <T extends TMDbObject> void copy(T from, int[] fields) {
+        copy(from, this, fields);
     }
 
     @Override

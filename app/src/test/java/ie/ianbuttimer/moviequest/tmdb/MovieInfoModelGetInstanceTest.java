@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,6 +27,7 @@ import static org.junit.Assert.fail;
 
 /**
  * Unit test for MovieInfoModel object
+ * TODO this test is not currently required as MovieInfoModel is a local object rather than one representing a JSON object returned by the TMDb server. It is also currently incomplete.
  */
 public class MovieInfoModelGetInstanceTest extends MovieInfoGetInstanceTest {
 

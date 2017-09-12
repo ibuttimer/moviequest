@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@ public class Genre extends IdName implements Parcelable {
     private static HashMap<String, MemberEntry> jsonMemberMap;  // map of JSON property names to class setter method & JSON getter method names
 
     static {
-        jsonMemberMap = generateMemberMap();
+        jsonMemberMap = generateMemberMap(null);
     }
 
     @Override
@@ -66,10 +66,10 @@ public class Genre extends IdName implements Parcelable {
      * @return  new Genre object or null if no data
      */
     public static Genre getInstance(JSONObject jsonData) {
-        return (Genre)TMDbObject.getInstance(jsonMemberMap, jsonData, Genre.class, new Genre());
+        return TMDbObject.getInstance(jsonMemberMap, jsonData, new Genre());
     }
 
-    // just provide the creator and parcel constructor as other parcelable ,ethods are in super class
+    // just provide the creator and parcel constructor as other parcelable methods are in super class
 
     public static final Parcelable.Creator<Genre> CREATOR
             = new Parcelable.Creator<Genre>() {

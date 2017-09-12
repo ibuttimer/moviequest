@@ -38,7 +38,8 @@ public class AboutActivity extends AppCompatActivity {
 
         // make links work
         int[] tvIds = new int[] {
-                R.id.tv_licencelink_aboutA, R.id.tv_tmdb_aboutA, R.id.tv_logo_aboutA, R.id.tv_icons_aboutA };
+                R.id.tv_licencelink_aboutA, R.id.tv_tmdb_aboutA, R.id.tv_logo_aboutA, R.id.tv_icons1_aboutA,
+                R.id.tv_icons2_aboutA };
         for (int id : tvIds) {
             tv = (TextView) findViewById(id);
             tv.setMovementMethod(LinkMovementMethod.getInstance());

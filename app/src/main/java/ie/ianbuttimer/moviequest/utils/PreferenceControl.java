@@ -21,6 +21,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import ie.ianbuttimer.moviequest.R;
+
 /**
  * Utility class providing access to application preferences
  */
@@ -29,6 +31,78 @@ public class PreferenceControl {
 
     @SuppressWarnings("unused")
     public enum PreferenceTypes { BOOLEAN, FLOAT, INTEGER, LONG, STRING }
+
+    /**
+     * Convenience method to retrieve cache enabled setting
+     * @param context   The current context
+     * @return  <code>true</code> if caching enabled, <code>false</code> otherwise
+     */
+    public static boolean getCachePreference(Context context) {
+        return getSharedBooleanPreference(context,
+                R.string.pref_caching_key, R.bool.pref_caching_dflt_value);
+    }
+
+    /**
+     * Convenience method to retrieve the cache length setting
+     * @param context   The current context
+     * @return  cache length setting in days
+     */
+    public static int getCacheLengthPreference(Context context) {
+        return
+            Integer.valueOf(
+                getSharedStringPreference(context,
+                    R.string.pref_cache_length_key, R.string.pref_cache_length_dlft_value));
+    }
+
+    /**
+     * Convenience method to retrieve show position setting
+     * @param context   The current context
+     * @return  <code>true</code> if position should be shown, <code>false</code> otherwise
+     */
+    public static boolean getShowPositionPreference(Context context) {
+        return getSharedBooleanPreference(context,
+                R.string.pref_show_position_key, R.bool.pref_show_position_dflt_value);
+    }
+
+    /**
+     * Convenience method to retrieve poster size setting
+     * @param context   The current context
+     * @return  poster size setting
+     */
+    public static String getPosterSizePreference(Context context) {
+        return getSharedStringPreference(context,
+                R.string.pref_poster_size_key, R.string.pref_poster_size_dlft_value);
+    }
+
+    /**
+     * Convenience method to retrieve backdrop size setting
+     * @param context   The current context
+     * @return  backdrop size setting
+     */
+    public static String getBackdropSizePreference(Context context) {
+        return getSharedStringPreference(context,
+                R.string.pref_backdrop_size_key, R.string.pref_backdrop_size_dlft_value);
+    }
+
+    /**
+     * Convenience method to retrieve thumbnail size setting
+     * @param context   The current context
+     * @return  thumbnail size setting
+     */
+    public static String getThumbnailSizePreference(Context context) {
+        return getSharedStringPreference(context,
+                R.string.pref_thumbnail_size_key, R.string.pref_thumbnail_size_dlft_value);
+    }
+
+    /**
+     * Convenience method to retrieve movie list setting
+     * @param context   The current context
+     * @return  movie list setting
+     */
+    public static String getMovieListPreference(Context context) {
+        return getSharedStringPreference(context,
+                R.string.pref_movie_list_key, R.string.pref_movie_list_dlft_value);
+    }
 
     /**
      * Return the application preferences

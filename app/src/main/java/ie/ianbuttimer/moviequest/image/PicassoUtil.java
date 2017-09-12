@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -14,11 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ie.ianbuttimer.moviequest.utils;
+package ie.ianbuttimer.moviequest.image;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.annotation.DrawableRes;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ImageView;
@@ -32,15 +33,14 @@ import ie.ianbuttimer.moviequest.R;
 
 
 /**
- * This package contains miscellaneous utility functions
+ * This class contains miscellaneous image utility functions
  */
 
 public class PicassoUtil {
 
     private static final String TAG = PicassoUtil.class.getSimpleName();
 
-    private static Picasso picasso;
-    private static LruCache cache;
+    private static LruCache cache = null;
 
     /**
      * Private constructor
@@ -57,13 +57,13 @@ public class PicassoUtil {
     private static Picasso getPicasso(Context context) {
         if (cache == null) {
             cache = new LruCache(context.getApplicationContext());
-        }
-        if (picasso == null) {
-            picasso = new Picasso.Builder(context.getApplicationContext())
+
+            Picasso picasso = new Picasso.Builder(context.getApplicationContext())
                     .memoryCache(cache)
                     .build();
+            Picasso.setSingletonInstance(picasso);
         }
-        return picasso;
+        return Picasso.with(context);
     }
 
     /**
@@ -81,9 +81,36 @@ public class PicassoUtil {
     public static String loadImage(Context context, Uri uri, ImageView imageView, Callback callback){
         RequestCreator request = getPicasso(context)
                 .load(uri)
-                .placeholder(R.mipmap.download_from_cloud)
-                .error(R.mipmap.no_image_available);
+                .placeholder(R.drawable.download_from_cloud)
+                .error(R.drawable.no_image_available);
         String tag = makeRequestTag(uri);
+        request.tag(tag);
+        if (callback != null) {
+            request.into(imageView, callback);
+        } else {
+            request.into(imageView);
+        }
+        return tag;
+    }
+
+    /**
+     * Loads an image into an ImageView
+     * @param context       The current context
+     * @param resourceId    Drawable resource ID
+     * @param imageView     ImageView to load into
+     * @param callback      Callback to invoke when finished
+     * @return Request tag
+     * <p>
+     * <b>Note: </b>The Callback param is a strong reference and will prevent your Activity or Fragment from being garbage collected. If you use this method, it is strongly recommended you invoke an adjacent <a href="https://square.github.io/picasso/2.x/picasso/com/squareup/picasso/Picasso.html#cancelRequest-android.widget.ImageView-">Picasso.cancelRequest(ImageView)</a> call to prevent temporary leaking.
+     * </p>
+     * @see <a href="https://square.github.io/picasso/2.x/picasso/com/squareup/picasso/RequestCreator.html#into-android.widget.ImageView-com.squareup.picasso.Callback-">Pacasso.into(ImageView, Callback)</a>
+     */
+    public static String loadImage(Context context, @DrawableRes int resourceId, ImageView imageView, Callback callback){
+        RequestCreator request = getPicasso(context)
+                .load(resourceId)
+                .placeholder(R.drawable.download_from_cloud)
+                .error(R.drawable.no_image_available);
+        String tag = makeRequestTag(resourceId);
         request.tag(tag);
         if (callback != null) {
             request.into(imageView, callback);
@@ -157,6 +184,16 @@ public class PicassoUtil {
     public static String makeRequestTag(Uri uri) {
         // the uri is used as the key for the cache
         return uri.toString() + "\n";   // picasso appends a lf
+    }
+
+    /**
+     * Make a request tag
+     * @param resourceId    Drawable resource ID
+     * @return Request tag
+     */
+    public static String makeRequestTag(@DrawableRes int resourceId) {
+        // the uri is used as the key for the cache
+        return String.valueOf(resourceId) + "\n";   // picasso appends a lf
     }
 
     /**

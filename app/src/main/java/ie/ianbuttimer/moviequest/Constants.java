@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,10 +16,16 @@
  */
 package ie.ianbuttimer.moviequest;
 
+import android.support.annotation.IntDef;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
 /**
  * Convenience class for storing constants used throughout the app
  */
-
+@SuppressWarnings("unused")
 public class Constants {
 
     /**
@@ -30,9 +36,17 @@ public class Constants {
     }
 
     public static final String MOVIE_ID = "movieId";
+    public static final String MOVIE_TITLE = "movieTitle";
     public static final String MOVIE_OBJ = "movieObj";
     public static final String MOVIE_DETAIL_OBJ = "movieDetailObj";
     public static final String MOVIE_LIST = "movieList";
+    public static final String RESULT_RECEIVER = "resultReceiver";
 
+    public static final Date INVALID_DATE;
 
+    static {
+        // Gregorian calendar was instituted October 15, 1582 in some countries, later in others
+        Calendar cal = new GregorianCalendar(1582, Calendar.OCTOBER, 15, 0, 0, 0);
+        INVALID_DATE = cal.getTime();
+    }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -43,7 +43,7 @@ public abstract class TestObjectInstance {
      * Get the field name as returned by the TMDb server
      * @param index     Index of field
      * @return  field name or empty string if invalid index
-     * @see {@link TMDbObject#getFieldName(int)}
+     * @see TMDbObject#getFieldName(int)
      */
     public abstract String getFieldName(int index);
 
@@ -51,7 +51,7 @@ public abstract class TestObjectInstance {
      * Get the object property name associated with the specified index
      * @param index     Index of field
      * @return  property name or empty string if invalid index
-     * @see {@link TMDbObject#getFieldName(int)}
+     * @see TMDbObject#getFieldName(int)
      */
     protected abstract String getPropertyName(int index);
 

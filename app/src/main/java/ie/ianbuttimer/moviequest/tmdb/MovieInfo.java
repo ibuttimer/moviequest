@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,6 +19,8 @@ package ie.ianbuttimer.moviequest.tmdb;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.gson.Gson;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,6 +30,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
+import ie.ianbuttimer.moviequest.utils.Utils;
+
+import static ie.ianbuttimer.moviequest.Constants.INVALID_DATE;
+
 /**
  * This class represents the movie details provided by TMDb as part of the popular & top rated movie lists
  *
@@ -36,9 +42,11 @@ import java.util.HashMap;
  * Unit tests:
  *  ie.ianbuttimer.moviequest.data.MovieInfoGetInstanceTest
  */
+@SuppressWarnings("unused")
 public class MovieInfo extends TMDbObject implements Parcelable {
 
     private static HashMap<String, MemberEntry> jsonMemberMap;  // map of JSON property names to class setter method & JSON getter method names
+    protected static HashMap<String, MemberEntry> placeholderMemberMap;  // map of default value fields for a placeholder
 
     private String posterPath;
     private String backdropPath;
@@ -47,8 +55,8 @@ public class MovieInfo extends TMDbObject implements Parcelable {
     private String originalLanguage;
     private String title;
     private Integer id;
-    private Integer adult;  // actually boolean values but storing as ints for parcelable convenience
-    private Integer video;  // actually boolean values but storing as ints for parcelable convenience
+    private Boolean adult;
+    private Boolean video;
     private Integer voteCount;
     private Date releaseDate;
     private Integer[] genreIds;
@@ -72,6 +80,8 @@ public class MovieInfo extends TMDbObject implements Parcelable {
     protected static final int GENRE_IDS = 13;
     protected static final int LAST_MOVIE_INFO_MEMBER = GENRE_IDS;
 
+    private static final int[] sAllFields;  // list of all fields
+
     private static final String[] FIELD_NAMES = new String[] {
         // NOTE must follow the order of the indices above!!!!
         "poster_path",
@@ -90,65 +100,69 @@ public class MovieInfo extends TMDbObject implements Parcelable {
         "genre_ids"
     };
 
-
     static {
         jsonMemberMap = generateMemberMap(null);
+        placeholderMemberMap = generateMemberMap(new int[] {
+            TITLE, ID
+        });
+
+        sAllFields = makeFieldIdsArray(FIRST_MEMBER, LAST_MOVIE_INFO_MEMBER);
     }
 
     /**
      * Generate the member map representing this object
      * @param exclude   Array of ids of members to exclude
+     * @return member map
      */
     protected static HashMap<String, MemberEntry> generateMemberMap(int[] exclude) {
-        HashMap<String, MemberEntry> memberMap = new HashMap<String, MemberEntry>();
-        if (exclude == null) {
-            exclude = new int[] {};
-        }
+        HashMap<String, MemberEntry> memberMap = new HashMap<>();
+        int[] sortedExclude = Utils.getSortedArray(exclude);
+
         for (int i = FIRST_MEMBER; i <= LAST_MOVIE_INFO_MEMBER; i++) {
-            if (Arrays.binarySearch(exclude, i) < 0) {
+            if (Arrays.binarySearch(sortedExclude, i) < 0) {
                 String key = FIELD_NAMES[i];
                 switch (i) {
                     case POSTER_PATH:
-                        memberMap.put(key, stringTemplate.copy("setPosterPath", "posterPath"));
+                        memberMap.put(key, stringTemplate.copy("setPosterPath", "getPosterPath", "posterPath"));
                         break;
                     case BACKDROP_PATH:
-                        memberMap.put(key, stringTemplate.copy("setBackdropPath", "backdropPath"));
+                        memberMap.put(key, stringTemplate.copy("setBackdropPath", "getBackdropPath", "backdropPath"));
                         break;
                     case OVERVIEW:
-                        memberMap.put(key, stringTemplate.copy("setOverview", "overview"));
+                        memberMap.put(key, stringTemplate.copy("setOverview", "getOverview", "overview"));
                         break;
                     case RELEASE_DATE:
-                        memberMap.put(key, stringTemplate.copy("setReleaseDate", "releaseDate"));
+                        memberMap.put(key, stringTemplate.copy("setReleaseDate", "getReleaseDateMemberValue", "releaseDate"));
                         break;
                     case ORIGINAL_TITLE:
-                        memberMap.put(key, stringTemplate.copy("setOriginalTitle", "originalTitle"));
+                        memberMap.put(key, stringTemplate.copy("setOriginalTitle", "getOriginalTitle", "originalTitle"));
                         break;
                     case ORIGINAL_LANGUAGE:
-                        memberMap.put(key, stringTemplate.copy("setOriginalLanguage", "originalLanguage"));
+                        memberMap.put(key, stringTemplate.copy("setOriginalLanguage", "getOriginalLanguage", "originalLanguage"));
                         break;
                     case TITLE:
-                        memberMap.put(key, stringTemplate.copy("setTitle", "title"));
+                        memberMap.put(key, stringTemplate.copy("setTitle", "getTitle", "title"));
                         break;
                     case ID:
-                        memberMap.put(key, intTemplate.copy("setId", "id"));
+                        memberMap.put(key, intTemplate.copy("setId", "getId", "id"));
                         break;
                     case ADULT:
-                        memberMap.put(key, boolTemplate.copy("setAdult", "adult"));
+                        memberMap.put(key, boolTemplate.copy("setAdult", "isAdult", "adult"));
                         break;
                     case VIDEO:
-                        memberMap.put(key, boolTemplate.copy("setVideo", "video"));
+                        memberMap.put(key, boolTemplate.copy("setVideo", "isVideo", "video"));
                         break;
                     case VOTE_COUNT:
-                        memberMap.put(key, intTemplate.copy("setVoteCount", "voteCount"));
+                        memberMap.put(key, intTemplate.copy("setVoteCount", "getVoteCount", "voteCount"));
                         break;
                     case POPULARITY:
-                        memberMap.put(key, dblTemplate.copy("setPopularity", "popularity"));
+                        memberMap.put(key, dblTemplate.copy("setPopularity", "getPopularity", "popularity"));
                         break;
                     case VOTE_AVERAGE:
-                        memberMap.put(key, dblTemplate.copy("setVoteAverage", "voteAverage"));
+                        memberMap.put(key, dblTemplate.copy("setVoteAverage", "getVoteAverage", "voteAverage"));
                         break;
                     case GENRE_IDS:
-                        memberMap.put(key, jsonArrayTemplate.copy("setGenreIdsFromJson", "genreIds"));
+                        memberMap.put(key, jsonArrayTemplate.copy("setGenreIdsFromJson", "getGenreIdsMemberValue", "genreIds"));
                         break;
                 }
             }
@@ -175,6 +189,11 @@ public class MovieInfo extends TMDbObject implements Parcelable {
     }
 
     @Override
+    public int[] getFieldIds() {
+        return sAllFields;
+    }
+
+    @Override
     protected HashMap<String, MemberEntry> getMemberMap() {
         return jsonMemberMap;
     }
@@ -185,9 +204,9 @@ public class MovieInfo extends TMDbObject implements Parcelable {
     public MovieInfo() {
         posterPath = "";
         backdropPath = "";
-        adult = 0;
+        adult = false;
         overview = "";
-        releaseDate = new Date(0);
+        releaseDate = INVALID_DATE;
         genreIds = new Integer[] {};
         id = 0;
         originalTitle = "";
@@ -195,8 +214,19 @@ public class MovieInfo extends TMDbObject implements Parcelable {
         title = "";
         popularity = 0.0d;
         voteCount = 0;
-        video = 0;
+        video = false;
         voteAverage = 0.0d;
+    }
+
+    /**
+     * Constructor for a MovieInfo placeholder
+     * @param id        Movie id
+     * @param title     Movie title
+     */
+    public MovieInfo(Integer id, String title) {
+        this();
+        this.title = title;
+        this.id = id;
     }
 
     /**
@@ -215,7 +245,12 @@ public class MovieInfo extends TMDbObject implements Parcelable {
      * @return updated object
      */
     static MovieInfo getInstance(JSONObject jsonData, MovieInfo movie) {
-        return (MovieInfo)getInstance(jsonMemberMap, jsonData, MovieInfo.class, movie);
+        return getInstance(jsonMemberMap, jsonData, movie);
+    }
+
+    @Override
+    public <T extends TMDbObject> void copy(T from, int[] fields) {
+        copy(from, this, fields);
     }
 
     public String getPosterPath() {
@@ -235,11 +270,11 @@ public class MovieInfo extends TMDbObject implements Parcelable {
     }
 
     public Boolean isAdult() {
-        return (adult == 1);
+        return adult;
     }
 
     public void setAdult(Boolean adult) {
-        this.adult = (adult ? 1 : 0);
+        this.adult = adult;
     }
 
     public String getOverview() {
@@ -254,18 +289,48 @@ public class MovieInfo extends TMDbObject implements Parcelable {
         return releaseDate;
     }
 
+    /**
+     * Return the release date as provided by the server
+     * @return  Date string in server format, or field default value if not valid
+     */
+    public String getReleaseDateMemberValue() {
+        String date;
+        if (INVALID_DATE.equals(releaseDate)) {
+            date = (String)jsonMemberMap.get(FIELD_NAMES[RELEASE_DATE]).dfltValue;
+        } else {
+            date = dateFormat.format(releaseDate);
+        }
+        return date;
+    }
+
     public void setReleaseDate(String releaseDate) {
         try {
             this.releaseDate = dateFormat.parse(releaseDate);
         }
         catch (ParseException e) {
             e.printStackTrace();
-            this.releaseDate = new Date(0);
+            this.releaseDate = INVALID_DATE;
         }
     }
 
     public Integer[] getGenreIds() {
         return genreIds;
+    }
+
+    /**
+     * Return the genre ids as provided by the server
+     * @return  Genre ids in server format, or field default value if not valid
+     */
+    public JSONArray getGenreIdsMemberValue() {
+        JSONArray array = (JSONArray)jsonMemberMap.get(FIELD_NAMES[GENRE_IDS]).dfltValue;
+        if ((genreIds != null) && (genreIds.length > 0)) {
+            try {
+                array = new JSONArray(new Gson().toJson(genreIds));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return array;
     }
 
     public void setGenreIds(Integer[] genreIds) {
@@ -281,7 +346,7 @@ public class MovieInfo extends TMDbObject implements Parcelable {
         }
         Integer[] ids = new Integer[len];
         for (int i = 0; i < len; i++) {
-            ids[i] = Integer.valueOf(genreIds[i]);
+            ids[i] = genreIds[i];
         }
         this.genreIds = ids;
     }
@@ -355,11 +420,11 @@ public class MovieInfo extends TMDbObject implements Parcelable {
     }
 
     public Boolean isVideo() {
-        return (video == 1);
+        return video;
     }
 
     public void setVideo(Boolean video) {
-        this.video = (video ? 1 : 0);
+        this.video = video;
     }
 
     public Double getVoteAverage() {
@@ -373,6 +438,28 @@ public class MovieInfo extends TMDbObject implements Parcelable {
     @Override
     public boolean isEmpty() {
         return equals(new MovieInfo());
+    }
+
+    @Override
+    public boolean isPlaceHolder() {
+        return isDefault(placeholderMemberMap, this);
+    }
+
+    /**
+     * Create a MovieInfo object from JSON
+     * @param from      Object to copy from
+     * @param to        Object to copy to
+     * @param fields    Array of field isa of members to include
+     * @return <code>true</code> if all fields were copied, <code>false</code> otherwise
+     */
+    public static boolean copy(MovieInfo from, MovieInfo to, int[] fields) {
+        HashMap<String, MemberEntry> memberMap;
+        if (fields == null) {
+            memberMap = jsonMemberMap;
+        } else {
+            memberMap = from.makeMemberMap(fields);
+        }
+        return copy(memberMap, from, to);
     }
 
     @Override
@@ -405,7 +492,6 @@ public class MovieInfo extends TMDbObject implements Parcelable {
         if (popularity != null ? !popularity.equals(movieInfo.popularity) : movieInfo.popularity != null)
             return false;
         return voteAverage != null ? voteAverage.equals(movieInfo.voteAverage) : movieInfo.voteAverage == null;
-
     }
 
     @Override
@@ -441,8 +527,8 @@ public class MovieInfo extends TMDbObject implements Parcelable {
         parcel.writeString(originalLanguage);
         parcel.writeString(title);
         parcel.writeInt(id);
-        parcel.writeInt(adult);
-        parcel.writeInt(video);
+        writeBooleanToParcel(parcel, adult);
+        writeBooleanToParcel(parcel, video);
         parcel.writeInt(voteCount);
         parcel.writeSerializable(releaseDate);
         parcel.writeDouble(popularity);
@@ -474,8 +560,8 @@ public class MovieInfo extends TMDbObject implements Parcelable {
         obj.originalLanguage = in.readString();
         obj.title = in.readString();
         obj.id = in.readInt();
-        obj.adult = in.readInt();
-        obj.video = in.readInt();
+        obj.adult = readBooleanFromParcel(in);
+        obj.video = readBooleanFromParcel(in);
         obj.voteCount = in.readInt();
         obj.releaseDate = (Date) in.readSerializable();
         obj.popularity = in.readDouble();

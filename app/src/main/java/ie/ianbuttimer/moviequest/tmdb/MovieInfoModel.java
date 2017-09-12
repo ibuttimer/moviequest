@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,10 @@ import android.net.Uri;
 import org.json.JSONObject;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+
+import static ie.ianbuttimer.moviequest.Constants.INVALID_DATE;
 
 /**
  * Class representing movie info as used within the app
@@ -32,7 +35,9 @@ import java.util.HashMap;
  *  ie.ianbuttimer.moviequest.data.MovieInfoModelTest
  * Unit tests:
  *  ie.ianbuttimer.moviequest.data.MovieInfoModelGetInstanceTest
+ *  NOTE: currently incomplete, and not strictly required
  */
+@SuppressWarnings("unused")
 public class MovieInfoModel extends MovieInfo implements Parcelable {
 
     private static HashMap<String, MemberEntry> jsonMemberMap;  // map of JSON property names to class setter method & JSON getter method names
@@ -42,6 +47,8 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
 	private Uri backdropUri;	// details backdrop image uri
 	private Uri thumbnailUri;	// thumbnail image uri
     private MovieDetails details;   // movie details
+    private Date cacheDate;     // date movie details were cached
+    private boolean favourite;  // favourite flag
 
     protected static final int FIRST_MOVIE_MODEL_MEMBER = LAST_MOVIE_INFO_MEMBER + 1;
     protected static final int INDEX = FIRST_MOVIE_MODEL_MEMBER;
@@ -49,7 +56,11 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
     protected static final int BACKDROP_URI = FIRST_MOVIE_MODEL_MEMBER + 2;
     protected static final int THUMBNAIL_URI = FIRST_MOVIE_MODEL_MEMBER + 3;
     protected static final int DETAILS = FIRST_MOVIE_MODEL_MEMBER + 4;
-    protected static final int LAST_MOVIE_MODEL_MEMBER = DETAILS;
+    protected static final int CACHE_DATE = FIRST_MOVIE_MODEL_MEMBER + 5;
+    protected static final int FAVOURITE = FIRST_MOVIE_MODEL_MEMBER + 6;
+    protected static final int LAST_MOVIE_MODEL_MEMBER = FAVOURITE;
+
+    private static final int[] sAllFields;  // list of all fields
 
     private static final String[] FIELD_NAMES;  // NOTE order must follow the order of the indices in super class & above!!!!
 
@@ -60,21 +71,21 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         FIELD_NAMES[BACKDROP_URI] = "nonTMDb_backdropUri"; // field not returned from TMDb
         FIELD_NAMES[THUMBNAIL_URI] = "nonTMDb_thumbnailUri";	// field not returned from TMDb
         FIELD_NAMES[DETAILS] = "nonTMDb_Details";	// field not returned from TMDb
+        FIELD_NAMES[CACHE_DATE] = "nonTMDb_cacheDate";	// field not returned from TMDb
+        FIELD_NAMES[FAVOURITE] = "nonTMDb_favourite";	// field not returned from TMDb
 
         // get members from super class
         jsonMemberMap = MovieInfo.generateMemberMap(null);
-        // add local members
-        jsonMemberMap.putAll(generateMemberMap(null));
-    }
-
-    static {
-        jsonMemberMap = generateMemberMap(null);
         // append this object's
-        jsonMemberMap.put(FIELD_NAMES[INDEX], intTemplate.copy("setIndex", "index"));
-        jsonMemberMap.put(FIELD_NAMES[POSTER_URI], stringTemplate.copy("setPosterUri", "posterUri"));
-        jsonMemberMap.put(FIELD_NAMES[BACKDROP_URI], stringTemplate.copy("setBackdropUri", "backdropUri"));
-        jsonMemberMap.put(FIELD_NAMES[THUMBNAIL_URI], stringTemplate.copy("setThumbnailUri", "thumbnailUri"));
-        jsonMemberMap.put(FIELD_NAMES[DETAILS], stringTemplate.copy("setDetails", "details"));
+        jsonMemberMap.put(FIELD_NAMES[INDEX], intTemplate.copy("setIndex", "getIndex", "index"));
+        jsonMemberMap.put(FIELD_NAMES[POSTER_URI], stringTemplate.copy("setPosterUri", "getPosterUri", "posterUri"));
+        jsonMemberMap.put(FIELD_NAMES[BACKDROP_URI], stringTemplate.copy("setBackdropUri", "getBackdropUri", "backdropUri"));
+        jsonMemberMap.put(FIELD_NAMES[THUMBNAIL_URI], stringTemplate.copy("setThumbnailUri", "getThumbnailUri", "thumbnailUri"));
+        jsonMemberMap.put(FIELD_NAMES[DETAILS], stringTemplate.copy("setDetails", "getDetails", "details"));
+        jsonMemberMap.put(FIELD_NAMES[CACHE_DATE], stringTemplate.copy("setCacheDate", "getCacheDate", "cacheDate"));
+        jsonMemberMap.put(FIELD_NAMES[FAVOURITE], boolTemplate.copy("setFavourite", "isFavourite", "favourite"));
+
+        sAllFields = makeFieldIdsArray(FIRST_MEMBER, LAST_MOVIE_MODEL_MEMBER);
     }
 
     @Override
@@ -96,6 +107,11 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         return name;
     }
 
+    @Override
+    public int[] getFieldIds() {
+        return sAllFields;
+    }
+
     /**
      * Default constructor
      */
@@ -106,6 +122,19 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         backdropUri = null;
 		thumbnailUri = null;
         details = null;
+        cacheDate = INVALID_DATE;
+        favourite = false;
+    }
+
+    /**
+     * Constructor for a MovieInfoModel placeholder
+     * @param id        Movie id
+     * @param title     Movie title
+     */
+    public MovieInfoModel(Integer id, String title) {
+        this();
+        setTitle(title);
+        setId(id);
     }
 
     /**
@@ -123,7 +152,12 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
      * @return  new MovieInfo object or null if no data
      */
     public static MovieInfoModel getInstance(JSONObject jsonData, MovieInfoModel movieModel) {
-        return (MovieInfoModel)getInstance(jsonMemberMap, jsonData, MovieInfoModel.class, movieModel);
+        return getInstance(jsonMemberMap, jsonData, movieModel);
+    }
+
+    @Override
+    public <T extends TMDbObject> void copy(T from, int[] fields) {
+        copy(from, this, fields);
     }
 
     public int getIndex() {
@@ -166,6 +200,27 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         this.details = details;
     }
 
+    public Date getCacheDate() {
+        return cacheDate;
+    }
+
+    public void setCacheDate(Date cacheDate) {
+        this.cacheDate = cacheDate;
+    }
+
+    public boolean isFavourite() {
+        return favourite;
+    }
+
+    public void setFavourite(boolean favourite) {
+        this.favourite = favourite;
+    }
+
+    @Override
+    public boolean isPlaceHolder() {
+        return isDefault(placeholderMemberMap, this);
+    }
+
     @Override
     public int describeContents() {
         return super.describeContents();
@@ -179,6 +234,8 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         parcel.writeParcelable(thumbnailUri, flags);
         parcel.writeParcelable(backdropUri, flags);
         parcel.writeParcelable(details, flags);
+        parcel.writeSerializable(cacheDate);
+        writeBooleanToParcel(parcel, favourite);
     }
 
     public static final Parcelable.Creator<MovieInfoModel> CREATOR
@@ -204,6 +261,8 @@ public class MovieInfoModel extends MovieInfo implements Parcelable {
         obj.thumbnailUri = in.readParcelable(Uri.class.getClassLoader());
         obj.backdropUri = in.readParcelable(Uri.class.getClassLoader());
         obj.details = in.readParcelable(MovieDetails.class.getClassLoader());
+        obj.cacheDate = (Date) in.readSerializable();
+        obj.favourite = readBooleanFromParcel(in);
     }
 
     /**

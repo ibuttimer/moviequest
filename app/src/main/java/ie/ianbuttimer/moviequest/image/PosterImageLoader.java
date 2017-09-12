@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ie.ianbuttimer.moviequest.utils;
+package ie.ianbuttimer.moviequest.image;
 
 import android.content.Context;
 import android.widget.ImageView;
@@ -22,8 +22,8 @@ import android.widget.ProgressBar;
 
 import com.squareup.picasso.Callback;
 
-import ie.ianbuttimer.moviequest.R;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfo;
+import ie.ianbuttimer.moviequest.utils.PreferenceControl;
 
 /**
  * Image loading utility class
@@ -33,7 +33,7 @@ public class PosterImageLoader extends ImageLoader implements Callback {
     /**
      * Default constructor
      */
-    public PosterImageLoader() {
+    PosterImageLoader() {
         super();
     }
 
@@ -42,7 +42,7 @@ public class PosterImageLoader extends ImageLoader implements Callback {
      * @param imageView     ImageView to load into
      * @param progressBar   In progress bar
      */
-    public PosterImageLoader(ImageView imageView, ProgressBar progressBar) {
+    PosterImageLoader(ImageView imageView, ProgressBar progressBar) {
         super(imageView, progressBar);
     }
 
@@ -56,8 +56,7 @@ public class PosterImageLoader extends ImageLoader implements Callback {
 
     @Override
     public String getImageSize(Context context, MovieInfo movie) {
-        return PreferenceControl.getSharedStringPreference(context,
-                R.string.pref_poster_size_key, R.string.pref_poster_size_dlft_value);
+        return PreferenceControl.getPosterSizePreference(context);
     }
 
     @Override

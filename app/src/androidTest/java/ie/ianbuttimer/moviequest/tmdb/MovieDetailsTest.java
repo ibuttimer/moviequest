@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2017  Ian Buttimer
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package ie.ianbuttimer.moviequest.tmdb;
 
 import android.os.Parcel;
@@ -8,7 +25,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Created by Ian on 16/08/2017.
+ * Unit test class for MovieDetails class
  */
 public class MovieDetailsTest extends MovieInfoTest {
 
@@ -45,36 +62,36 @@ public class MovieDetailsTest extends MovieInfoTest {
         MovieDetails createdFromParcel = MovieDetails.CREATOR.createFromParcel(parcel);
 
         // Verify that the received data is correct.
-        checkObject(createdFromParcel, movieDetails);
+        checkObject("parcel", createdFromParcel, movieDetails);
     }
 
-    public void checkObject(MovieDetails createdFromParcel, MovieDetails original) {
+    public void checkObject(String test, MovieDetails createdFromParcel, MovieDetails original) {
         // Verify that the received data is correct.
-        super.checkObject(createdFromParcel, original);
+        super.checkObject(test, createdFromParcel, original);
 
-        assertEquals(makeAssertMessage("Budget"),
+        assertEquals(makeAssertMessage(test + " Budget"),
                 createdFromParcel.getBudget(), original.getBudget());
-        assertArrayEquals(makeAssertMessage("Genres"),
+        assertArrayEquals(makeAssertMessage(test + " Genres"),
                 createdFromParcel.getGenres(), original.getGenres());
-        assertEquals(makeAssertMessage("Homepage"),
+        assertEquals(makeAssertMessage(test + " Homepage"),
                 createdFromParcel.getHomepage(), original.getHomepage());
-        assertEquals(makeAssertMessage("ImdbId"),
+        assertEquals(makeAssertMessage(test + " ImdbId"),
                 createdFromParcel.getImdbId(), original.getImdbId());
-        assertArrayEquals(makeAssertMessage("ProductionCompanies"),
+        assertArrayEquals(makeAssertMessage(test + " ProductionCompanies"),
                 createdFromParcel.getProductionCompanies(), original.getProductionCompanies());
-        assertArrayEquals(makeAssertMessage("ProductionCountries"),
+        assertArrayEquals(makeAssertMessage(test + " ProductionCountries"),
                 createdFromParcel.getProductionCountries(), original.getProductionCountries());
-        assertEquals(makeAssertMessage("Revenue"),
+        assertEquals(makeAssertMessage(test + " Revenue"),
                 createdFromParcel.getRevenue(), original.getRevenue());
-        assertEquals(makeAssertMessage("Runtime"),
+        assertEquals(makeAssertMessage(test + " Runtime"),
                 createdFromParcel.getRuntime(), original.getRuntime());
-        assertArrayEquals(makeAssertMessage("SpokenLanguages"),
+        assertArrayEquals(makeAssertMessage(test + " SpokenLanguages"),
                 createdFromParcel.getSpokenLanguages(), original.getSpokenLanguages());
-        assertEquals(makeAssertMessage("Status"),
+        assertEquals(makeAssertMessage(test + " Status"),
                 createdFromParcel.getStatus(), original.getStatus());
-        assertEquals(makeAssertMessage("Tagline"),
+        assertEquals(makeAssertMessage(test + " Tagline"),
                 createdFromParcel.getTagline(), original.getTagline());
-        assertEquals(makeAssertMessage("Collection"),
+        assertEquals(makeAssertMessage(test + " Collection"),
                 createdFromParcel.getCollection(), original.getCollection());
     }
 

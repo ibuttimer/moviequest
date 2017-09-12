@@ -99,15 +99,22 @@
             android:textColor="@color/colorPrimaryDark" />
 
         <TextView
-            android:id="@+id/tv_icons_aboutA"
+            android:id="@+id/tv_icons1_aboutA"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/tv_logo_aboutA"
-            android:text="@string/ack_icons"
+            android:text="@string/ack_icons1"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="@color/colorPrimaryDark" />
 
-
+        <TextView
+            android:id="@+id/tv_icons2_aboutA"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_icons1_aboutA"
+            android:text="@string/ack_icons2"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@color/colorPrimaryDark" />
 
     </RelativeLayout>
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,11 +17,24 @@
 package ie.ianbuttimer.moviequest;
 
 import android.app.Activity;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
+import android.support.v4.app.NavUtils;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
@@ -30,31 +43,54 @@ import android.widget.TextView;
 import com.squareup.picasso.Callback;
 
 import java.io.IOException;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Locale;
 
+import ie.ianbuttimer.moviequest.data.DbCacheIntentService;
 import ie.ianbuttimer.moviequest.tmdb.CollectionInfo;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfo;
 import ie.ianbuttimer.moviequest.tmdb.MovieDetails;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfoModel;
-import ie.ianbuttimer.moviequest.utils.AsyncCallback;
-import ie.ianbuttimer.moviequest.utils.BackdropImageLoader;
-import ie.ianbuttimer.moviequest.utils.ICallback;
-import ie.ianbuttimer.moviequest.utils.ImageLoader;
+import ie.ianbuttimer.moviequest.data.AbstractResultWrapper;
+import ie.ianbuttimer.moviequest.data.AsyncCallback;
+import ie.ianbuttimer.moviequest.image.BackdropImageLoader;
+import ie.ianbuttimer.moviequest.data.DbContentValues;
+import ie.ianbuttimer.moviequest.utils.DbUtils;
+import ie.ianbuttimer.moviequest.data.FavouritesContentValues;
+import ie.ianbuttimer.moviequest.data.ICallback;
+import ie.ianbuttimer.moviequest.image.ImageLoader;
+import ie.ianbuttimer.moviequest.data.MovieContentValues;
 import ie.ianbuttimer.moviequest.utils.NetworkUtils;
-import ie.ianbuttimer.moviequest.utils.PicassoUtil;
+import ie.ianbuttimer.moviequest.image.PicassoUtil;
+import ie.ianbuttimer.moviequest.utils.PreferenceControl;
 import ie.ianbuttimer.moviequest.utils.ResponseHandler;
-import ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils;
-import ie.ianbuttimer.moviequest.utils.ThumbnailImageLoader;
+import ie.ianbuttimer.moviequest.image.ThumbnailImageLoader;
+import ie.ianbuttimer.moviequest.utils.UriUtils;
 import ie.ianbuttimer.moviequest.utils.Utils;
 import okhttp3.Call;
 import okhttp3.Response;
 
+import static ie.ianbuttimer.moviequest.Constants.INVALID_DATE;
 import static ie.ianbuttimer.moviequest.Constants.MOVIE_DETAIL_OBJ;
 import static ie.ianbuttimer.moviequest.Constants.MOVIE_ID;
 import static ie.ianbuttimer.moviequest.Constants.MOVIE_OBJ;
+import static ie.ianbuttimer.moviequest.Constants.MOVIE_TITLE;
+import static ie.ianbuttimer.moviequest.data.DbCacheIntentService.CV_EXTRA;
+import static ie.ianbuttimer.moviequest.data.DbCacheIntentService.INSERT_OR_UPDATE_FAVOURITE;
+import static ie.ianbuttimer.moviequest.data.DbCacheIntentService.INSERT_OR_UPDATE_MOVIE;
+import static ie.ianbuttimer.moviequest.data.MovieContentProvider.FAVOURITE_WITH_ID;
+import static ie.ianbuttimer.moviequest.data.MovieContentProvider.MOVIE_WITH_ID;
+import static ie.ianbuttimer.moviequest.data.MovieContract.FavouriteEntry.COLUMN_FAVOURITE;
+import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry.COLUMN_JSON;
+import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry._ID;
+import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry.GET_DETAILS_METHOD;
+import static ie.ianbuttimer.moviequest.utils.UriUtils.matchMovieUri;
 
 /**
  * Activity to display the details for a movie
@@ -67,83 +103,69 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
     private int orientationIdx;     // current orientation; PORTRAIT_IDX or LANDSCAPE_IDX
 
+    // ids of items that can be populated from a placeholder movie info object
+    private static int[][] mPlaceholderViewContainerIds;
     // ids of items that can be populated from movie info provided in intent
-    private static final int[][] mInfoTextViewIds = new int[][] {
-        // ids of text views that can be populated from movie info provided in intent
-        { R.id.tv_year_moviedetailsA, 
-            R.id.tv_plot_moviedetailsA,
-            R.id.tv_releasedate_moviedetailsA,
-            R.id.tv_rating_moviedetailsA,
-            R.id.tv_banner_title_movie_detailsA, 
-            R.id.tv_originaltitle_moviedetailsA },
-        // ids of container views in portrait orientation
-        { R.id.tv_year_moviedetailsA,   // no container
-            R.id.tv_plot_moviedetailsA, // no container
-            R.id.tr_releasedate_moviedetailsA,
-            R.id.tv_rating_moviedetailsA,   // no container
-            R.id.tv_banner_title_movie_detailsA,    // no container
-            R.id.tr_originaltitle_moviedetailsA },
-        // ids of container views in landscape orientation
-        { R.id.tv_year_moviedetailsA,   // no container
-            R.id.tv_plot_moviedetailsA, // no container
-            R.id.ll_releasedate_moviedetailsA,
-            R.id.tv_rating_moviedetailsA,   // no container
-            R.id.tv_banner_title_movie_detailsA,    // no container
-            R.id.ll_originaltitle_moviedetailsA },
-    };
+    private static int[][] mInfoViewContainerIds;
     // ids of items that are populated from movie details info returned from server
-    private static final int[][] mDetailsTextViewIds = new int[][] {
+    private static int[][] mDetailsViewContainerIds;
+
+    static {
+        // ids of text views that can be populated from movie info placeholder
+        mPlaceholderViewContainerIds = new int[][] {
+            // view id                              portrait container id               landscape contained id
+            { R.id.tv_banner_title_movie_detailsA,  R.id.tv_banner_title_movie_detailsA,R.id.tv_banner_title_movie_detailsA }   // no container
+        };
+
+        // ids of text views that can be populated from movie info provided in intent excluding placeholder fields
+        int[][] infoNonPlaceholderIds = new int[][] {
+            // view id                              portrait container id               landscape contained id
+            { R.id.tv_year_moviedetailsA,           R.id.tv_year_moviedetailsA,         R.id.tv_year_moviedetailsA },   // no container
+            { R.id.tv_plot_moviedetailsA,           R.id.tv_plot_moviedetailsA,         R.id.tv_plot_moviedetailsA },   // no container
+            { R.id.tv_releasedate_moviedetailsA,    R.id.tr_releasedate_moviedetailsA,  R.id.ll_releasedate_moviedetailsA },
+            { R.id.tv_rating_moviedetailsA,         R.id.tv_rating_moviedetailsA,       R.id.tv_rating_moviedetailsA }, // no container
+            { R.id.tv_originaltitle_moviedetailsA,  R.id.tr_originaltitle_moviedetailsA,R.id.ll_originaltitle_moviedetailsA }
+        };
+
+        // ids of text views that can be populated from movie info provided in intent
+        mInfoViewContainerIds = new int[mPlaceholderViewContainerIds.length + infoNonPlaceholderIds.length][];
+        System.arraycopy(mPlaceholderViewContainerIds, 0, mInfoViewContainerIds, 0, mPlaceholderViewContainerIds.length);
+        System.arraycopy(infoNonPlaceholderIds, 0, mInfoViewContainerIds, mPlaceholderViewContainerIds.length, infoNonPlaceholderIds.length);
+
         // ids of text views that are populated from movie details info returned from server
-        { R.id.tv_runningtime_moviedetailsA,
-            R.id.tv_genres_moviedetailsA,
-            R.id.tv_homepage_moviedetailsA,
-            R.id.tv_revenue_moviedetailsA,
-            R.id.tv_collection_moviedetailsA,
-            R.id.tv_originallang_moviedetailsA,
-            R.id.tv_budget_moviedetailsA,
-            R.id.tv_languages_moviedetailsA,
-            R.id.tv_companies_moviedetailsA,
-            R.id.tv_countries_moviedetailsA,
-            R.id.tv_tagline_movie_detailsA },
-        // ids of container views in portrait orientation
-        { R.id.tv_runningtime_moviedetailsA,    // no container
-            R.id.tr_genres_moviedetailsA,
-            R.id.tr_homepage_moviedetailsA,
-            R.id.tr_revenue_moviedetailsA,
-            R.id.tr_collection_moviedetailsA,
-            R.id.tr_originallang_moviedetailsA,
-            R.id.tr_budget_moviedetailsA,
-            R.id.tr_languages_moviedetailsA,
-            R.id.tr_companies_moviedetailsA,
-            R.id.tr_countries_moviedetailsA,
-            R.id.tv_tagline_movie_detailsA },   // no container
-        // ids of container views in landscape orientation
-        { R.id.tv_runningtime_moviedetailsA,    // no container
-            R.id.ll_genres_moviedetailsA,
-            R.id.ll_homepage_moviedetailsA,
-            R.id.ll_revenue_moviedetailsA,
-            R.id.ll_collection_moviedetailsA,
-            R.id.ll_originallang_moviedetailsA,
-            R.id.ll_budget_moviedetailsA,
-            R.id.ll_languages_moviedetailsA,
-            R.id.ll_companies_moviedetailsA,
-            R.id.ll_countries_moviedetailsA,
-            R.id.tv_tagline_movie_detailsA }    // no container
-    };
+        mDetailsViewContainerIds = new int[][] {
+            // view id                              portrait container id               landscape contained id
+            { R.id.tv_runningtime_moviedetailsA,    R.id.tv_runningtime_moviedetailsA,  R.id.tv_runningtime_moviedetailsA },    // no container
+            { R.id.tv_genres_moviedetailsA,         R.id.tr_genres_moviedetailsA,       R.id.ll_genres_moviedetailsA },
+            { R.id.tv_homepage_moviedetailsA,       R.id.tr_homepage_moviedetailsA,     R.id.ll_homepage_moviedetailsA },
+            { R.id.tv_revenue_moviedetailsA,        R.id.tr_revenue_moviedetailsA,      R.id.ll_revenue_moviedetailsA },
+            { R.id.tv_collection_moviedetailsA,     R.id.tr_collection_moviedetailsA,   R.id.ll_collection_moviedetailsA },
+            { R.id.tv_originallang_moviedetailsA,   R.id.tr_originallang_moviedetailsA, R.id.ll_originallang_moviedetailsA },
+            { R.id.tv_budget_moviedetailsA,         R.id.tr_budget_moviedetailsA,       R.id.ll_budget_moviedetailsA },
+            { R.id.tv_languages_moviedetailsA,      R.id.tr_languages_moviedetailsA,    R.id.ll_languages_moviedetailsA },
+            { R.id.tv_companies_moviedetailsA,      R.id.tr_companies_moviedetailsA,    R.id.ll_companies_moviedetailsA },
+            { R.id.tv_countries_moviedetailsA,      R.id.tr_countries_moviedetailsA,    R.id.ll_countries_moviedetailsA },
+            { R.id.tv_tagline_movie_detailsA,       R.id.tv_tagline_movie_detailsA,     R.id.tv_tagline_movie_detailsA },   // no container
+            { R.id.tv_cache_moviedetailsA,          R.id.tr_cache_moviedetailsA,        R.id.ll_cache_moviedetailsA }
+        };
 
+        // all arrays need to be sorted in ascending order based on view id
+        Comparator comparator = new java.util.Comparator<int[]>() {
+            public int compare(int[] a, int[] b) {
+                // return a negative integer, zero, or a positive integer as the first argument is less than, equal to, or greater than the second.
+                return (a[0] - b[0]);
+            }
+        };
+        Arrays.sort(mPlaceholderViewContainerIds, comparator);
+        Arrays.sort(mInfoViewContainerIds, comparator);
+        Arrays.sort(mDetailsViewContainerIds, comparator);
+    }
 
+    private Button mFavouriteButton;
+    private ImageView mFavouriteBadge;
 
-    
-
-
-
-
-
-
-
-
-
-
+    private ProgressBar mRefreshProgress;
+    private Button mRefreshButton;
 
     private MovieInfoModel mMovie;
     private ImageView backdropImageView;
@@ -153,8 +175,14 @@ public class MovieDetailsActivity extends AppCompatActivity {
     private MovieDetails mDetails = null;
     private int movieId = 0;
 
+    private boolean mFavourite = false; // favourite status
+
+    private DateFormat mediumDF = DateFormat.getDateInstance(DateFormat.MEDIUM);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        String title = null;
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
 
@@ -176,6 +204,9 @@ public class MovieDetailsActivity extends AppCompatActivity {
             if (intent.hasExtra(MOVIE_ID)) {
                 movieId = intent.getIntExtra(MOVIE_ID, 0);
             }
+            if (intent.hasExtra(MOVIE_TITLE)) {
+                title = intent.getStringExtra(MOVIE_TITLE);
+            }
         }
 
         if ((mDetails == null) && (mMovie != null)) {
@@ -185,22 +216,53 @@ public class MovieDetailsActivity extends AppCompatActivity {
         if (mDetails == null) {
             if (mMovie != null) {
                 requestDetails(mMovie);     // request using movie info
-                setInfo(mMovie);    // set the info available
+                setInfo(mMovie);            // set the info available
             } else if (movieId != 0) {
                 requestDetails(movieId);    // request using id
+
+                mMovie = new MovieInfoModel(movieId, title);
+                setInfo(mMovie);            // set the placeholder info available
             } else {
                 // no movie info so clear text view texts
-                for (int id : mInfoTextViewIds[TV_IDX]) {
-                    setTextViewText(id, "");
+                for (int id[] : mInfoViewContainerIds) {
+                    setTextViewText(id[TV_IDX], "");
                 }
-                for (int id : mDetailsTextViewIds[TV_IDX]) {
-                    setTextViewText(id, "");
+                for (int id[] : mDetailsViewContainerIds) {
+                    setTextViewText(id[TV_IDX], "");
                 }
             }
         } else {
             // set text view texts
             setInfoAndDetails();
         }
+
+        // setup refresh button
+        mRefreshProgress = (ProgressBar) findViewById(R.id.pb_refresh_moviedetailsA);
+        mRefreshButton = (Button) findViewById(R.id.b_refresh_moviedetailsA);
+        mRefreshButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requestDetailsFromServer(mMovie.getId());
+            }
+        });
+
+        // setup favourite button
+        mFavouriteButton = (Button) findViewById(R.id.b_favourite_moviedetailsA);
+        mFavouriteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int id = mMovie.getId();
+                boolean toSet = !mMovie.isFavourite();  // toggle current setting
+                setFavouriteButton(toSet);
+
+                startDbCacheIntentService(INSERT_OR_UPDATE_FAVOURITE,
+                        FavouritesContentValues.builder()
+                                .setTitle(mMovie.getTitle())
+                                .setFavourite(toSet),
+                        id);
+            }
+        });
+        mFavouriteBadge = (ImageView) findViewById(R.id.iv_favourite_moviedetailsA);
     }
 
     /**
@@ -208,12 +270,19 @@ public class MovieDetailsActivity extends AppCompatActivity {
      */
     private void setInfo(MovieInfo movie) {
         if (movie != null) {
-            DateFormat df = DateFormat.getDateInstance(DateFormat.MEDIUM);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy", Locale.US);
+            boolean isPlaceholder = movie.isPlaceHolder();
+            int[][] ids;
 
-            for (int id : mInfoTextViewIds[TV_IDX]) {
+            if (isPlaceholder) {
+                ids = mPlaceholderViewContainerIds;
+            } else {
+                ids = mInfoViewContainerIds;
+            }
+
+            for (int[] id : ids) {
                 String text;
-                switch (id) {
+                switch (id[TV_IDX]) {
                     case R.id.tv_year_moviedetailsA:
                         text = sdf.format(movie.getReleaseDate());
                         break;
@@ -224,7 +293,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
                         text = movie.getOverview();
                         break;
                     case R.id.tv_releasedate_moviedetailsA:
-                        text = df.format(movie.getReleaseDate());
+                        text = mediumDF.format(movie.getReleaseDate());
                         break;
                     case R.id.tv_rating_moviedetailsA:
                         text = MessageFormat.format(getString(R.string.movie_num_stars),
@@ -237,11 +306,11 @@ public class MovieDetailsActivity extends AppCompatActivity {
                         text = "";
                         break;
                 }
-                setTextViewText(id, text);
+                setTextViewText(id[TV_IDX], text);
             }
 
             RatingBar rb = (RatingBar) findViewById(R.id.rb_rating_moviedetailsA);
-            rb.setRating(new Float(movie.getVoteAverage().floatValue()));
+            rb.setRating(movie.getVoteAverage().floatValue());
 
             getImages(movie);
         }
@@ -297,9 +366,9 @@ public class MovieDetailsActivity extends AppCompatActivity {
      */
     private void setDetails() {
         if ((mDetails != null) && !mDetails.isEmpty()) {
-            for (int i = 0, ll = mDetailsTextViewIds[TV_IDX].length; i < ll; ++i) {
-                int id = mDetailsTextViewIds[TV_IDX][i];
-                int containerId = mDetailsTextViewIds[orientationIdx][i];
+            for (int[] row : mDetailsViewContainerIds) {
+                int id = row[TV_IDX];
+                int containerId = row[orientationIdx];
                 boolean set = true;
                 boolean hide = false;
                 int visibility;
@@ -349,6 +418,21 @@ public class MovieDetailsActivity extends AppCompatActivity {
                         hide = text.equals("");
                         set = !hide;
                         break;
+                    case R.id.tv_cache_moviedetailsA:
+                        Date cacheDate = mMovie.getCacheDate();
+                        hide = Utils.isEmpty(cacheDate);
+                        if (!hide) {
+                            long cache = cacheDate.getTime();
+                            long now = new Date().getTime();
+                            if (cache < now) {
+                                String elapsed = Utils.getRelativeTimeSpanString(this, cache, now).toLowerCase();
+                                text = MessageFormat.format(getString(R.string.movie_cache_details), elapsed);
+                            } else {
+                                hide = true;    // should never happen but if cached date is in future, don't have reliable info so show nothing
+                            }
+                        }
+                        set = !hide;
+                        break;
                     default:
                         text = "";
                         break;
@@ -357,11 +441,11 @@ public class MovieDetailsActivity extends AppCompatActivity {
                     setViewOpacity(containerId, 1f);
                     setTextViewText(id, text);
                 } else if (hide) {
-                    setViewVisibility(id, View.GONE);
+                    setViewVisibility(containerId, View.GONE);
                 }
             }
         } else {
-            setViewOpacity(mDetailsTextViewIds, 0.5f);
+            dimUnknown();
         }
     }
 
@@ -456,8 +540,9 @@ public class MovieDetailsActivity extends AppCompatActivity {
      * @param ids      Array of view ids
      * @param visibility    View visibility
      */
+    @SuppressWarnings("unused")
     private void setViewVisibility(int[][] ids, int visibility) {
-        setViewVisibility(ids[orientationIdx], visibility);
+        setViewVisibility(Utils.getArrayColumn(ids, orientationIdx), visibility);
     }
 
     /**
@@ -474,31 +559,49 @@ public class MovieDetailsActivity extends AppCompatActivity {
      * Set View's opacity
      * @param ids      Array of view ids
      * @param alpha    View opacity
+     * @param exclude  Array of view ids to exclude
      */
-    private void setViewOpacity(int[] ids, float alpha) {
+    private void setViewOpacity(int[] ids, float alpha, int[] exclude) {
+        int[] sortedExclude = Utils.getSortedArray(exclude);
         for (int id : ids) {
             if (id > 0) {
-                setViewOpacity(id, alpha);
+                if (Arrays.binarySearch(sortedExclude, id) < 0) {
+                    setViewOpacity(id, alpha);
+                }
             }
         }
     }
 
     /**
      * Set View's opacity
-     * @param ids      Array of view ids
-     * @param alpha    View opacity
+     * @param ids       Array of view ids
+     * @param alpha     View opacity
+     * @param exclude   Array of view ids to exclude. <b>NOTE:</b> must be TV_IDX index ids!
      */
-    private void setViewOpacity(int[][] ids, float alpha) {
-        setViewOpacity(ids[orientationIdx], alpha);
+    private void setViewOpacity(int[][] ids, float alpha, int[] exclude) {
+        int[] sortedExclude = Utils.getSortedArray(exclude);
+        int[] excludedContainer = null;
+        int length = sortedExclude.length;
+        if (length > 0) {
+            excludedContainer = new int[length];
+            Arrays.fill(excludedContainer, 0);
+            for (int i = 0; i < length; i++) {
+                int index = Utils.binarySearch(ids, TV_IDX, sortedExclude[i]);
+                if (index >= 0) {
+                    excludedContainer[i] = ids[index][orientationIdx];
+                }
+            }
+        }
+        setViewOpacity(Utils.getArrayColumn(ids, orientationIdx), alpha, excludedContainer);
     }
 
     /**
      * Set the image for an ImageView
-     * @param id    Id of TextView
+     * @param id    Id of ImageView
      * @param image Image to display
      */
     private ImageView setImageViewImage(int id, Bitmap image) {
-        ImageView iv = (ImageView) findViewById(R.id.iv_movie_thumbnail_detailsA);
+        ImageView iv = (ImageView) findViewById(id);
         if (image != null) {
             iv.setImageBitmap(image);
         }
@@ -506,7 +609,35 @@ public class MovieDetailsActivity extends AppCompatActivity {
     }
 
     /**
+     * Setup favourite button
+     * @param isFavourite   Favourite flag
+     */
+    private void setFavouriteButton(boolean isFavourite) {
+        @StringRes int textId;
+        @DrawableRes int imageId;
+        int visibility;
+        if (isFavourite) {
+            textId = R.string.del_from_favourites;
+            imageId = R.drawable.ic_remove_circle_black_18dp;
+            visibility = View.VISIBLE;
+        } else {
+            textId = R.string.add_to_favourites;
+            imageId = R.drawable.ic_favorite_black_18dp;
+            visibility = View.INVISIBLE;
+        }
+        mFavouriteButton.setText(textId);
+        mFavouriteButton.setCompoundDrawablesWithIntrinsicBounds(imageId, 0, 0, 0);
+
+        mFavouriteBadge.setVisibility(visibility);
+
+        if (mMovie != null) {
+            mMovie.setFavourite(isFavourite);
+        }
+    }
+
+    /**
      * Request the movies
+     * @param mMovie    MovieInfo object
      */
     private void requestDetails(MovieInfo mMovie) {
         requestDetails(mMovie.getId());
@@ -514,12 +645,72 @@ public class MovieDetailsActivity extends AppCompatActivity {
 
     /**
      * Request the movies
+     * @param id    Id of movie to request
      */
     private void requestDetails(int id) {
-        setViewOpacity(mDetailsTextViewIds, 0.5f);  // dim details currently n/a
-        if (NetworkUtils.isInternetAvailable(this)) {
-            responseHandler.request(TMDbNetworkUtils.buildGetDetailsUrl(this, id));
+        dimUnknown();
+
+        requestFavouriteDetails(id);
+
+        if (PreferenceControl.getCachePreference(this)) {
+            // caching enabled, try database first
+            Uri uri = UriUtils.getMovieWithIdUri(id);
+            responseHandler.query(this, matchMovieUri(uri), uri);
+        } else {
+            // no cache request from server
+            requestDetailsFromServer(id);
         }
+    }
+
+    /**
+     * Dim details currently not available
+     */
+    private void dimUnknown() {
+        setViewOpacity(mDetailsViewContainerIds, 0.5f, new int[] {
+            R.id.tv_cache_moviedetailsA     // don't dim cache info
+        });  // dim details currently n/a
+    }
+
+    /**
+     * Show refresh in progress
+     */
+    private void showRefreshInProgress() {
+        mRefreshButton.setEnabled(false);
+        mRefreshProgress.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Hide refresh in progress
+     */
+    private void hideRefreshInProgress() {
+        mRefreshButton.setEnabled(true);
+        mRefreshProgress.setVisibility(View.INVISIBLE);
+    }
+
+    /**
+     * Request the movie details from the server
+     * @param id    Id of movie to request
+     */
+    private void requestDetailsFromServer(int id) {
+        dimUnknown();
+        showRefreshInProgress();
+
+        if (NetworkUtils.isInternetAvailable(this)) {
+            // request current movie list via ContentProvider
+            Uri uri = UriUtils.getMovieWithIdUri(id);
+            responseHandler.call(this, matchMovieUri(uri), uri, GET_DETAILS_METHOD, String.valueOf(id), null);
+            // direct http request alternative is
+//            responseHandler.request(TMDbNetworkUtils.buildGetDetailsUrl(this, id));
+        }
+    }
+
+    /**
+     * Request the movie favourite details
+     * @param id    Id of movie to request
+     */
+    private void requestFavouriteDetails(int id) {
+        Uri uri = UriUtils.getFavouriteWithIdUri(id);
+        responseHandler.query(this, matchMovieUri(uri), uri);
     }
 
 
@@ -531,6 +722,71 @@ public class MovieDetailsActivity extends AppCompatActivity {
         outState.putParcelable(MOVIE_DETAIL_OBJ, mDetails);
     }
 
+    @Override
+    public void onBackPressed() {
+        setResult(RESULT_OK, setReturnIntent(new Intent()));
+        finish();
+    }
+
+    /**
+     * Add any required return info to the intent
+     * @param intent    Intent to add to
+     * @return  Intent
+     */
+    private Intent setReturnIntent(@NonNull Intent intent) {
+        // add favourite status change info if necessary
+        if (mMovie.isFavourite() != mFavourite) {
+            intent.putExtra(MOVIE_ID, mMovie.getId());
+            intent.putExtra(COLUMN_FAVOURITE, mMovie.isFavourite());
+        }
+        if (!mDetails.isEmpty()) {
+            intent.putExtra(MOVIE_OBJ, mDetails);   // return details
+        }
+        return intent;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent upIntent;
+        boolean result;
+        switch (item.getItemId()) {
+            // Respond to the action bar's Up/Home button
+            case android.R.id.home:
+                upIntent = NavUtils.getParentActivityIntent(this);
+                setReturnIntent(upIntent);
+
+                if (NavUtils.shouldUpRecreateTask(this, upIntent)) {
+                    // This activity is NOT part of this app's task, so create a new task
+                    // when navigating up, with a synthesized back stack.
+                    TaskStackBuilder.create(this)
+                            // Add all of this activity's parents to the back stack
+                            .addNextIntentWithParentStack(upIntent)
+                            // Navigate up to the closest parent
+                            .startActivities();
+                } else {
+                    // This activity is part of this app's task, so simply
+                    // navigate up to the logical parent activity.
+//                    NavUtils.navigateUpTo(this, upIntent);
+
+                    /* NavUtils.navigateUpTo() causes the onActivityResult() in the parent to receive RESULT_CANCELED and no data intent.
+                        FIXME This is ok for this app for now, as the parent activity is the only activity calling this activity, but needs to be reviewed.
+                     */
+                    upIntent = NavUtils.getParentActivityIntent(this);
+                    setReturnIntent(upIntent);
+
+                    // this is basically what NavUtils.navigateUpTo() does except it uses startActivity() rather than setResult()
+                    upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    setResult(RESULT_OK, upIntent);
+                    finish();
+                }
+                result = true;
+                break;
+            default:
+                result = super.onOptionsItemSelected(item);
+                break;
+        }
+        return result;
+    }
 
     @Override
     protected void onDestroy() {
@@ -561,7 +817,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
     /**
      * Asynchronous request and response handler
      */
-    private ICallback responseHandler = new AsyncCallback() {
+    private AsyncCallback<MovieDetails> responseHandler = new AsyncCallback<MovieDetails>() {
 
         @Override
         public void onFailure(Call call, IOException e) {
@@ -570,49 +826,151 @@ public class MovieDetailsActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onResponse(Object result) {
-            MovieDetails response = null;
-            if (result != null) {
-                response = (MovieDetails) result;
+        public void onResponse(MovieDetails result) {
+            int msgId = 0;
+            if ((result == null) || result.isEmpty()) {
+                msgId = R.string.movie_no_response;
             }
-            onMovieResponse(response, 0);
+            onMovieResponse(result, msgId);
+        }
+
+        @Override
+        public void request(@NonNull URL url) {
+            super.request(url);
         }
 
         /**
          * Convert the http response into a MovieDetails object
          * @param response  Response from the server
-         * @return
+         * @return Response object or <code>null</code>
          */
         @Override
-        public Object processResponse(Response response) {
-            Object result = null;
-            try {
-                String jsonResponse = response.body().string();
-                result = MovieDetails.getInstance(jsonResponse);
-            } catch (Exception e) {
-                e.printStackTrace();
+        public MovieDetails processUrlResponse(@NonNull URL request, @NonNull Response response) {
+            String jsonResponse = NetworkUtils.getResponseBodyString(response);
+            return processUriResponse(new UrlProviderResultWrapper(request, jsonResponse));
+        }
+
+        /**
+         * Process the response from a {@link ICallback#call(AppCompatActivity, int, Uri, String, String, Bundle)} call
+         * @param response  Response from the content provider
+         * @return Response object or <code>null</code>
+         */
+        @Override
+        public MovieDetails processUriResponse(@Nullable AbstractResultWrapper response) {
+            MovieDetails movieDetails = null;
+            if (response != null) {
+                String stringResult = response.getStringResult();
+                if (!TextUtils.isEmpty(stringResult)) {
+                    movieDetails = MovieDetails.getInstance(stringResult);
+
+                    // if caching is enabled save details to db
+                    boolean cache = PreferenceControl.getCachePreference(getContext());
+                    if ((movieDetails != null) && cache) {
+                        int id = movieDetails.getId();
+                        if (id > 0) {
+                            startDbCacheIntentService(INSERT_OR_UPDATE_MOVIE,
+                                    MovieContentValues.builder()
+                                            .setJson(stringResult)
+                                            .setTimestamp(),
+                                    id);
+                        }
+                    }
+                }
             }
-            return result;
+
+            return movieDetails;
+        }
+
+        @Override
+        public void processQueryResponse(@Nullable QueryResultWrapper response) {
+            if (response != null) {
+                Uri uriRequest = response.getUriRequest();
+                int match = matchMovieUri(uriRequest);
+                Cursor cursor = response.getCursorResult();
+
+                switch (match) {
+                    case MOVIE_WITH_ID:
+                        if (cursor.moveToNext()) {
+                            // got result
+                            int idxJson = cursor.getColumnIndex(COLUMN_JSON);
+                            setMovieDetails(MovieDetails.getInstance(cursor.getString(idxJson)), DbUtils.timestampToDate(cursor));
+                        } else  {
+                            // details n/a in database
+                            int id;
+                            try {
+                                // request from server
+                                id = Integer.parseInt(UriUtils.getIdFromWithIdUri(uriRequest));
+                                requestDetailsFromServer(id);
+                            } catch (NumberFormatException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        break;
+                    case FAVOURITE_WITH_ID:
+                        mFavourite = false;
+                        if (cursor.moveToNext()) {
+                            // got result
+                            int idxFav = cursor.getColumnIndex(COLUMN_FAVOURITE);
+                            mFavourite = (cursor.getInt(idxFav) == 1);
+                        }
+                        setFavouriteButton(mFavourite);
+                        break;
+                }
+            }
+        }
+
+        @Override
+        public Context getContext() {
+            return MovieDetailsActivity.this;
         }
     };
+
+    /**
+     * Start the DbCacheIntentService
+     * @param action    Service action to perform
+     * @param builder   ContentValues builder to create ContentValues
+     * @param id        Id to set in builder
+     */
+    private void startDbCacheIntentService(@NonNull String action, DbContentValues.Builder builder, int id) {
+        Intent intent = DbCacheIntentService.getLaunchIntent(this, action);
+
+        ContentValues cv = builder
+                .setId(id)
+                .build();
+
+        intent.putExtra(_ID, id);
+        intent.putExtra(CV_EXTRA, cv);
+        this.startService(intent);
+    }
 
     /**
      * Class to update the ui with response details
      */
     private class MovieResponseHandler extends ResponseHandler<MovieDetails> implements Runnable {
 
-        public MovieResponseHandler(Activity activity, MovieDetails response, int errorId) {
-            super(activity, response, errorId);
+        MovieResponseHandler(Activity activity, MovieDetails response, int errorId, Date cacheDate) {
+            super(activity, response, errorId, cacheDate);
         }
 
         @Override
         public void run() {
             super.run();
-
-            mDetails = getResponse();
-            mMovie.setDetails(mDetails);
-            setInfoAndDetails();
+            setMovieDetails(getResponse(), getCacheDate());
         }
+    }
+
+    /**
+     * Set details from a request
+     * @param details   Details to set
+     */
+    private void setMovieDetails(MovieDetails details, Date cacheDate) {
+        mDetails = details;
+        if (mMovie.isPlaceHolder()) {
+            mMovie.copy(details, null);
+        }
+        mMovie.setDetails(mDetails);
+        mMovie.setCacheDate(cacheDate);
+        setInfoAndDetails();
     }
 
     /**
@@ -620,8 +978,17 @@ public class MovieDetailsActivity extends AppCompatActivity {
      * @param response  Response object
      */
     protected void onMovieResponse(MovieDetails response, int msgId) {
+        hideRefreshInProgress();
+
+        Date cacheDate = INVALID_DATE;
+        if ((response != null) && !response.isEmpty()) {
+            if (PreferenceControl.getCachePreference(this)) {
+                // if caching id enabled, the DbCacheIntentService will be saving response in the background
+                cacheDate = new Date(); // assume successful
+            }
+        }
         // ui updates need to be on ui thread
-        MovieDetailsActivity.this.runOnUiThread(new MovieResponseHandler(MovieDetailsActivity.this, response, msgId));
+        MovieDetailsActivity.this.runOnUiThread(new MovieResponseHandler(MovieDetailsActivity.this, response, msgId, cacheDate));
     }
 
 }

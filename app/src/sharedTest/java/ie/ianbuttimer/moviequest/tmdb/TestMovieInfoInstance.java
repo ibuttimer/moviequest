@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,17 +24,21 @@ import org.json.JSONObject;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.ADULT;
 import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.FIRST_MEMBER;
 import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.LAST_MOVIE_INFO_MEMBER;
 import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.RELEASE_DATE;
 import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.VIDEO;
+import static ie.ianbuttimer.moviequest.utils.DbUtils.DB_RAW_BOOLEAN_FALSE;
+import static ie.ianbuttimer.moviequest.utils.DbUtils.DB_RAW_BOOLEAN_TRUE;
 import static org.junit.Assert.fail;
 
 /**
  * Class for MovieInfo test object
  */
+@SuppressWarnings("unused")
 public class TestMovieInfoInstance extends TestObjectInstance {
 
     /** The MovieInfo object as returned by the Get Popular/Top Rated lists is a subset of the
@@ -127,7 +131,7 @@ public class TestMovieInfoInstance extends TestObjectInstance {
     public static final String overview = "Minions Stuart, Kevin and Bob are recruited by Scarlet Overkill, a super-villain who, alongside her inventor husband Herb, hatches a plot to take over the world.";
     public static final String release_date = "2015-06-17";
 
-    private static final SimpleDateFormat tmdbDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat tmdbDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
     // don't have static access to MovieInfo.getPropertyName() or MovieInfo.getFieldName()
     private MovieInfo dummyMovieInfo = new MovieInfo();
 
@@ -135,7 +139,7 @@ public class TestMovieInfoInstance extends TestObjectInstance {
     /**
      * Set the properties of the specified object for test
      * @param movie     Object to setup
-     * @return
+     * @return initialised object
      */
     public MovieInfo setupObject(MovieInfo movie) {
         if (movie == null) {
@@ -160,7 +164,7 @@ public class TestMovieInfoInstance extends TestObjectInstance {
 
     /**
      * Set the properties of the specified object for test
-     * @return
+     * @return initialised object
      */
     public MovieInfo setupObject() {
         return setupObject(null);
@@ -177,8 +181,8 @@ public class TestMovieInfoInstance extends TestObjectInstance {
         String result = raw;
         int index = raw.indexOf(field);
         if (index >= 0) {
-            int zeroIndex = raw.indexOf("0", index);
-            int oneIndex = raw.indexOf("1", index);
+            int zeroIndex = raw.indexOf(DB_RAW_BOOLEAN_FALSE, index);
+            int oneIndex = raw.indexOf(DB_RAW_BOOLEAN_TRUE, index);
             if ((zeroIndex > 0) && (oneIndex > 0)) {
                 if (zeroIndex < oneIndex) {
                     oneIndex = -1;
@@ -209,7 +213,7 @@ public class TestMovieInfoInstance extends TestObjectInstance {
             startIndex = raw.indexOf('\"', startIndex + 1) + 1; // first char of date
             int endIndex = raw.indexOf('\"', startIndex);       // " at end of date
             try {
-                Date date = new SimpleDateFormat("MMM d, yyyy HH:mm:ss a").parse(raw.substring(startIndex, endIndex));
+                Date date = new SimpleDateFormat("MMM d, yyyy HH:mm:ss a", Locale.US).parse(raw.substring(startIndex, endIndex));
                 result = raw.substring(0, startIndex) + tmdbDateFormat.format(date);
                 result += raw.substring(endIndex);
             }
@@ -272,7 +276,7 @@ public class TestMovieInfoInstance extends TestObjectInstance {
      * Get the field name as returned by the TMDb server
      * @param index     Index of field
      * @return  field name or empty string if invalid index
-     * @see {@link ie.ianbuttimer.moviequest.tmdb.TMDbObject#getFieldName(int)}
+     * @see ie.ianbuttimer.moviequest.tmdb.TMDbObject#getFieldName(int)
      */
     @Override
     public String getFieldName(int index) {
@@ -283,7 +287,7 @@ public class TestMovieInfoInstance extends TestObjectInstance {
      * Get the object property name associated with the specified index
      * @param index     Index of field
      * @return  property name or empty string if invalid index
-     * @see {@link ie.ianbuttimer.moviequest.tmdb.TMDbObject#getFieldName(int)}
+     * @see ie.ianbuttimer.moviequest.tmdb.TMDbObject#getFieldName(int)
      */
     @Override
     protected String getPropertyName(int index) {

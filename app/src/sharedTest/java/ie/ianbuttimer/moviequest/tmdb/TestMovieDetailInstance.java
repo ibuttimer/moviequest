@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@ import static org.junit.Assert.fail;
  */
 public class TestMovieDetailInstance extends TestMovieInfoInstance {
 
-    /** @see {@link ie.ianbuttimer.moviequest.tmdb.TestMovieInfoInstance} regarding test data */
+    /** @see ie.ianbuttimer.moviequest.tmdb.TestMovieInfoInstance regarding test data */
 
     public static final int budget = 74000000;
     public static final Genre[] genres  = new Genre[] {
@@ -140,7 +140,7 @@ public class TestMovieDetailInstance extends TestMovieInfoInstance {
      * Get the field name as returned by the TMDb server
      * @param index     Index of field
      * @return  field name or empty string if invalid index
-     * @see {@link ie.ianbuttimer.moviequest.tmdb.TMDbObject#getFieldName(int)}
+     * @see ie.ianbuttimer.moviequest.tmdb.TMDbObject#getFieldName(int)
      */
     @Override
     public String getFieldName(int index) {
@@ -151,7 +151,7 @@ public class TestMovieDetailInstance extends TestMovieInfoInstance {
      * Get the object property name associated with the specified index
      * @param index     Index of field
      * @return  property name or empty string if invalid index
-     * @see {@link ie.ianbuttimer.moviequest.tmdb.TMDbObject#getFieldName(int)}
+     * @see ie.ianbuttimer.moviequest.tmdb.TMDbObject#getFieldName(int)
      */
     @Override
     protected String getPropertyName(int index) {

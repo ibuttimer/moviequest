@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,20 +25,27 @@ import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
 
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Date;
 
 import ie.ianbuttimer.moviequest.R;
 
-
-
-
+import static android.text.format.DateUtils.DAY_IN_MILLIS;
+import static android.text.format.DateUtils.HOUR_IN_MILLIS;
+import static android.text.format.DateUtils.MINUTE_IN_MILLIS;
+import static android.text.format.DateUtils.SECOND_IN_MILLIS;
+import static android.text.format.DateUtils.WEEK_IN_MILLIS;
+import static android.text.format.DateUtils.YEAR_IN_MILLIS;
+import static ie.ianbuttimer.moviequest.Constants.INVALID_DATE;
 
 /**
- * This package contains miscellaneous utility functions
+ * This class contains miscellaneous utility functions
  */
-
+@SuppressWarnings("unused")
 public class Utils {
 
     /**
@@ -76,8 +83,6 @@ public class Utils {
             Bundle bundle = ai.metaData;
             metaData = bundle.getString(key);
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        } catch (NullPointerException e) {
             e.printStackTrace();
         }
         return metaData;
@@ -235,6 +240,7 @@ public class Utils {
      * @param context   The current context
      * @return <code>true</code> if device has a small screen, <code>false</code> otherwise
      */
+    @SuppressWarnings("unused")
     public static boolean isSmallScreen(Context context) {
         return isSize(context, Configuration.SCREENLAYOUT_SIZE_SMALL);
     }
@@ -250,14 +256,14 @@ public class Utils {
 
     /**
      * Set the backdrop size preference for the app
-     * @param context
+     * @param context   Current context
      */
     public static void setBackdropPreference(Context context) {
         /* set the backdrop size depending on screen size
             its setup as a preference (but not currently shown in settings), so save as preference
          */
         String[] array = context.getResources().getStringArray(R.array.pref_backdrop_size_values);
-        int sizeIndex = -1;
+        int sizeIndex;
         if (isXLargeScreen(context)) {
             sizeIndex = 2;
         } else if (isLargeScreen(context)) {
@@ -265,10 +271,115 @@ public class Utils {
         } else {
             sizeIndex = 0;
         }
-        if ((sizeIndex >= 0) && (sizeIndex < array.length)) {
+        if (sizeIndex < array.length) {
             PreferenceControl.setSharedStringPreference(context, R.string.pref_backdrop_size_key, array[sizeIndex]);
         }
     }
 
+    /**
+     * Checks if a date is empty, i.e. null or equal to the app's 'invalid date'
+     * @param date  Date to check
+     * @return  <code>true</code> if empty, <code>false</code> otherwise
+     */
+    public static boolean isEmpty(Date date) {
+        return ((date == null) || (date.equals(INVALID_DATE)));
+    }
 
+    /**
+     * Returns a string describing 'time' as a time relative to 'now'.
+     * @param context   Current context
+     * @param time      the time to describe, in milliseconds
+     * @param now       the current time in milliseconds
+     * @return  elapsed time string
+     */
+    public static String getRelativeTimeSpanString(Context context, long time, long now) {
+        String elapsed;
+        long interval = now - time;
+        if (interval < SECOND_IN_MILLIS) {
+            interval = 0L;
+        } else if (interval < MINUTE_IN_MILLIS) {
+            interval = SECOND_IN_MILLIS;
+        } else if (interval < HOUR_IN_MILLIS) {
+            interval = MINUTE_IN_MILLIS;
+        } else if (interval < DAY_IN_MILLIS) {
+            interval = HOUR_IN_MILLIS;
+        } else if (interval < WEEK_IN_MILLIS) {
+            interval = DAY_IN_MILLIS;
+        } else if (interval > YEAR_IN_MILLIS) {
+            interval = YEAR_IN_MILLIS;
+        } else {
+            interval = WEEK_IN_MILLIS;
+        }
+        if (interval == 0L) {
+            elapsed = context.getString(R.string.just_now);
+        } else {
+            elapsed = DateUtils.getRelativeTimeSpanString(time, now, interval).toString();
+        }
+        return elapsed;
+    }
+
+    /**
+     * Returns a ascending numerical order sorted copy of an array
+     * @param unsorted  Array to copy
+     * @return  new sorted array, or empty array if <code>null</code> was passed
+     */
+    public static int[] getSortedArray(int[] unsorted) {
+        int[] sorted;
+        if (unsorted == null) {
+            sorted = new int[] {};
+        } else {
+            sorted = Arrays.copyOf(unsorted, unsorted.length);
+            Arrays.sort(sorted);
+        }
+        return sorted;
+    }
+
+    /**
+     * Return an array representing the specified column of a multi-dimension array
+     * @param array         Array to get column from
+     * @param columnIndex   Index of column to get
+     * @return  Column array
+     */
+    public static int[] getArrayColumn(int[][] array, int columnIndex) {
+        int length = array.length;
+        if (columnIndex < 0) {
+            throw new ArrayIndexOutOfBoundsException("Invalid column index");
+        }
+        int[] column = new int[length];
+        for (int i = 0; i < length; i++) {
+            if (columnIndex >= array[i].length) {
+                throw new ArrayIndexOutOfBoundsException("Invalid column index on row " + i);
+            }
+            column[i] = array[i][columnIndex];
+        }
+        return column;
+    }
+
+    /**
+     * Return the index of a row from a multi-dimension array where the value at a particular column matches a value<br>
+     * <b>NOTE:</b> The search column must be sorted in ascending order.
+     * @param array         Array to get column from
+     * @param columnIndex   Index of column to check
+     * @param value         Value to find
+     * @return  Index of row or <code>-1</code> if not found
+     */
+    public static int binarySearch(int[][] array, int columnIndex, int value) {
+        int row = -1;
+        if ((array != null) && (array.length > 0)) {
+            int lo = 0;
+            int hi = array.length - 1;
+            while (lo <= hi) {
+                int mid = (lo + hi) / 2;
+                if (value < array[mid][columnIndex]) {
+                    hi = mid - 1;
+                } else if (value > array[mid][columnIndex]) {
+                    lo = mid + 1;
+                } else {
+                    row = mid;
+                    break;
+                }
+            }
+        }
+        return row;
+    }
 }

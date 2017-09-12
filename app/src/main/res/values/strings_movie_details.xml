@@ -2,14 +2,24 @@
 <resources>
 
     <string name="title_activity_moviedetails">Details</string>
-    <string name="banner_image_movie_detailsA">Banner image</string>
-    <string name="thumbnail_image_movie_detailsA">Thumbnail image</string>
+    <string name="banner_image_movie_detailsA">Banner</string>
+    <string name="thumbnail_image_movie_detailsA">Thumbnail</string>
+    <string name="refresh_image_movie_detailsA">Refresh</string>
 
     <!-- Note: to be parsed by MessageFormat, play particular attention to quotes -->
     <string name="movie_num_stars">{0}/10</string>
     <string name="movie_running_time">{0} min</string>
+    <string name="movie_cache_details">Information saved {0}</string>
+    <string name="movie_no_cache_details">Information not saved</string>
+    <string name="movie_no_response">No response received</string>
+    <string name="refresh_movie_details">Refresh</string>
 
     <string name="movie_running_time_na">Running time unavailable</string>
+    <string name="movie_plot_na">Plot unavailable</string>
+    <string name="movie_rating_na">Rating unavailable</string>
+    <string name="movie_release_year_na">Year unavailable</string>
+    <string name="add_to_favourites">Add to\nfavourites</string>
+    <string name="del_from_favourites">Remove from\nfavourites</string>
 
     <string name="moviedetails_title">Title</string>
     <string name="moviedetails_plot">Plot</string>
@@ -25,4 +35,5 @@
     <string name="moviedetails_companies">Production Companies</string>
     <string name="moviedetails_countries">Production Countries</string>
     <string name="moviedetails_budget">Budget</string>
+    <string name="favourite_badge">Favourite badge</string>
 </resources>

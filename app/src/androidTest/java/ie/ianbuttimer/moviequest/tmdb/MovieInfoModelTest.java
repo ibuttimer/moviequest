@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,6 +25,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Date;
+
 import ie.ianbuttimer.moviequest.utils.NetworkUtils;
 import ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils;
 
@@ -40,8 +42,10 @@ public class MovieInfoModelTest extends MovieInfoTest {
     private MovieInfoModel movieModel;
     private MovieDetails movieDetails;
     private Uri posterUri;
-    private Uri backgropUri;
+    private Uri backdropUri;
     private Uri thumbnailUri;
+    private Date cacheDate;
+    private boolean favourite;
     private TestMovieInfoModelInstance modelProvider = new TestMovieInfoModelInstance();
     private TestMovieDetailInstance detailProvider = new TestMovieDetailInstance();
 
@@ -64,17 +68,21 @@ public class MovieInfoModelTest extends MovieInfoTest {
                         movieModel.getPosterPath()
                 })
         );
-        backgropUri = Uri.parse(
+        backdropUri = Uri.parse(
                 NetworkUtils.joinUrlPaths(new String[] {
                         TMDbNetworkUtils.IMAGE_BASE_URL,
                         TMDbNetworkUtils.sizePath(300),
                         movieModel.getPosterPath()
                 })
         );
+        cacheDate = new Date();
+        favourite = true;
         movieModel.setThumbnailUri(thumbnailUri);
         movieModel.setPosterUri(posterUri);
-        movieModel.setBackdropUri(backgropUri);
+        movieModel.setBackdropUri(backdropUri);
         movieModel.setDetails(movieDetails);
+        movieModel.setCacheDate(cacheDate);
+        movieModel.setFavourite(favourite);
     }
 
     @Override
@@ -101,23 +109,27 @@ public class MovieInfoModelTest extends MovieInfoTest {
         MovieInfoModel createdFromParcel = MovieInfoModel.CREATOR.createFromParcel(parcel);
 
         // Verify that the received data is correct.
-        checkObject(createdFromParcel, movieModel);
+        checkObject("parcel", createdFromParcel, movieModel);
     }
 
-    public void checkObject(MovieInfoModel createdFromParcel, MovieInfoModel original) {
+    public void checkObject(String test, MovieInfoModel createdFromParcel, MovieInfoModel original) {
         // Verify that the received data is correct.
-        super.checkObject(createdFromParcel, original);
+        super.checkObject(test, createdFromParcel, original);
 
-        assertEquals(makeAssertMessage("Index"),
+        assertEquals(makeAssertMessage(test + " Index"),
                 createdFromParcel.getIndex(), original.getIndex());
-        assertEquals(makeAssertMessage("Thumbnail"),
+        assertEquals(makeAssertMessage(test + " Thumbnail"),
                 createdFromParcel.getThumbnailUri(), original.getThumbnailUri());
-        assertEquals(makeAssertMessage("Poster"),
+        assertEquals(makeAssertMessage(test + " Poster"),
                 createdFromParcel.getPosterUri(), original.getPosterUri());
-        assertEquals(makeAssertMessage("Backdrop"),
+        assertEquals(makeAssertMessage(test + " Backdrop"),
                 createdFromParcel.getBackdropUri(), original.getBackdropUri());
-        assertEquals(makeAssertMessage("Details"),
+        assertEquals(makeAssertMessage(test + " Details"),
                 createdFromParcel.getDetails(), original.getDetails());
+        assertEquals(makeAssertMessage(test + " CacheDate"),
+                createdFromParcel.getCacheDate(), original.getCacheDate());
+        assertEquals(makeAssertMessage(test + " Favourite"),
+                createdFromParcel.isFavourite(), original.isFavourite());
     }
 
 }

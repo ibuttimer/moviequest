@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,10 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.util.Log;
+
+import com.facebook.stetho.okhttp3.StethoInterceptor;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,16 +36,19 @@ import java.net.URL;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
+import ie.ianbuttimer.moviequest.BuildConfig;
+import ie.ianbuttimer.moviequest.data.ICallback;
 import okhttp3.Call;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * Network-related utility function class
  */
-
+@SuppressWarnings("unused")
 public class NetworkUtils {
 
     private static final String TAG = NetworkUtils.class.getSimpleName();
@@ -50,11 +56,17 @@ public class NetworkUtils {
     private final static OkHttpClient client;
 
     static {
-        client = new OkHttpClient.Builder()
+
+        // FIXME network requests when there is no internet connection are taking longer than these settings
+
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .writeTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .build();
+            .readTimeout(20, TimeUnit.SECONDS);
+        if (BuildConfig.DEBUG) {
+            builder.addNetworkInterceptor(new StethoInterceptor());
+        }
+        client = builder.build();
     }
 
     /**
@@ -64,7 +76,7 @@ public class NetworkUtils {
      * @throws IOException If the response was not successfully received, understood, and accepted.
      * @see <a href="https://github.com/square/okhttp/wiki/Recipes">okhttp Recipes</a>
      */
-    public static String getHttpResponseStringSync(URL url) throws Exception {
+    public static String getHttpResponseStringSync(URL url) throws IOException {
         Request request = getHttpRequest(url);
         Call call = client.newCall(request);
         Response response = null;
@@ -80,7 +92,7 @@ public class NetworkUtils {
             logHeaders(response);
 
             // response body can only be consumed once, and not on another thread
-            body = response.body().string();
+            body = getResponseBodyString(response);
             if (body != null) {
                 body = body.substring(0);
             }
@@ -92,6 +104,24 @@ public class NetworkUtils {
             }
         }
         return body;
+    }
+
+    /**
+     * Get the response body from a Response
+     * @param response  Response to get body from
+     * @return  Body as a string
+     */
+    public static String getResponseBodyString(@NonNull Response response) {
+        String bodyString = null;
+        try {
+            ResponseBody body = response.body();
+            if (body != null) {
+                bodyString = body.string();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bodyString;
     }
 
     /**
@@ -112,7 +142,7 @@ public class NetworkUtils {
      * @throws IOException If the response was not successfully received, understood, and accepted.
      * @see <a href="https://github.com/square/okhttp/wiki/Recipes">okhttp Recipes</a>
      */
-    public static JSONObject getHttpResponseJsonSync(URL url) throws Exception {
+    public static JSONObject getHttpResponseJsonSync(URL url) throws IOException {
         String body = getHttpResponseStringSync(url);
         JSONObject json = null;
         try {
@@ -192,12 +222,13 @@ public class NetworkUtils {
     public static URL convertUriToUrl(Uri uri) {
 
         URL url = null;
-        try {
-            url = new URL(uri.toString());
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+        if (uri != null) {
+            try {
+                url = new URL(uri.toString());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
         }
-
         Log.v(TAG, "Built URL " + url);
 
         return url;

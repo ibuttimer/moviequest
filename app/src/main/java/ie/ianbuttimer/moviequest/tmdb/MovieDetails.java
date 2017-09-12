@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 
+import ie.ianbuttimer.moviequest.utils.Utils;
+
 /**
  * This class represents the movie details provided by TMDb
  *
@@ -36,7 +38,7 @@ import java.util.Locale;
  * Unit tests:
  *  ie.ianbuttimer.moviequest.tmdb.TestMovieDetailInstance
  */
-
+@SuppressWarnings("unused")
 public class MovieDetails extends MovieInfo implements Parcelable {
 
     private static HashMap<String, MemberEntry> jsonMemberMap;  // map of JSON property names to class setter method & JSON getter method names
@@ -69,6 +71,8 @@ public class MovieDetails extends MovieInfo implements Parcelable {
     protected static final int COLLECTION = FIRST_MOVIE_DETAIL_MEMBER + 11;
     protected static final int LAST_MOVIE_DETAIL_MEMBER = COLLECTION;
 
+    private static final int[] sAllFields;  // list of all fields
+
     private static final String[] FIELD_NAMES;  // NOTE order must follow the order of the indices in super class & above!!!!
 
     static {
@@ -92,6 +96,8 @@ public class MovieDetails extends MovieInfo implements Parcelable {
         });
         // add local members
         jsonMemberMap.putAll(generateMemberMap(null));
+
+        sAllFields = makeFieldIdsArray(FIRST_MEMBER, LAST_MOVIE_DETAIL_MEMBER);
     }
 
     /**
@@ -99,50 +105,48 @@ public class MovieDetails extends MovieInfo implements Parcelable {
      * @param exclude   Array of ids of members to exclude
      */
     protected static HashMap<String, MemberEntry> generateMemberMap(int[] exclude) {
-        HashMap<String, MemberEntry> memberMap = new HashMap<String, MemberEntry>();
+        HashMap<String, MemberEntry> memberMap = new HashMap<>();
+        int[] sortedExclude = Utils.getSortedArray(exclude);
 
-        if (exclude == null) {
-            exclude = new int[] {};
-        }
         for (int i = FIRST_MOVIE_DETAIL_MEMBER; i <= LAST_MOVIE_DETAIL_MEMBER; i++) {
-            if (Arrays.binarySearch(exclude, i) < 0) {
+            if (Arrays.binarySearch(sortedExclude, i) < 0) {
                 String key = FIELD_NAMES[i];
                 switch (i) {
                     case BUDGET:
-                        memberMap.put(key, intTemplate.copy("setBudget", "budget"));
+                        memberMap.put(key, intTemplate.copy("setBudget", "getBudget", "budget"));
                         break;
                     case GENRES:
-                        memberMap.put(key, jsonArrayTemplate.copy("setGenresFromJson", "genres"));
+                        memberMap.put(key, jsonArrayTemplate.copy("setGenresFromJson", "getGenres", "genres"));
                         break;
                     case HOMEPAGE:
-                        memberMap.put(key, stringTemplate.copy("setHomepage", "homepage"));
+                        memberMap.put(key, stringTemplate.copy("setHomepage", "getHomepage", "homepage"));
                         break;
                     case IMDB_ID:
-                        memberMap.put(key, stringTemplate.copy("setImdbId", "imdbId"));
+                        memberMap.put(key, stringTemplate.copy("setImdbId", "getImdbId", "imdbId"));
                         break;
                     case PRODUCTION_COMPANIES:
-                        memberMap.put(key, jsonArrayTemplate.copy("setProductionCompaniesFromJson", "productionCompanies"));
+                        memberMap.put(key, jsonArrayTemplate.copy("setProductionCompaniesFromJson", "getProductionCompanies", "productionCompanies"));
                         break;
                     case PRODUCTION_COUNTRIES:
-                        memberMap.put(key, jsonArrayTemplate.copy("setProductionCountriesFromJson", "productionCountries"));
+                        memberMap.put(key, jsonArrayTemplate.copy("setProductionCountriesFromJson", "getProductionCountries", "productionCountries"));
                         break;
                     case REVENUE:
-                        memberMap.put(key, intTemplate.copy("setRevenue", "revenue"));
+                        memberMap.put(key, intTemplate.copy("setRevenue", "getRevenue", "revenue"));
                         break;
                     case RUNTIME:
-                        memberMap.put(key, intTemplate.copy("setRuntime", "runtime"));
+                        memberMap.put(key, intTemplate.copy("setRuntime", "getRuntime", "runtime"));
                         break;
                     case SPOKEN_LANGUAGES:
-                        memberMap.put(key, jsonArrayTemplate.copy("setSpokenLanguagesFromJson", "spokenLanguages"));
+                        memberMap.put(key, jsonArrayTemplate.copy("setSpokenLanguagesFromJson", "getSpokenLanguages", "spokenLanguages"));
                         break;
                     case STATUS:
-                        memberMap.put(key, stringTemplate.copy("setStatus", "status"));
+                        memberMap.put(key, stringTemplate.copy("setStatus", "getStatus", "status"));
                         break;
                     case TAGLINE:
-                        memberMap.put(key, stringTemplate.copy("setTagline", "tagline"));
+                        memberMap.put(key, stringTemplate.copy("setTagline", "getTagline", "tagline"));
                         break;
                     case COLLECTION:
-                        memberMap.put(key, jsonObjectTemplate.copy("setCollectionFromJson", "collection"));
+                        memberMap.put(key, jsonObjectTemplate.copy("setCollectionFromJson", "getCollection", "collection"));
                         break;
                 }
             }
@@ -169,6 +173,11 @@ public class MovieDetails extends MovieInfo implements Parcelable {
         return name;
     }
 
+    @Override
+    public int[] getFieldIds() {
+        return sAllFields;
+    }
+
     /**
      * Default constructor
      */
@@ -189,6 +198,17 @@ public class MovieDetails extends MovieInfo implements Parcelable {
     }
 
     /**
+     * Constructor for a MovieDetails placeholder
+     * @param id        Movie id
+     * @param title     Movie title
+     */
+    public MovieDetails(Integer id, String title) {
+        this();
+        setTitle(title);
+        setId(id);
+    }
+
+    /**
      * Create a MovieInfo object from JSON data
      * @param jsonData  JSON data object
      * @return  new MovieInfo object or null if no data
@@ -203,7 +223,7 @@ public class MovieDetails extends MovieInfo implements Parcelable {
      * @return  new MovieInfo object or null if no data
      */
     public static MovieDetails getInstance(String jsonString) {
-        return (MovieDetails)getInstance(jsonMemberMap, jsonString, MovieDetails.class, new MovieDetails());
+        return getInstance(jsonMemberMap, jsonString, new MovieDetails());
     }
 
     /**
@@ -213,9 +233,13 @@ public class MovieDetails extends MovieInfo implements Parcelable {
      * @return updated object
      */
     static MovieDetails getInstance(JSONObject jsonData, MovieDetails movie) {
-        return (MovieDetails)getInstance(jsonMemberMap, jsonData, MovieDetails.class, movie);
+        return getInstance(jsonMemberMap, jsonData, movie);
     }
 
+    @Override
+    public <T extends TMDbObject> void copy(T from, int[] fields) {
+        copy(from, this, fields);
+    }
 
     public Integer getBudget() {
         return budget;
@@ -489,7 +513,6 @@ public class MovieDetails extends MovieInfo implements Parcelable {
     public boolean isEmpty() {
         return equals(new MovieDetails());
     }
-
 
     @Override
     public int describeContents() {

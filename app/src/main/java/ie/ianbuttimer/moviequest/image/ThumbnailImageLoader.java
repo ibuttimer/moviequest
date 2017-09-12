@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ie.ianbuttimer.moviequest.utils;
+package ie.ianbuttimer.moviequest.image;
 
 import android.content.Context;
 import android.widget.ImageView;
@@ -22,18 +22,18 @@ import android.widget.ProgressBar;
 
 import com.squareup.picasso.Callback;
 
-import ie.ianbuttimer.moviequest.R;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfo;
+import ie.ianbuttimer.moviequest.utils.PreferenceControl;
 
 /**
  * Image loading utility class
  */
-public class BackdropImageLoader extends ImageLoader implements Callback {
+public class ThumbnailImageLoader extends PosterImageLoader implements Callback {
 
     /**
      * Default constructor
      */
-    public BackdropImageLoader() {
+    public ThumbnailImageLoader() {
         super();
     }
 
@@ -42,7 +42,8 @@ public class BackdropImageLoader extends ImageLoader implements Callback {
      * @param imageView     ImageView to load into
      * @param progressBar   In progress bar
      */
-    public BackdropImageLoader(ImageView imageView, ProgressBar progressBar) {
+    @SuppressWarnings("unused")
+    public ThumbnailImageLoader(ImageView imageView, ProgressBar progressBar) {
         super(imageView, progressBar);
     }
 
@@ -50,19 +51,24 @@ public class BackdropImageLoader extends ImageLoader implements Callback {
      * Constructor
      * @param imageView     ImageView to load into
      */
-    public BackdropImageLoader(ImageView imageView) {
+    @SuppressWarnings("unused")
+    public ThumbnailImageLoader(ImageView imageView) {
         super(imageView);
     }
 
     @Override
     public String getImageSize(Context context, MovieInfo movie) {
-        return PreferenceControl.getSharedStringPreference(context,
-                R.string.pref_backdrop_size_key, R.string.pref_backdrop_size_dlft_value);
+        return PreferenceControl.getThumbnailSizePreference(context);
+    }
+
+
+    @Override
+    public void onSuccess() {
+        super.onSuccess();
     }
 
     @Override
-    public String getImagePath(MovieInfo movie) {
-        return movie.getBackdropPath();
+    public void onError() {
+        super.onError();
     }
-
 }

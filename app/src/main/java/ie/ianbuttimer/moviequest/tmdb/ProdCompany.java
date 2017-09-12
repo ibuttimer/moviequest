@@ -30,7 +30,7 @@ public class ProdCompany extends IdName implements Parcelable {
     private static HashMap<String, MemberEntry> jsonMemberMap;  // map of JSON property names to class setter method & JSON getter method names
 
     static {
-        jsonMemberMap = generateMemberMap();
+        jsonMemberMap = generateMemberMap(null);
     }
 
     @Override
@@ -63,7 +63,7 @@ public class ProdCompany extends IdName implements Parcelable {
      * @return  new ProdCompany object or null if no data
      */
     public static ProdCompany getInstance(JSONObject jsonData) {
-        return (ProdCompany)TMDbObject.getInstance(jsonMemberMap, jsonData, ProdCompany.class, new ProdCompany());
+        return TMDbObject.getInstance(jsonMemberMap, jsonData, new ProdCompany());
     }
 
     // just provide the creator and parcel constructor as other parcelable ,ethods are in super class

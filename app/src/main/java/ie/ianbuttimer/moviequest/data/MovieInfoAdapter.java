@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,20 +20,24 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import ie.ianbuttimer.moviequest.R;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfoModel;
+import ie.ianbuttimer.moviequest.utils.ITester;
 
 /**
  * Adapter class for a RecyclerView of movies
  */
+@SuppressWarnings("unused")
 public class MovieInfoAdapter<T extends MovieInfoModel> extends RecyclerView.Adapter<MovieInfoViewHolder> {
 
         private List<T> mMovieList;         // list of objects represented by this adapter
@@ -64,11 +68,11 @@ public class MovieInfoAdapter<T extends MovieInfoModel> extends RecyclerView.Ada
         public MovieInfoViewHolder<? extends MovieInfoModel> onCreateViewHolder(ViewGroup viewGroup, int viewType) {
             Context context = viewGroup.getContext();
             LayoutInflater inflater = LayoutInflater.from(context);
-            boolean attachImmediately = false;
 
-            View view = inflater.inflate(R.layout.movie_info_list_item, viewGroup, attachImmediately);
+            // inflate but don't attach
+            View view = inflater.inflate(R.layout.movie_info_list_item, viewGroup, false);
 
-            return new MovieInfoViewHolder<T>(view, mClickHandler);
+            return new MovieInfoViewHolder<>(view, mClickHandler);
         }
 
         /**
@@ -88,6 +92,9 @@ public class MovieInfoAdapter<T extends MovieInfoModel> extends RecyclerView.Ada
                 // set the movie object as the view tag for easy retrieval later
                 viewHolder.itemView.setTag(R.id.movie_id_tag, movie);
                 viewHolder.setViewInfo(movie);      // set the view's elements to the movie's info
+            } else {
+                viewHolder.setViewInfo(movie);      // set the view's elements to the movie's info
+
             }
         }
 
@@ -102,6 +109,115 @@ public class MovieInfoAdapter<T extends MovieInfoModel> extends RecyclerView.Ada
                 item = mMovieList.get(position);
             }
             return item;
+        }
+
+        /**
+         * Find the data item in the data set matching the test criteria
+         * @param tester        Tester to use to find required data
+         * @param fromIndex	    Index of the first element, inclusive
+         * @param toIndex	    Index of the last element, exclusive
+         * @return A Pair with the data at the specified position and its index. If a data item isn't found the Pair will contain null & -1;
+         * @throws IllegalArgumentException	if fromIndex > toIndex
+         * @throws ArrayIndexOutOfBoundsException	if fromIndex < 0 or toIndex > a.length
+         */
+        public Pair<T, Integer> findItemAndIndex(ITester<T> tester, int fromIndex, int toIndex) {
+            Pair<T, Integer> result = Pair.create(null, -1);
+            if (fromIndex > toIndex) {
+                throw new IllegalArgumentException("From index greater than to index");
+            }
+            if (fromIndex < 0) {
+                throw new ArrayIndexOutOfBoundsException("From index before start");
+            }
+            if (mMovieList != null) {
+                int length = mMovieList.size();
+                if (toIndex > length) {
+                    throw new ArrayIndexOutOfBoundsException("To index after end");
+                }
+                for (int i = fromIndex, ll = Math.min(length, toIndex); i < ll; i++) {
+                    T toTest = mMovieList.get(i);
+                    if (tester.test(toTest)) {
+                        result = Pair.create(toTest, i);
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+
+        /**
+         * Find the data item in the data set matching the test criteria
+         * @param tester    Tester to use to find required data
+         * @param fromIndex	Index of the first element, inclusive
+         * @param toIndex	Index of the last element, exclusive
+         * @return The data matching the test criteria, or <code>null</code> if not found
+         * @throws IllegalArgumentException	if fromIndex > toIndex
+         * @throws ArrayIndexOutOfBoundsException	if fromIndex < 0 or toIndex > a.length
+         */
+        public T findItem(ITester<T> tester, int fromIndex, int toIndex) {
+            Pair<T, Integer> result = findItemAndIndex(tester, fromIndex, toIndex);
+            return result.first;
+        }
+
+        /**
+         * Find the data item in the data set matching the test criteria
+         * @param tester    Tester to use to find required data
+         * @param fromIndex	Index of the first element, inclusive
+         * @return The data matching the test criteria, or <code>null</code> if not found
+         * @throws ArrayIndexOutOfBoundsException	if fromIndex < 0 or toIndex > a.length
+         */
+        public T findItem(ITester<T> tester, int fromIndex) {
+            T item = null;
+            if (mMovieList != null) {
+                item = findItem(tester, fromIndex, mMovieList.size());
+            }
+            return item;
+        }
+
+        /**
+         * Find the data item in the data set matching the test criteria
+         * @param tester    Tester to use to find required data
+         * @return The data matching the test criteria, or <code>null</code> if not found
+         */
+        public T findItem(ITester<T> tester) {
+            return findItem(tester, 0);
+        }
+
+        /**
+         * Find the index of a data item in the data set matching the test criteria
+         * @param tester    Tester to use to find required data
+         * @param fromIndex	Index of the first element, inclusive
+         * @param toIndex	Index of the last element, exclusive
+         * @return The index of the data, or -1 if nothing is found
+         * @throws IllegalArgumentException	if fromIndex > toIndex
+         * @throws ArrayIndexOutOfBoundsException	if fromIndex < 0 or toIndex > a.length
+         */
+        public int findItemIndex(ITester<T> tester, int fromIndex, int toIndex) {
+            Pair<T, Integer> result = findItemAndIndex(tester, fromIndex, toIndex);
+            return result.second;
+        }
+
+        /**
+         * Find the index of a data item in the data set matching the test criteria
+         * @param tester    Tester to use to find required data
+         * @param fromIndex	Index of the first element, inclusive
+         * @return The index of the data, or -1 if nothing is found
+         * @throws ArrayIndexOutOfBoundsException	if fromIndex < 0 or toIndex > a.length
+         */
+        public int findItemIndex(ITester<T> tester, int fromIndex) {
+            int index = -1;
+            if (mMovieList != null) {
+                index = findItemIndex(tester, fromIndex, mMovieList.size());
+            }
+            return index;
+        }
+
+        /**
+         * Find the index of a data item in the data set matching the test criteria
+         * @param tester    Tester to use to find required data
+         * @return The index of the data, or -1 if nothing is found
+         */
+        public int findItemIndex(ITester<T> tester) {
+            return findItemIndex(tester, 0);
         }
 
         /**
@@ -146,6 +262,31 @@ public class MovieInfoAdapter<T extends MovieInfoModel> extends RecyclerView.Ada
             mMovieList.addAll(collection);
         }
 
+
+        /**
+         * Removes the element at the specified position in this list.
+         * @param position   The index of the element to be removed.
+         * @return The data at the specified position. This value may be null.
+         * @throws UnsupportedOperationException    if the remove operation is not supported by this list
+         * @throws IndexOutOfBoundsException    if the index is out of range (index < 0 || index >= size())
+         */
+        public T remove(int position) {
+            T item = null;
+            if (mMovieList != null) {
+                item = mMovieList.remove(position);
+            }
+            return item;
+        }
+
+
+        public Iterator<T> iterator () {
+            Iterator<T> iterator = null;
+            if (mMovieList != null) {
+                iterator = mMovieList.iterator();
+            }
+            return iterator;
+        }
+
         /**
          * Remove all elements from the list.
          * Note: Remember to call notifyDataSetChanged() when finished adding items to the list
@@ -177,6 +318,10 @@ public class MovieInfoAdapter<T extends MovieInfoModel> extends RecyclerView.Ada
      * Interface for movie adapter
      */
     public interface MovieInfoAdapterOnClickHandler {
+        /**
+         * Process the click event
+         * @param view  View that was clicked
+         */
         void onItemClick(View view);
     }
 }

@@ -17,9 +17,13 @@
 package ie.ianbuttimer.moviequest;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -37,29 +41,42 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
+import ie.ianbuttimer.moviequest.data.DbCacheIntentService;
 import ie.ianbuttimer.moviequest.data.MovieInfoAdapter;
+import ie.ianbuttimer.moviequest.tmdb.MovieDetails;
+import ie.ianbuttimer.moviequest.tmdb.MovieInfo;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfoModel;
 import ie.ianbuttimer.moviequest.tmdb.MovieListResponse;
-import ie.ianbuttimer.moviequest.utils.AsyncCallback;
+import ie.ianbuttimer.moviequest.data.AbstractResultWrapper;
+import ie.ianbuttimer.moviequest.data.AsyncCallback;
 import ie.ianbuttimer.moviequest.utils.Dialog;
-import ie.ianbuttimer.moviequest.utils.ICallback;
+import ie.ianbuttimer.moviequest.data.ICallback;
+import ie.ianbuttimer.moviequest.utils.ITester;
 import ie.ianbuttimer.moviequest.utils.NetworkUtils;
 import ie.ianbuttimer.moviequest.utils.PreferenceControl;
 import ie.ianbuttimer.moviequest.utils.ResponseHandler;
-import ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils;
 import ie.ianbuttimer.moviequest.utils.Tuple;
 import ie.ianbuttimer.moviequest.utils.Utils;
 import okhttp3.Call;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 
 import static ie.ianbuttimer.moviequest.Constants.MOVIE_ID;
 import static ie.ianbuttimer.moviequest.Constants.MOVIE_OBJ;
+import static ie.ianbuttimer.moviequest.Constants.MOVIE_TITLE;
+import static ie.ianbuttimer.moviequest.data.DbCacheIntentService.PURGE_EXPIRED;
+import static ie.ianbuttimer.moviequest.data.MovieContract.FavouriteEntry.COLUMN_FAVOURITE;
+import static ie.ianbuttimer.moviequest.data.MovieContract.MovieLists.GET_FAVOURITE_METHOD;
+import static ie.ianbuttimer.moviequest.data.MovieContract.MovieLists.MOVIE_LIST_CONTENT_URI;
+import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.MOVIE_PAGE;
+import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.RESULTS_PER_LIST;
+import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.RESULTS_PER_PAGES;
 import static ie.ianbuttimer.moviequest.utils.PreferenceControl.PreferenceTypes.BOOLEAN;
 import static ie.ianbuttimer.moviequest.utils.PreferenceControl.PreferenceTypes.STRING;
 
@@ -83,6 +100,9 @@ public class MainActivity extends AppCompatActivity implements
 
     private TextView mMovieRangeTextView;
     private static String MOVIE_RANGE = "movie_range";
+    private int mRangeStart;
+    private int mRangeEnd;
+    private int mRangeTotal;
 
     private ProgressBar mProgressBar;
     private TextView mErrorTextView;
@@ -98,6 +118,12 @@ public class MainActivity extends AppCompatActivity implements
             new Tuple<>(R.string.pref_movie_list_key, R.string.pref_movie_list_dlft_value, STRING),     // Note this is the default NOT the currently displayed (mListSelection)
             new Tuple<>(R.string.pref_show_position_key, R.bool.pref_show_position_dflt_value, BOOLEAN),
         };
+
+    /** Loader id for movie lists */
+    private static final int MOVIE_LIST_LOADER_ID = 1;
+
+    /** Request code for movie details activity */
+    private static final int MOVIE_DETAILS_REQ_CODE = 1;
 
     /**
      * {@inheritDoc}
@@ -124,8 +150,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         } else {
             // get the user's last list selection or the app default
-            String appDflt = PreferenceControl.getSharedStringPreference(this,
-                    R.string.pref_movie_list_key, R.string.pref_movie_list_dlft_value);
+            String appDflt = PreferenceControl.getMovieListPreference(this);
             mListSelection = PreferenceControl.getStringPreference(this, R.string.pref_movie_list_key, appDflt);
             mMovieList = new ArrayList<>();
         }
@@ -171,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements
 
         mMovieRangeTextView = (TextView) findViewById(R.id.tv_movie_range_MainA);
         if (savedInstanceState != null) {
-            mMovieRangeTextView.setText(savedInstanceState .getString(MOVIE_RANGE));
+            mMovieRangeTextView.setText(savedInstanceState.getString(MOVIE_RANGE));
         }
 
         mRetry = (Button) findViewById(R.id.button_retry_mainA);
@@ -189,8 +214,12 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         // watch for preference changes
-        Utils.setBackdropPreference(this);
         PreferenceControl.registerOnSharedPreferenceChangeListener(this, preferenceChangeListener);
+
+        // misc activity
+        Utils.setBackdropPreference(this);  // set backdrop preference as currently not in settings
+
+        startService(DbCacheIntentService.getLaunchIntent(this, PURGE_EXPIRED)); // purge expired entries from db
     }
 
     /**
@@ -200,9 +229,39 @@ public class MainActivity extends AppCompatActivity implements
         // persist to activity preferences
         PreferenceControl.setStringPreference(this, R.string.pref_movie_list_key, mListSelection);
 
+        clearCurrentList();
         showInProgress();
 
-        responseHandler.request(TMDbNetworkUtils.buildGetMovieListUrl(this, mListSelection));
+        // request current movie list via ContentProvider
+        Bundle extras = null;
+        if (isFavouritesList()) {
+            extras = new Bundle();
+            extras.putInt(RESULTS_PER_PAGES, RESULTS_PER_LIST);
+            extras.putInt(MOVIE_PAGE, 0);   // TODO always requesting page 0
+        }
+        responseHandler.call(this, MOVIE_LIST_LOADER_ID, MOVIE_LIST_CONTENT_URI, mListSelection, null, extras);
+    }
+
+    /**
+     * Clear existing list details
+     */
+    private void clearCurrentList() {
+        // clear existing
+        mMovieAdapter.clear();
+        mMovieAdapter.notifyDataSetChanged();
+
+        mRangeStart = 1;  // default
+        mRangeEnd = 1;
+        mRangeTotal = 0;
+        setRange();
+    }
+
+    /**
+     * Check if viewing favourites list
+     * @return  <code>true</code> if viewing favourites list, <code>false</code> otherwise
+     */
+    private boolean isFavouritesList() {
+        return GET_FAVOURITE_METHOD.equals(mListSelection);
     }
 
     /**
@@ -211,8 +270,7 @@ public class MainActivity extends AppCompatActivity implements
      */
     private int calcNumColumns() {
         int width = Utils.getScreenWidth(this);     //
-        String posterSetting = PreferenceControl.getSharedStringPreference(this,
-                R.string.pref_poster_size_key, R.string.pref_poster_size_dlft_value);
+        String posterSetting = PreferenceControl.getPosterSizePreference(this);
         int posterSize = Integer.valueOf(posterSetting);
         return Math.max(1, (width / posterSize));
     }
@@ -233,11 +291,88 @@ public class MainActivity extends AppCompatActivity implements
         // add the movie object to the intent so it doesn't have to be requested
         MovieInfoModel movie = (MovieInfoModel) view.getTag(R.id.movie_id_tag);
         intent.putExtra(MOVIE_ID, movie.getId());   // pass id to request movie details
-        intent.putExtra(MOVIE_OBJ, movie);          // pass movie info to at least display what we have
+        if (!movie.isPlaceHolder()) {
+            intent.putExtra(MOVIE_OBJ, movie);          // pass movie info to at least display what we have
+        } else {
+            intent.putExtra(MOVIE_TITLE, movie.getTitle());   // pass title from placeholder
+        }
 
-        Utils.startActivity(this, intent);
+        Utils.startActivityForResult(this, intent, MOVIE_DETAILS_REQ_CODE);
+    }
 
-        // TODO use startActivityForResult, return MovieInfoModel & update MovieInfoModel so no need to request again
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        switch (requestCode) {
+            case MOVIE_DETAILS_REQ_CODE:
+                if (isFavouritesList()) {
+                    if ((resultCode == RESULT_OK) && (data != null)) {
+                        boolean dataChange = false;
+                        if (data.hasExtra(COLUMN_FAVOURITE)) {
+                            // favourite status change has occurred
+                            final int id = data.getIntExtra(MOVIE_ID, 0);
+                            boolean favourite = data.getBooleanExtra(COLUMN_FAVOURITE, false);
+
+                            if (!favourite) {
+                                int index = mMovieAdapter.findItemIndex(new ITester<MovieInfoModel>() {
+                                    @Override
+                                    public boolean test(MovieInfoModel obj) {
+                                        return (obj.getId() == id);
+                                    }
+                                });
+                                if (index >= 0) {
+                                    mMovieAdapter.remove(index);
+
+                                    // adjust indices & range display
+                                    Iterator<MovieInfoModel> iterator = mMovieAdapter.iterator();
+                                    index = mRangeStart;
+                                    while (iterator.hasNext()) {
+                                        MovieInfoModel movie = iterator.next();
+                                        movie.setIndex(index);
+                                        ++index;
+                                    }
+                                    --mRangeEnd;    // one less favourite
+                                    --mRangeTotal;
+                                    setRange();
+                                    if (isFavouritesList() && (mRangeTotal <= 0)) {
+                                        showError(R.string.no_movies_favourites);
+                                    }
+
+                                    dataChange = true;
+                                }
+                            }
+                        }
+                        if (data.hasExtra(MOVIE_OBJ)) {
+                            MovieDetails details = data.getParcelableExtra(MOVIE_OBJ);
+                            final int id = details.getId();
+                            int index = mMovieAdapter.findItemIndex(new ITester<MovieInfoModel>() {
+                                @Override
+                                public boolean test(MovieInfoModel obj) {
+                                    return (obj.getId() == id);
+                                }
+                            });
+                            if (index >= 0) {
+                                // if tile is a placeholder update it with the info
+                                MovieInfoModel model = mMovieAdapter.getItem(index);
+                                if (model.isPlaceHolder()) {
+                                    model.copy(details, new MovieInfo().getFieldIds()); // YUCK
+
+                                    dataChange = true;
+                                }
+                            }
+                        }
+                        if (dataChange) {
+                            // something has changed
+                            mMovieAdapter.notifyDataSetChanged();
+                        }
+                    }
+                }
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+                break;
+        }
     }
 
     /**
@@ -261,7 +396,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Asynchronous request and response handler
      */
-    private ICallback responseHandler = new AsyncCallback() {
+    private ICallback<MovieListResponse> responseHandler = new AsyncCallback<MovieListResponse>() {
 
         @Override
         public void onFailure(Call call, IOException e) {
@@ -270,32 +405,54 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         @Override
-        public void onResponse(Object result) {
-            MovieListResponse response = null;
+        public void onResponse(MovieListResponse result) {
+            int msgId = 0;
             if (result != null) {
-                response = (MovieListResponse) result;
+                if (result.getMovieCount() == 0) {
+                    if (isFavouritesList()) {
+                        msgId = R.string.no_movies_favourites;
+                    } else if (result.isNonResponse()) {
+                        msgId = R.string.no_response;
+                    } else {
+                        msgId = R.string.no_movies_in_list;
+                    }
+                }
             }
-            onListResponse(response, 0);
+            onListResponse(result, msgId);
         }
 
         /**
          * Convert the http response into a MovieListResponse object
          * @param response  Response from the server
-         * @return MovieListResponse object or <code>null</code>
+         * @return Response object or <code>null</code>
          */
         @Override
-        public Object processResponse(Response response) {
-            Object result = null;
-            try {
-                ResponseBody body = response.body();
-                if (body != null) {
-                    String jsonResponse = body.string();
-                    result = MovieListResponse.getMovieListFromJsonString(jsonResponse);
+        public MovieListResponse processUrlResponse(@NonNull URL request, @NonNull Response response) {
+            String jsonResponse = NetworkUtils.getResponseBodyString(response);
+            return processUriResponse(new UrlProviderResultWrapper(request, jsonResponse));
+        }
+
+        /**
+         * Process the response from a {@link ICallback#call(AppCompatActivity, int, Uri, String, String, Bundle)} call
+         * @param response  Response from the content provider
+         * @return Response object or <code>null</code>
+         */
+        @Override
+        public MovieListResponse processUriResponse(@Nullable AbstractResultWrapper response) {
+            MovieListResponse movieList = null;
+            if (response != null) {
+                if (response.isResultType(AbstractResultWrapper.ResultType.STRING)) {
+                    movieList = MovieListResponse.getMovieListFromJsonString(response.getStringResult());
+                } else if (response.isResultType(AbstractResultWrapper.ResultType.BUNDLE)) {
+                    movieList = MovieListResponse.getMovieListFromBundle(response.getBundleResult());
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-            return result;
+            return movieList;
+        }
+
+        @Override
+        public Context getContext() {
+            return MainActivity.this;
         }
     };
 
@@ -311,19 +468,21 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         public void run() {
             MovieListResponse response = getResponse();
-            String range = "";
 
             super.run();
 
+            clearInProgress();
+            mRangeStart = 1;  // default
+            mRangeEnd = 1;
+            mRangeTotal = 0;
             if (response != null) {
                 if (response.rangeIsValid()) {
-                    clearInProgress();
-
-                    range = MessageFormat.format(getResources().getString(R.string.movie_range),
-                            response.getRangeStart(), response.getRangeEnd(), response.getTotalResults());
+                    mRangeStart = response.getRangeStart();
+                    mRangeEnd = response.getRangeEnd();
+                    mRangeTotal = response.getTotalResults();
                 }
             }
-            mMovieRangeTextView.setText(range);
+            setRange();
 
             if (hasDialog()) {
                 showError(getErrorId());
@@ -335,6 +494,20 @@ public class MainActivity extends AppCompatActivity implements
             }
             mMovieAdapter.notifyDataSetChanged();
         }
+    }
+
+    /**
+     * Set the range display
+     */
+    private void setRange() {
+        String range;
+        if ((mRangeStart <= mRangeEnd) && (mRangeTotal > 0)) {
+            range = MessageFormat.format(getResources().getString(R.string.movie_range),
+                    mRangeStart, mRangeEnd, mRangeTotal);
+        } else {
+            range = "";
+        }
+        mMovieRangeTextView.setText(range);
     }
 
     /**
@@ -371,7 +544,7 @@ public class MainActivity extends AppCompatActivity implements
         mErrorTextView.setText(getString(msgResId));
         mProgressBar.setVisibility(View.INVISIBLE);
         mErrorTextView.setVisibility(View.VISIBLE);
-        mRetry.setVisibility(View.VISIBLE);
+        mRetry.setVisibility(isFavouritesList() ? View.INVISIBLE : View.VISIBLE);
     }
 
     /**

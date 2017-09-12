@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,36 +15,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package ie.ianbuttimer.moviequest.utils;
+package ie.ianbuttimer.moviequest;
 
-import java.net.URL;
+import android.app.Application;
+import android.util.Log;
 
-import okhttp3.Callback;
-import okhttp3.Response;
+import com.facebook.stetho.Stetho;
 
 /**
- * Extended okhttp Callback interface
+ * Application class
  */
 
-public interface ICallback extends Callback {
+public class MovieQuestApplication extends Application {
 
-    /**
-     * Process the response
-     * @param result    Response received from the server
-     */
-    void onResponse(Object result);
+    private static final String TAG = MovieQuestApplication.class.getSimpleName();
 
-    /**
-     * Send a request using the specified Url
-     * @param url   Url to send
-     */
-    void request(URL url);
+    @Override
+    public void onCreate() {
+        super.onCreate();
 
-    /**
-     * Process the response received
-     * @param response  Response from the server
-     * @return  Response object
-     */
-    Object processResponse(Response response);
+        String mode;
+        if (BuildConfig.DEBUG) {
+            Stetho.initializeWithDefaults(this);
+            mode = "debug";
+        } else {
+            mode = "release";
+        }
+        Log.d(TAG, "Application launched in " + mode + " mode");
+    }
 
 }

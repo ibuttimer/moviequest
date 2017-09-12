@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -14,11 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ie.ianbuttimer.moviequest.utils;
+package ie.ianbuttimer.moviequest.image;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.annotation.DrawableRes;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -26,10 +28,12 @@ import android.widget.ProgressBar;
 import com.squareup.picasso.Callback;
 
 import ie.ianbuttimer.moviequest.tmdb.MovieInfo;
+import ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils;
 
 /**
  * Image loading utility class
  */
+@SuppressWarnings("unused")
 public abstract class ImageLoader implements Callback {
 
     private ImageView imageView;
@@ -79,8 +83,9 @@ public abstract class ImageLoader implements Callback {
      * Get an image Uri
      * @param context   The current context
      * @param size      Image size to request
+     * @return The URI to use to query the server, or <code>null</code> if not able build
      */
-    public static Uri getImageUri(Context context, String size, String path) {
+    public static @Nullable Uri getImageUri(Context context, String size, String path) {
 		return TMDbNetworkUtils.buildGetImageUri(context, size, path);
     }
 
@@ -89,8 +94,9 @@ public abstract class ImageLoader implements Callback {
      * @param context   The current context
      * @param size      Image size to request
      * @param movie     Movie to get Uri for
+     * @return The URI to use to query the server, or <code>null</code> if not able build
      */
-    public Uri getImageUri(Context context, String size, MovieInfo movie) {
+    public @Nullable Uri getImageUri(Context context, String size, MovieInfo movie) {
         return getImageUri(context, size, getImagePath(movie));
     }
 
@@ -98,8 +104,9 @@ public abstract class ImageLoader implements Callback {
      * Get a image Uri
      * @param context   The current context
      * @param movie     Movie to get Uri for
+     * @return The URI to use to query the server, or <code>null</code> if not able build
      */
-    public Uri getImageUri(Context context, MovieInfo movie) {
+    public @Nullable Uri getImageUri(Context context, MovieInfo movie) {
         return getImageUri(context, getImageSize(context, movie), movie);
     }
 
@@ -116,19 +123,34 @@ public abstract class ImageLoader implements Callback {
      */
     public abstract String getImagePath(MovieInfo movie);
 
-
+    /**
+     * Return the ImageView for this object
+     * @return  ImageView object
+     */
     public ImageView getImageView() {
         return imageView;
     }
 
+    /**
+     * Set the ImageView for this object
+     * @param imageView ImageView to set
+     */
     public void setImageView(ImageView imageView) {
         this.imageView = imageView;
     }
 
+    /**
+     * Return the ProgressBar for this object
+     * @return ProgressBar object
+     */
     public ProgressBar getProgressBar() {
         return progressBar;
     }
 
+    /**
+     * Set the ProgressBarfor this object
+     * @param progressBar   ProgressBar to set
+     */
     public void setProgressBar(ProgressBar progressBar) {
         this.progressBar = progressBar;
     }
@@ -164,8 +186,12 @@ public abstract class ImageLoader implements Callback {
      */
     public String loadImage(Context context, String size, MovieInfo movie, Callback callback) {
         Uri uri = getImageUri(context, size, movie);
-        start(context, callback);
-        tag = PicassoUtil.loadImage(context, uri, imageView, this);
+        if (uri != null) {
+            start(context, callback);
+            tag = PicassoUtil.loadImage(context, uri, imageView, this);
+        } else {
+            tag = "";
+        }
         return tag;
     }
 
@@ -178,6 +204,29 @@ public abstract class ImageLoader implements Callback {
      */
     public String loadImage(Context context, String size, MovieInfo movie) {
         return loadImage(context, size, movie, null);
+    }
+
+    /**
+     * Loads a image into an ImageView
+     * @param context   The current context
+     * @param resourceId    Drawable resource ID
+     * @param callback  Callback to invoke when finished
+     * @return Request tag
+     */
+    public String loadImage(Context context, @DrawableRes int resourceId, Callback callback) {
+        start(context, callback);
+        tag = PicassoUtil.loadImage(context, resourceId, imageView, this);
+        return tag;
+    }
+
+    /**
+     * Loads a image into an ImageView
+     * @param context   The current context
+     * @param resourceId    Drawable resource ID
+     * @return Request tag
+     */
+    public String loadImage(Context context, @DrawableRes int resourceId) {
+        return loadImage(context, resourceId, null);
     }
 
     /**
@@ -317,7 +366,7 @@ public abstract class ImageLoader implements Callback {
      * End download
      */
     private void end() {
-        hideProgress();;
+        hideProgress();
         init();
     }
 

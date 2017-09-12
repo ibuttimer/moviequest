@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,6 +24,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.ADULT;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.BACKDROP_PATH;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.GENRE_IDS;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.ID;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.ORIGINAL_LANGUAGE;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.ORIGINAL_TITLE;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.OVERVIEW;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.POPULARITY;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.POSTER_PATH;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.RELEASE_DATE;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.TITLE;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.VIDEO;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.VOTE_AVERAGE;
+import static ie.ianbuttimer.moviequest.tmdb.MovieInfo.VOTE_COUNT;
 import static org.junit.Assert.*;
 
 /**
@@ -34,11 +48,13 @@ import static org.junit.Assert.*;
 public class MovieInfoTest extends ParcelTest {
 
     private MovieInfo movieInfo;
+    private MovieInfo movieInfoPlaceholder;
     private TestMovieInfoInstance provider = new TestMovieInfoInstance();
 
     @Before
     public void createObject() {
         movieInfo = provider.setupObject(new MovieInfo());
+        movieInfoPlaceholder = new MovieInfo(TestMovieInfoInstance.id, TestMovieInfoInstance.title);
     }
 
     public void writeToParcel(Parcel parcel) {
@@ -58,48 +74,98 @@ public class MovieInfoTest extends ParcelTest {
         checkParcel(parcel);
     }
 
+    @Test
+    public void movieInfo_Placeholder() {
+        assertTrue(makeAssertMessage("isPlaceholder"), movieInfoPlaceholder.isPlaceHolder());
+    }
+
+    @Test
+    public void movieInfo_Copy() {
+        MovieInfo blankMovie = new MovieInfo();
+
+        blankMovie.copy(movieInfo, null);
+
+        checkObject("cop", blankMovie, movieInfo, null);
+    }
+
     public void checkParcel(Parcel parcel) {
         // Read the data.
         MovieInfo createdFromParcel = MovieInfo.CREATOR.createFromParcel(parcel);
 
         // Verify that the received data is correct.
-        checkObject(createdFromParcel, movieInfo);
+        checkObject("parcel", createdFromParcel, movieInfo);
     }
 
-    public void checkObject(MovieInfo createdFromParcel, MovieInfo original) {
+    public void checkObject(String test, MovieInfo createdFromParcel, MovieInfo original) {
         // Verify that the received data is correct.
-        assertEquals(makeAssertMessage("PosterPath"),
-                createdFromParcel.getPosterPath(), original.getPosterPath());
-        assertEquals(makeAssertMessage("BackdropPath"),
-                createdFromParcel.getBackdropPath(), original.getBackdropPath());
-        assertEquals(makeAssertMessage("Overview"),
-                createdFromParcel.getOverview(), original.getOverview());
-        assertEquals(makeAssertMessage("OriginalTitle"),
-                createdFromParcel.getOriginalTitle(), original.getOriginalTitle());
-        assertEquals(makeAssertMessage("OriginalLanguage"),
-                createdFromParcel.getOriginalLanguage(), original.getOriginalLanguage());
-        assertEquals(makeAssertMessage("Title"),
-                createdFromParcel.getTitle(), original.getTitle());
-        assertEquals(makeAssertMessage("ReleaseDate"),
-                createdFromParcel.getReleaseDate(), original.getReleaseDate());
+        checkObject(test, createdFromParcel, original, null);
+    }
 
-        assertEquals(makeAssertMessage("isAdult"),
-                createdFromParcel.isAdult(), original.isAdult());
-        assertEquals(makeAssertMessage("isVideo"),
-                createdFromParcel.isVideo(), original.isVideo());
-
-        assertEquals(makeAssertMessage("Id"),
-                createdFromParcel.getId().longValue(), original.getId().longValue());
-        assertEquals(makeAssertMessage("VoteCount"),
-                createdFromParcel.getVoteCount().longValue(), original.getVoteCount().longValue());
-
-        assertEquals(makeAssertMessage("Popularity"),
-                createdFromParcel.getPopularity(), original.getPopularity(), 0.1d);
-        assertEquals(makeAssertMessage("VoteAverage"),
-                createdFromParcel.getVoteAverage(), original.getVoteAverage(), 0.1d);
-
-        assertArrayEquals(makeAssertMessage("GenreIds"),
-                createdFromParcel.getGenreIds(), original.getGenreIds());
+    public void checkObject(String test, MovieInfo createdFromParcel, MovieInfo original, int[] fields) {
+        // Verify that the received data is correct.
+        if ((fields == null) || (fields.length == 0)) {
+            fields = createdFromParcel.getFieldIds();
+        }
+        for (int field : fields) {
+            switch (field) {
+                case POSTER_PATH:
+                    assertEquals(makeAssertMessage(test + " PosterPath"),
+                            createdFromParcel.getPosterPath(), original.getPosterPath());
+                    break;
+                case BACKDROP_PATH:
+                    assertEquals(makeAssertMessage(test + " BackdropPath"),
+                            createdFromParcel.getBackdropPath(), original.getBackdropPath());
+                    break;
+                case OVERVIEW:
+                    assertEquals(makeAssertMessage(test + " Overview"),
+                            createdFromParcel.getOverview(), original.getOverview());
+                    break;
+                case RELEASE_DATE:
+                    assertEquals(makeAssertMessage(test + " ReleaseDate"),
+                            createdFromParcel.getReleaseDate(), original.getReleaseDate());
+                    break;
+                case ORIGINAL_TITLE:
+                    assertEquals(makeAssertMessage(test + " OriginalTitle"),
+                            createdFromParcel.getOriginalTitle(), original.getOriginalTitle());
+                    break;
+                case ORIGINAL_LANGUAGE:
+                    assertEquals(makeAssertMessage(test + " OriginalLanguage"),
+                            createdFromParcel.getOriginalLanguage(), original.getOriginalLanguage());
+                    break;
+                case TITLE:
+                    assertEquals(makeAssertMessage(test + " Title"),
+                            createdFromParcel.getTitle(), original.getTitle());
+                    break;
+                case ID:
+                    assertEquals(makeAssertMessage(test + " Id"),
+                            createdFromParcel.getId().longValue(), original.getId().longValue());
+                    break;
+                case ADULT:
+                    assertEquals(makeAssertMessage(test + " isAdult"),
+                            createdFromParcel.isAdult(), original.isAdult());
+                    break;
+                case VIDEO:
+                    assertEquals(makeAssertMessage(test + " isVideo"),
+                            createdFromParcel.isVideo(), original.isVideo());
+                    break;
+                case VOTE_COUNT:
+                    assertEquals(makeAssertMessage(test + " VoteCount"),
+                            createdFromParcel.getVoteCount().longValue(), original.getVoteCount().longValue());
+                    break;
+                case POPULARITY:
+                    assertEquals(makeAssertMessage(test + " Popularity"),
+                            createdFromParcel.getPopularity(), original.getPopularity(), 0.1d);
+                    break;
+                case VOTE_AVERAGE:
+                    assertEquals(makeAssertMessage(test + " VoteAverage"),
+                            createdFromParcel.getVoteAverage(), original.getVoteAverage(), 0.1d);
+                    break;
+                case GENRE_IDS:
+                    assertArrayEquals(makeAssertMessage(test + " GenreIds"),
+                            createdFromParcel.getGenreIds(), original.getGenreIds());
+                    break;
+            }
+        }
     }
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@ import ie.ianbuttimer.moviequest.R;
 /**
  * Dialog related utility class
  */
-
+@SuppressWarnings("unused")
 public class Dialog {
 
     /**
@@ -124,7 +124,6 @@ public class Dialog {
      * @param negativeListener  Negative button listener
      * @param neutralText       Resource id of neutral button text
      * @param neutralListener   Neutral button listener
-     * @return  Alert dialog
      */
     public static void showAlert(Activity activity, int titleResId, int msgResId,
                                          int positiveText, DialogInterface.OnClickListener positiveListener,
@@ -145,7 +144,6 @@ public class Dialog {
      * @param positiveListener  Positive button listener
      * @param negativeText      Resource id of negative button text
      * @param negativeListener  Negative button listener
-     * @return  Alert dialog
      */
     public static void showAlert(Activity activity, int titleResId, int msgResId,
                                          int positiveText, DialogInterface.OnClickListener positiveListener,
@@ -163,7 +161,6 @@ public class Dialog {
      * @param msgResId          Resource id of message
      * @param positiveText      Resource id of positive button text
      * @param positiveListener  Positive button listener
-     * @return  Alert dialog
      */
     public static void showAlert(Activity activity, int titleResId, int msgResId,
                                          int positiveText, DialogInterface.OnClickListener positiveListener) {
@@ -173,12 +170,37 @@ public class Dialog {
     }
 
     /**
-     * Display a basic no response received dialog
+     * Build an AlertDialog
+     * @param activity          The current activity
+     * @param titleResId        Resource id of title
+     * @param msg               Message
+     * @param positiveText      Resource id of positive button text
+     * @param positiveListener  Positive button listener
+     */
+    public static void showAlert(Activity activity, int titleResId, String msg,
+                                         int positiveText, DialogInterface.OnClickListener positiveListener) {
+        AlertDialog dialog = buildAlert(activity, titleResId, msg,
+                                        positiveText, positiveListener, 0, null, 0, null);
+        dialog.show();
+    }
+
+    /**
+     * Display a basic alert dialog
      * @param activity  The current activity
      * @param msgId     The resource id of the message to display
      */
     public static void showAlertDialog(Activity activity, int msgId) {
         showAlert(activity, android.R.string.dialog_alert_title, msgId,
+                android.R.string.ok, null);
+    }
+
+    /**
+     * Display a basic alert dialog
+     * @param activity  The current activity
+     * @param msg       Message
+     */
+    public static void showAlertDialog(Activity activity, String msg) {
+        showAlert(activity, android.R.string.dialog_alert_title, msg,
                 android.R.string.ok, null);
     }
 

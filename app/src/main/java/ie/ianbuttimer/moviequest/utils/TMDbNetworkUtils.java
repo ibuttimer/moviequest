@@ -17,6 +17,8 @@ package ie.ianbuttimer.moviequest.utils;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.net.URL;
@@ -29,7 +31,7 @@ import ie.ianbuttimer.moviequest.R;
  * Android Developer Nanodegree Program from Udacity
  * (https://www.udacity.com/course/android-developer-nanodegree-by-google--nd801)
  */
-
+@SuppressWarnings("unused")
 public class TMDbNetworkUtils {
 
     private static final String TAG = TMDbNetworkUtils.class.getSimpleName();
@@ -39,6 +41,10 @@ public class TMDbNetworkUtils {
 
     // query arguments for all endpoints of the TMDb API
     final static String API_KEY_PARAM = "api_key";
+    final static String APPEND_TO_RESP_PARAM = "append_to_response";
+
+    final static String APPEND_VIDEOS = "videos";
+    final static String APPEND_REVIEWS = "reviews";
 
     /* API endpoint for Get Movie Details on TMDb.
         See https://developers.themoviedb.org/3/movies/get-movie-details */
@@ -261,8 +267,7 @@ public class TMDbNetworkUtils {
     public static URL buildGetMovieListUrl(Context context, String list) {
         URL url;
         if (list == null) {
-            list = PreferenceControl.getSharedStringPreference(context,
-                    R.string.pref_movie_list_key, R.string.pref_movie_list_dlft_value);
+            list = PreferenceControl.getMovieListPreference(context);
         }
         String popularList = context.getString(R.string.pref_movie_list_popular);
         String topRatedList = context.getString(R.string.pref_movie_list_top_rated);
@@ -329,11 +334,17 @@ public class TMDbNetworkUtils {
      * @param context   Context to use
      * @param size      Image size to request
      * @param path      Path to image size to request
-     * @return The URI to use to query the server.
+     * @return The URI to use to query the server, or <code>null</code> if not able build
      */
-    public static Uri buildGetImageUri(Context context, String size, String path) {
-        String endPoint = NetworkUtils.joinUrlPaths(sizePath(size), path);
-        return buildUri(context, IMAGE_BASE_URL, endPoint, null);
+    public static @Nullable Uri buildGetImageUri(Context context, String size, String path) {
+        Uri uri;
+        if (TextUtils.isEmpty(size) || TextUtils.isEmpty(path)) {
+            uri = null;
+        } else {
+            String endPoint = NetworkUtils.joinUrlPaths(sizePath(size), path);
+            uri = buildUri(context, IMAGE_BASE_URL, endPoint, null);
+        }
+        return uri;
     }
 
     /**
@@ -341,9 +352,9 @@ public class TMDbNetworkUtils {
      * @param context   Context to use
      * @param size      Image size to request
      * @param path      Path to image size to request
-     * @return The URL to use to query the server.
+     * @return The URL to use to query the server, or <code>null</code> if not able build
      */
-    public static URL buildGetImageUrl(Context context, String size, String path) {
+    public static @Nullable URL buildGetImageUrl(Context context, String size, String path) {
         Uri uri = buildGetImageUri(context, sizePath(size), path);
         return NetworkUtils.convertUriToUrl(uri);
     }

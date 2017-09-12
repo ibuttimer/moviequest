@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2017  Ian Buttimer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,14 +20,12 @@ package ie.ianbuttimer.moviequest.tmdb;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.ParseException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
+
+import ie.ianbuttimer.moviequest.utils.Utils;
 
 /**
  * This class represents the movie details provided by TMDb as part of the popular & top rated movie lists
@@ -37,9 +35,11 @@ import java.util.HashMap;
  * Unit tests:
  *
  */
+@SuppressWarnings("unused")
 public class CollectionInfo extends TMDbObject implements Parcelable {
 
     private static HashMap<String, MemberEntry> jsonMemberMap;  // map of JSON property names to class setter method & JSON getter method names
+    private static HashMap<String, MemberEntry> placeholderMemberMap;  // map of default value fields for a placeholder
 
     private String posterPath;
     private String backdropPath;
@@ -53,6 +53,8 @@ public class CollectionInfo extends TMDbObject implements Parcelable {
     protected static final int ID = 3;
     protected static final int LAST_COLLECTION_INFO_MEMBER  = ID;
 
+    private static final int[] sAllFields;  // list of all fields
+
     private static final String[] FIELD_NAMES = new String[] {
         // NOTE must follow the order of the indices above!!!!
         "poster_path",
@@ -63,6 +65,16 @@ public class CollectionInfo extends TMDbObject implements Parcelable {
 
     static {
         jsonMemberMap = generateMemberMap(null);
+        placeholderMemberMap = generateMemberMap(new int[] {
+                NAME, ID
+        });
+
+        sAllFields = makeFieldIdsArray(FIRST_MEMBER, LAST_COLLECTION_INFO_MEMBER);
+    }
+
+    @Override
+    public int[] getFieldIds() {
+        return sAllFields;
     }
 
     /**
@@ -70,26 +82,24 @@ public class CollectionInfo extends TMDbObject implements Parcelable {
      * @param exclude   Array of ids of members to exclude
      */
     protected static HashMap<String, MemberEntry> generateMemberMap(int[] exclude) {
-        HashMap<String, MemberEntry> memberMap = new HashMap<String, MemberEntry>();
+        HashMap<String, MemberEntry> memberMap = new HashMap<>();
+        int[] sortedExclude = Utils.getSortedArray(exclude);
 
-        if (exclude == null) {
-            exclude = new int[] {};
-        }
         for (int i = FIRST_MEMBER; i <= LAST_COLLECTION_INFO_MEMBER ; i++) {
-            if (Arrays.binarySearch(exclude, i) < 0) {
+            if (Arrays.binarySearch(sortedExclude, i) < 0) {
                 String key = FIELD_NAMES[i];
                 switch (i) {
                     case POSTER_PATH:
-                        memberMap.put(key, stringTemplate.copy("setPosterPath", "posterPath"));
+                        memberMap.put(key, stringTemplate.copy("setPosterPath", "getPosterPath", "posterPath"));
                         break;
                     case BACKDROP_PATH:
-                        memberMap.put(key, stringTemplate.copy("setBackdropPath", "backdropPath"));
+                        memberMap.put(key, stringTemplate.copy("setBackdropPath", "getBackdropPath", "backdropPath"));
                         break;
                     case NAME:
-                        memberMap.put(key, stringTemplate.copy("setName", "name"));
+                        memberMap.put(key, stringTemplate.copy("setName", "getName", "name"));
                         break;
                     case ID:
-                        memberMap.put(key, intTemplate.copy("setId", "id"));
+                        memberMap.put(key, intTemplate.copy("setId", "getId", "id"));
                         break;
                 }
             }
@@ -152,7 +162,7 @@ public class CollectionInfo extends TMDbObject implements Parcelable {
      * @return updated object
      */
     static CollectionInfo getInstance(JSONObject jsonData, CollectionInfo movie) {
-        return (CollectionInfo)getInstance(jsonMemberMap, jsonData, CollectionInfo.class, movie);
+        return getInstance(jsonMemberMap, jsonData, movie);
     }
 
     public String getPosterPath() {
@@ -190,6 +200,16 @@ public class CollectionInfo extends TMDbObject implements Parcelable {
     @Override
     public boolean isEmpty() {
         return equals(new CollectionInfo());
+    }
+
+    @Override
+    public boolean isPlaceHolder() {
+        return isDefault(placeholderMemberMap, this);
+    }
+
+    @Override
+    public <T extends TMDbObject> void copy(T from, int[] fields) {
+        copy(from, this, fields);
     }
 
     @Override
