@@ -36,15 +36,20 @@ public class TMDbNetworkUtils {
 
     private static final String TAG = TMDbNetworkUtils.class.getSimpleName();
 
-    // Url of TMDb API.
-    public static final String TMDB_BASE_URL = "https://api.themoviedb.org/3/";
+    /** Url of TMDb API */
+    public static final String TMDB_API_BASE_URL = "https://api.themoviedb.org/3/";
 
     // query arguments for all endpoints of the TMDb API
     final static String API_KEY_PARAM = "api_key";
     final static String APPEND_TO_RESP_PARAM = "append_to_response";
 
-    final static String APPEND_VIDEOS = "videos";
-    final static String APPEND_REVIEWS = "reviews";
+    public final static String APPEND_VIDEOS = "videos";
+    public final static String APPEND_REVIEWS = "reviews";
+    public final static String APPEND_IMAGES = "images";
+
+    public final static String[] APPEND_REVIEWS_VIDEOS = new String[] {
+        APPEND_REVIEWS, APPEND_VIDEOS
+    };
 
     /* API endpoint for Get Movie Details on TMDb.
         See https://developers.themoviedb.org/3/movies/get-movie-details */
@@ -65,9 +70,16 @@ public class TMDbNetworkUtils {
         https://developers.themoviedb.org/3/configuration/get-api-configuration */
     private static final String GET_CONFIGURATION = "configuration";
 
-    // Url of TMDb images.
+    /** Url of TMDb images */
     public static final String IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";
 
+
+    /** Url of TMDb website */
+    public static final String TMDB_WEB_BASE_URL = "https://www.themoviedb.org/";
+
+    /* API endpoint for Get API Configuration on TMDb.
+        https://developers.themoviedb.org/3/reviews */
+    private static final String GET_REVIEW = "review";
 
     /**
      * Build a URI for the TMDb server.
@@ -81,7 +93,7 @@ public class TMDbNetworkUtils {
 
         String apiKey = Utils.getManifestMetaData(context, "TMDB_API_KEY");
 
-        Uri.Builder builder = Uri.parse(baseUrl + endPoint).buildUpon();
+        Uri.Builder builder = Uri.parse(NetworkUtils.joinUrlPaths(baseUrl, endPoint)).buildUpon();
         builder.appendQueryParameter(API_KEY_PARAM, apiKey);
         if (params != null) {
             for (String key : params.keySet()) {
@@ -121,7 +133,7 @@ public class TMDbNetworkUtils {
      */
     public static Uri buildMovieUri(Context context, String endPoint, String language, int page, String region) {
 
-        HashMap<String, String> params = new HashMap<String, String>();
+        HashMap<String, String> params = new HashMap<>();
 
         if (Utils.stringHasContent(language)) {
             params.put(LANGUAGE_PARAM, language);
@@ -132,7 +144,7 @@ public class TMDbNetworkUtils {
         if (Utils.stringHasContent(region)) {
             params.put(REGION_PARAM, region);
         }
-        return buildUri(context, TMDB_BASE_URL, endPoint, params);
+        return buildUri(context, TMDB_API_BASE_URL, endPoint, params);
     }
 
     /**
@@ -297,7 +309,7 @@ public class TMDbNetworkUtils {
      * @return The URI to use to query the server.
      */
     public static Uri buildGetConfigurationUri(Context context) {
-        return buildUri(context, TMDB_BASE_URL, GET_CONFIGURATION, null);
+        return buildUri(context, TMDB_API_BASE_URL, GET_CONFIGURATION, null);
     }
 
     /**
@@ -361,13 +373,41 @@ public class TMDbNetworkUtils {
 
     /**
      * Build a movie get details URI for the TMDb server.
+     * @param context           Context to use
+     * @param id                Id of movie to request details for
+     * @param appendToResponse  Append to response arguments; one or more of APPEND_VIDEOS/APPEND_REVIEWS/APPEND_IMAGES
+     * @return The URI to use to query the server.
+     */
+    public static Uri buildGetDetailsUri(Context context, int id, String[] appendToResponse) {
+        String endPoint = NetworkUtils.joinUrlPaths(GET_DETAILS, String.valueOf(id));
+        HashMap<String, String> params = null;
+        if ((appendToResponse != null) && (appendToResponse.length > 0)) {
+            params = new HashMap<>();
+            params.put(APPEND_TO_RESP_PARAM, TextUtils.join(",", appendToResponse));
+        }
+        return buildUri(context, TMDB_API_BASE_URL, endPoint, params);
+    }
+
+    /**
+     * Build a movie get details URI for the TMDb server.
      * @param context   Context to use
      * @param id        Id of movie to request details for
      * @return The URI to use to query the server.
      */
     public static Uri buildGetDetailsUri(Context context, int id) {
-        String endPoint = NetworkUtils.joinUrlPaths(GET_DETAILS, String.valueOf(id));
-        return buildUri(context, TMDB_BASE_URL, endPoint, null);
+        return buildGetDetailsUri(context, id, null);
+    }
+
+    /**
+     * Build a movie get details URL for the TMDb server.
+     * @param context   Context to use
+     * @param id        Id of movie to request details for
+     * @param appendToResponse  Append to response arguments; one or more of APPEND_VIDEOS/APPEND_REVIEWS/APPEND_IMAGES
+     * @return The URL to use to query the server.
+     */
+    public static URL buildGetDetailsUrl(Context context, int id, String[] appendToResponse) {
+        Uri uri = buildGetDetailsUri(context, id, appendToResponse);
+        return NetworkUtils.convertUriToUrl(uri);
     }
 
     /**
@@ -377,10 +417,56 @@ public class TMDbNetworkUtils {
      * @return The URL to use to query the server.
      */
     public static URL buildGetDetailsUrl(Context context, int id) {
-        Uri uri = buildGetDetailsUri(context, id);
+        return buildGetDetailsUrl(context, id, null);
+    }
+
+    /**
+     * Build a get additional info about a movie URI for the TMDb server.
+     * @param context   Context to use
+     * @param id        Id of movie to request details for
+     * @param info      Additional info to request; one of APPEND_VIDEOS/APPEND_REVIEWS/APPEND_IMAGES
+     * @return The URI to use to query the server.
+     */
+    public static Uri buildGetAdditionalUri(Context context, int id, String info) {
+        String endPoint = NetworkUtils.joinUrlPaths(new String[] {
+                GET_DETAILS, String.valueOf(id), info
+        });
+        return buildUri(context, TMDB_API_BASE_URL, endPoint, null);
+    }
+
+    /**
+     * Build a get additional info about a movie URI for the TMDb server.
+     * @param context   Context to use
+     * @param id        Id of movie to request details for
+     * @param info      Additional info to request; one of APPEND_VIDEOS/APPEND_REVIEWS/APPEND_IMAGES
+     * @return The URL to use to query the server.
+     */
+    public static URL buildGetAdditionalUrl(Context context, int id, String info) {
+        Uri uri = buildGetAdditionalUri(context, id, info);
         return NetworkUtils.convertUriToUrl(uri);
     }
 
+    /**
+     * Build a Get Review URI for the TMDb server.
+     * @param context   Context to use
+     * @param id        Id of review to request
+     * @return The URI to use to query the server.
+     */
+    public static Uri buildGetReviewUri(Context context, String id) {
+        String endPoint = NetworkUtils.joinUrlPaths(GET_REVIEW, id);
+        return buildUri(context, TMDB_WEB_BASE_URL, endPoint, null);
+    }
+
+    /**
+     * Build a Get Review URL for the TMDb server.
+     * @param context   Context to use
+     * @param id        Id of review to request
+     * @return The URL to use to query the server.
+     */
+    public static URL buildGetReviewUrl(Context context, String id) {
+        Uri uri = buildGetReviewUri(context, id);
+        return NetworkUtils.convertUriToUrl(uri);
+    }
 
 
 

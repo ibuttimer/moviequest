@@ -27,6 +27,8 @@ import java.util.Date;
 import java.util.HashMap;
 
 import static ie.ianbuttimer.moviequest.Constants.INVALID_DATE;
+import static ie.ianbuttimer.moviequest.utils.Utils.readBooleanFromParcel;
+import static ie.ianbuttimer.moviequest.utils.Utils.writeBooleanToParcel;
 
 /**
  * Class representing movie info as used within the app

@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item type="id" name="movie_id_tag" />
+    <item type="id" name="tmdb_obj_tag" />
 </resources>

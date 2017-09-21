@@ -24,6 +24,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Parcel;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
@@ -104,11 +105,7 @@ public class Utils {
      * @return  true if intent was successfully resolved
      */
     public static boolean startActivity(Context context, Intent intent) {
-        boolean resolved = (intent.resolveActivity(context.getPackageManager()) != null);
-        if (resolved) {
-            context.startActivity(intent);
-        }
-        return resolved;
+        return startActivity(context, new Intent[] { intent });
     }
 
     /**
@@ -119,9 +116,43 @@ public class Utils {
      * @return  true if intent was successfully resolved
      */
     public static boolean startActivityForResult(Activity activity, Intent intent, int requestCode) {
-        boolean resolved = (intent.resolveActivity(activity.getPackageManager()) != null);
-        if (resolved) {
-            activity.startActivityForResult(intent, requestCode);
+        return startActivityForResult(activity, new Intent[] { intent }, requestCode);
+    }
+
+    /**
+     * Start an activity with fallback options. All intents will be attempted in ascending order until
+     * one is successfully resolved, and that one is used.
+     * @param context   The current context
+     * @param intents       Intents to start activity
+     * @return  true if intent was successfully resolved
+     */
+    public static boolean startActivity(Context context, Intent[] intents) {
+        boolean resolved = false;
+        PackageManager manager = context.getPackageManager();
+        for (int i = 0, ll = intents.length; (i < ll) && !resolved; i++) {
+            resolved = (intents[i].resolveActivity(manager) != null);
+            if (resolved) {
+                context.startActivity(intents[i]);
+            }
+        }
+        return resolved;
+    }
+
+    /**
+     * Start an activity with fallback options. All intents will be attempted in ascending order until
+     * one is successfully resolved, and that one is used.
+     * @param activity      Parent activity
+     * @param intents       Intents to start activity
+     * @return  true if intent was successfully resolved
+     */
+    public static boolean startActivityForResult(Activity activity, Intent[] intents, int requestCode) {
+        boolean resolved = false;
+        PackageManager manager = activity.getPackageManager();
+        for (int i = 0, ll = intents.length; (i < ll) && !resolved; i++) {
+            resolved = (intents[i].resolveActivity(manager) != null);
+            if (resolved) {
+                activity.startActivityForResult(intents[i], requestCode);
+            }
         }
         return resolved;
     }
@@ -240,7 +271,6 @@ public class Utils {
      * @param context   The current context
      * @return <code>true</code> if device has a small screen, <code>false</code> otherwise
      */
-    @SuppressWarnings("unused")
     public static boolean isSmallScreen(Context context) {
         return isSize(context, Configuration.SCREENLAYOUT_SIZE_SMALL);
     }
@@ -382,4 +412,84 @@ public class Utils {
         }
         return row;
     }
+
+    /**
+     * Write an Integer object array to a Parcel
+     * @param parcel    Parcel to write to
+     * @param array     Array to write
+     */
+    public static void writeIntegerArrayToParcel(Parcel parcel, Integer[] array) {
+        int len = array.length;
+        int[] intArray = new int[len];
+        for (int index = 0; index < len; index++) {
+            intArray[index] = array[index];
+        }
+        parcel.writeInt(len);
+        if (len > 0) {
+            parcel.writeIntArray(intArray);
+        }
+    }
+
+    /**
+     * Read an int array from a Parcel
+     * @param in    Parcel to read from
+     * @return  Integer object array
+     */
+    public static int[] readIntArrayFromParcel(Parcel in) {
+        int len = in.readInt();
+        int[] intArray = new int[len];
+        if (len > 0) {
+            in.readIntArray(intArray);
+        }
+        return intArray;
+    }
+
+    /**
+     * Read an Integer object array from a Parcel
+     * @param in    Parcel to read from
+     * @return  Integer object array
+     */
+    public static Integer[] readIntegerArrayFromParcel(Parcel in) {
+        int[] intArray = readIntArrayFromParcel(in);
+        int len = intArray.length;
+        Integer[] array = new Integer[len];
+        if (len > 0) {
+            for (int i = 0; i < len; i++) {
+                array[i] = intArray[i];
+            }
+        }
+        return array;
+    }
+
+    /**
+     * Read an array from a Parcel
+     * @param in            Parcel to read from
+     * @param loader        Class loader to create array elements
+     * @param arrayClass    Class of the copy to be returned
+     * @return Object array
+     */
+    public static Object[] readArrayFromParcel(Parcel in, ClassLoader loader, Class<? extends Object[]> arrayClass) {
+        Object[] objArray = in.readArray(loader);
+        return Arrays.copyOf(objArray, objArray.length, arrayClass);
+    }
+
+    /**
+     * Write the representation of a boolean to a parcel
+     * @param parcel    Parcel to write to
+     * @param bool      Valur to write
+     */
+    public static void writeBooleanToParcel(Parcel parcel, Boolean bool) {
+        parcel.writeInt(bool ? 1 : 0);
+    }
+
+    /**
+     * Read a boolean from a Parcel
+     * @param in            Parcel to read from
+     * @return Boolean value
+     */
+    public static boolean readBooleanFromParcel(Parcel in) {
+        return (in.readInt() == 1);
+    }
+
+
 }

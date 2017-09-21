@@ -149,7 +149,6 @@ public abstract class IdName extends TMDbObject {
 
         if (id != null ? !id.equals(idName.id) : idName.id != null) return false;
         return name != null ? name.equals(idName.name) : idName.name == null;
-
     }
 
     @Override

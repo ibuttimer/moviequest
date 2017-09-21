@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package ie.ianbuttimer.moviequest.data;
+
+package ie.ianbuttimer.moviequest.data.adapter;
 
 import android.content.Context;
 import android.net.Uri;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
@@ -27,23 +27,21 @@ import android.widget.TextView;
 import java.text.MessageFormat;
 
 import ie.ianbuttimer.moviequest.R;
-import ie.ianbuttimer.moviequest.tmdb.MovieInfoModel;
+import ie.ianbuttimer.moviequest.data.IAdapterOnClickHandler;
 import ie.ianbuttimer.moviequest.image.PosterImageLoader;
-import ie.ianbuttimer.moviequest.utils.PreferenceControl;
 import ie.ianbuttimer.moviequest.image.ThumbnailImageLoader;
-
+import ie.ianbuttimer.moviequest.tmdb.MovieInfoModel;
+import ie.ianbuttimer.moviequest.utils.PreferenceControl;
 
 /**
- * A RecyclerView.ViewHolder for MovieInfo objects
+ * A RecyclerView.ViewHolder for MovieInfoModel objects
  */
-@SuppressWarnings("unused")
-class MovieInfoViewHolder<T extends MovieInfoModel> extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-    private final View mView;
+public class MovieInfoViewHolder extends AbstractTMDbViewHolder<MovieInfoModel> {
+
     private final TextView mIndexTextView;
     private final TextView mPosterNaTextView;
     private final ImageView mPosterImageView;
-    private MovieInfoAdapter.MovieInfoAdapterOnClickHandler mClickHandler;
 
     private PosterImageLoader mPosterLoader;
     private ThumbnailImageLoader mThumbnailLoader;
@@ -53,43 +51,28 @@ class MovieInfoViewHolder<T extends MovieInfoModel> extends RecyclerView.ViewHol
      * @param view          View to hold
      * @param clickHandler  onClick handler for view
      */
-    public MovieInfoViewHolder(View view, MovieInfoAdapter.MovieInfoAdapterOnClickHandler clickHandler) {
-        super(view);
-
-        mView = view;
-        mClickHandler = clickHandler;
+    public MovieInfoViewHolder(View view, IAdapterOnClickHandler clickHandler) {
+        super(view, clickHandler);
 
         mPosterImageView = view.findViewById(R.id.iv_poster_movie_info_list_item);
         mPosterNaTextView = view.findViewById(R.id.tv_poster_na_movie_info_list_item);
         mIndexTextView = view.findViewById(R.id.tv_index_movie_info_list_item);
-
-        view.setOnClickListener(this);
     }
 
-    /**
-     * Get a context reference
-     * @return  context reference
-     */
-    public Context getContext() {
-        return mView.getContext();
-    }
 
-    /**
-     * Set the movie details to display
-     * @param model Movie object to use
-     */
-    void setViewInfo(T model) {
+    @Override
+    public void setViewInfo(MovieInfoModel info) {
         Context context = getContext();
         int posterNaVisibility = View.INVISIBLE;
 
         // request poster image
         mPosterLoader = new PosterImageLoader(mPosterImageView);
-        Uri uri = mPosterLoader.getImageUri(context, model);
+        Uri uri = mPosterLoader.getImageUri(context, info);
         if (uri != null) {
-            model.setPosterUri(uri);
-            mPosterLoader.loadImage(context, model);
+            info.setPosterUri(uri);
+            mPosterLoader.loadImage(context, info);
         } else {
-            String msg = model.getTitle();
+            String msg = info.getTitle();
             if (!TextUtils.isEmpty(msg)) {
                 posterNaVisibility = View.VISIBLE;
                 msg = MessageFormat.format(getContext().getString(R.string.movie_info_na), msg);
@@ -103,7 +86,7 @@ class MovieInfoViewHolder<T extends MovieInfoModel> extends RecyclerView.ViewHol
         // set index number
         boolean show = PreferenceControl.getShowPositionPreference(context);
         if (show) {
-            mIndexTextView.setText(String.valueOf(model.getIndex()));
+            mIndexTextView.setText(String.valueOf(info.getIndex()));
             mIndexTextView.setVisibility(View.VISIBLE);
         } else {
             mIndexTextView.setVisibility(View.GONE);
@@ -111,19 +94,13 @@ class MovieInfoViewHolder<T extends MovieInfoModel> extends RecyclerView.ViewHol
 
         // request thumbnail image
         mThumbnailLoader = new ThumbnailImageLoader();
-        uri = mThumbnailLoader.getImageUri(context, model);
+        uri = mThumbnailLoader.getImageUri(context, info);
         if (uri != null) {
-            model.setThumbnailUri(uri);
-            mThumbnailLoader.fetchImage(context, model);
+            info.setThumbnailUri(uri);
+            mThumbnailLoader.fetchImage(context, info);
         } else {
             mThumbnailLoader = null;   // can't load without uri
         }
-    }
-
-    @Override
-    public void onClick(View v) {
-        // pass the click onto the click handler
-        mClickHandler.onItemClick(v);
     }
 
     /**

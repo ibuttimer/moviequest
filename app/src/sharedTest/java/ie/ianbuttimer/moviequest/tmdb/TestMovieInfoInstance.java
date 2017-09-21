@@ -44,7 +44,7 @@ public class TestMovieInfoInstance extends TestObjectInstance {
     /** The MovieInfo object as returned by the Get Popular/Top Rated lists is a subset of the
      * Get Details object returned by the TMDb server
      *
-         https://api.themoviedb.org/3/movie/211672?api_key=07b4203e40866fe38f9f338b9fc9a8da&language=en-US
+         https://api.themoviedb.org/3/movie/211672?api_key=<your api key>&language=en-US
          {
          "adult": false,
          "backdrop_path": "/uX7LXnsC7bZJZjn048UCOwkPXWJ.jpg",
@@ -131,7 +131,6 @@ public class TestMovieInfoInstance extends TestObjectInstance {
     public static final String overview = "Minions Stuart, Kevin and Bob are recruited by Scarlet Overkill, a super-villain who, alongside her inventor husband Herb, hatches a plot to take over the world.";
     public static final String release_date = "2015-06-17";
 
-    private static final SimpleDateFormat tmdbDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
     // don't have static access to MovieInfo.getPropertyName() or MovieInfo.getFieldName()
     private MovieInfo dummyMovieInfo = new MovieInfo();
 
@@ -170,59 +169,6 @@ public class TestMovieInfoInstance extends TestObjectInstance {
         return setupObject(null);
     }
 
-    /**
-     * Convert a boolean field from its internal object representation (int) to boolean in the
-     * specified JSON string
-     * @param raw       JSON string
-     * @param field     Field name
-     * @return  updated JSON string
-     */
-    public String convertFieldToBoolean(String raw, String field) {
-        String result = raw;
-        int index = raw.indexOf(field);
-        if (index >= 0) {
-            int zeroIndex = raw.indexOf(DB_RAW_BOOLEAN_FALSE, index);
-            int oneIndex = raw.indexOf(DB_RAW_BOOLEAN_TRUE, index);
-            if ((zeroIndex > 0) && (oneIndex > 0)) {
-                if (zeroIndex < oneIndex) {
-                    oneIndex = -1;
-                }
-            }
-            boolean value = (oneIndex > 0);
-            index = (value ? oneIndex : zeroIndex);
-            result = raw.substring(0, index) + String.valueOf(value);
-            result += raw.substring(index + 1);
-        }
-        return result;
-    }
-
-    /**
-     * Convert a date field from the GSON format to the TMDb format in the
-     * specified JSON string
-     * @param raw       JSON string
-     * @param field     Field name
-     * @return  updated JSON string
-     */
-    String convertDate(String raw, String field) {
-        // GsonBuilder.setDateFormat didn't work for some reason, hence this function
-        String result = raw;
-        int index = raw.indexOf(field);
-        if (index >= 0) {
-            // example segment "releaseDate":"Jun 17, 2015 12:00:00 AM",
-            int startIndex = raw.indexOf('\"', index) + 1;      // " at end of field name
-            startIndex = raw.indexOf('\"', startIndex + 1) + 1; // first char of date
-            int endIndex = raw.indexOf('\"', startIndex);       // " at end of date
-            try {
-                Date date = new SimpleDateFormat("MMM d, yyyy HH:mm:ss a", Locale.US).parse(raw.substring(startIndex, endIndex));
-                result = raw.substring(0, startIndex) + tmdbDateFormat.format(date);
-                result += raw.substring(endIndex);
-            }
-            catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-        return result;
-    }
 
     /**
      * Convert all the necessary fields in the specified JSON string

@@ -28,7 +28,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 
+import ie.ianbuttimer.moviequest.tmdb.review.AppendedReviewList;
+import ie.ianbuttimer.moviequest.tmdb.video.MovieVideoList;
 import ie.ianbuttimer.moviequest.utils.Utils;
+
+import static ie.ianbuttimer.moviequest.utils.Utils.readArrayFromParcel;
 
 /**
  * This class represents the movie details provided by TMDb
@@ -43,7 +47,6 @@ public class MovieDetails extends MovieInfo implements Parcelable {
 
     private static HashMap<String, MemberEntry> jsonMemberMap;  // map of JSON property names to class setter method & JSON getter method names
 
-    private CollectionInfo collection;
     private Integer budget;
     private Genre[] genres;
     private String homepage;
@@ -55,6 +58,9 @@ public class MovieDetails extends MovieInfo implements Parcelable {
     private Language[] spokenLanguages;
     private String status;
     private String tagline;
+    private CollectionInfo collection;
+    private AppendedReviewList reviewList;
+    private MovieVideoList movieVideoList;
 
     protected static final int FIRST_MOVIE_DETAIL_MEMBER = LAST_MOVIE_INFO_MEMBER + 1;
     protected static final int BUDGET = FIRST_MOVIE_DETAIL_MEMBER;
@@ -69,7 +75,9 @@ public class MovieDetails extends MovieInfo implements Parcelable {
     protected static final int STATUS = FIRST_MOVIE_DETAIL_MEMBER + 9;
     protected static final int TAGLINE = FIRST_MOVIE_DETAIL_MEMBER + 10;
     protected static final int COLLECTION = FIRST_MOVIE_DETAIL_MEMBER + 11;
-    protected static final int LAST_MOVIE_DETAIL_MEMBER = COLLECTION;
+    protected static final int REVIEWS = FIRST_MOVIE_DETAIL_MEMBER + 12;
+    protected static final int VIDEOS = FIRST_MOVIE_DETAIL_MEMBER + 13;
+    protected static final int LAST_MOVIE_DETAIL_MEMBER = VIDEOS;
 
     private static final int[] sAllFields;  // list of all fields
 
@@ -89,6 +97,8 @@ public class MovieDetails extends MovieInfo implements Parcelable {
         FIELD_NAMES[STATUS] = "status";
         FIELD_NAMES[TAGLINE] = "tagline";
         FIELD_NAMES[COLLECTION] = "belongs_to_collection";
+        FIELD_NAMES[REVIEWS] = "reviews";
+        FIELD_NAMES[VIDEOS] = "videos";
 
             // get members from super class
         jsonMemberMap = MovieInfo.generateMemberMap(new int [] {
@@ -148,6 +158,12 @@ public class MovieDetails extends MovieInfo implements Parcelable {
                     case COLLECTION:
                         memberMap.put(key, jsonObjectTemplate.copy("setCollectionFromJson", "getCollection", "collection"));
                         break;
+                    case REVIEWS:
+                        memberMap.put(key, jsonObjectTemplate.copy("setReviewListFromJson", "getReviewList", "reviewList"));
+                        break;
+                    case VIDEOS:
+                        memberMap.put(key, jsonObjectTemplate.copy("setVideoListFromJson", "getMovieVideoList", "movieVideoList"));
+                        break;
                 }
             }
         }
@@ -195,6 +211,8 @@ public class MovieDetails extends MovieInfo implements Parcelable {
         status = "";
         tagline = "";
         collection = new CollectionInfo();
+        reviewList = new AppendedReviewList();
+        movieVideoList = new MovieVideoList();
     }
 
     /**
@@ -455,12 +473,35 @@ public class MovieDetails extends MovieInfo implements Parcelable {
         this.collection = CollectionInfo.getInstance(collection);
     }
 
+    public AppendedReviewList getReviewList() {
+        return reviewList;
+    }
+
+    public void setReviewList(AppendedReviewList reviewList) {
+        this.reviewList = reviewList;
+    }
+
+    public void setReviewListFromJson(JSONObject reviewList) {
+        this.reviewList = AppendedReviewList.getInstance(reviewList);
+    }
+
+    public MovieVideoList getMovieVideoList() {
+        return movieVideoList;
+    }
+
+    public void setMovieVideoList(MovieVideoList movieVideoList) {
+        this.movieVideoList = movieVideoList;
+    }
+
+    public void setVideoListFromJson(JSONObject videoList) {
+        this.movieVideoList = MovieVideoList.getInstance(videoList);
+    }
+
     private String formatAmount(int amount) {
         NumberFormat formatter = NumberFormat.getCurrencyInstance(Locale.US);
         formatter.setMinimumFractionDigits(0);
         return formatter.format(amount);
     }
-
 
     @Override
     public boolean equals(Object o) {
@@ -470,31 +511,29 @@ public class MovieDetails extends MovieInfo implements Parcelable {
 
         MovieDetails that = (MovieDetails) o;
 
-        if (collection != null ? !collection.equals(that.collection) : that.collection != null)
-            return false;
         if (budget != null ? !budget.equals(that.budget) : that.budget != null) return false;
-        // Probably incorrect - comparing Object[] arrays with Arrays.equals
         if (!Arrays.equals(genres, that.genres)) return false;
         if (homepage != null ? !homepage.equals(that.homepage) : that.homepage != null)
             return false;
         if (imdbId != null ? !imdbId.equals(that.imdbId) : that.imdbId != null) return false;
-        // Probably incorrect - comparing Object[] arrays with Arrays.equals
         if (!Arrays.equals(productionCompanies, that.productionCompanies)) return false;
-        // Probably incorrect - comparing Object[] arrays with Arrays.equals
         if (!Arrays.equals(productionCountries, that.productionCountries)) return false;
         if (revenue != null ? !revenue.equals(that.revenue) : that.revenue != null) return false;
         if (runtime != null ? !runtime.equals(that.runtime) : that.runtime != null) return false;
-        // Probably incorrect - comparing Object[] arrays with Arrays.equals
         if (!Arrays.equals(spokenLanguages, that.spokenLanguages)) return false;
         if (status != null ? !status.equals(that.status) : that.status != null) return false;
-        return tagline != null ? tagline.equals(that.tagline) : that.tagline == null;
+        if (tagline != null ? !tagline.equals(that.tagline) : that.tagline != null) return false;
+        if (collection != null ? !collection.equals(that.collection) : that.collection != null)
+            return false;
+        if (reviewList != null ? !reviewList.equals(that.reviewList) : that.reviewList != null)
+            return false;
+        return movieVideoList != null ? movieVideoList.equals(that.movieVideoList) : that.movieVideoList == null;
 
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (collection != null ? collection.hashCode() : 0);
         result = 31 * result + (budget != null ? budget.hashCode() : 0);
         result = 31 * result + Arrays.hashCode(genres);
         result = 31 * result + (homepage != null ? homepage.hashCode() : 0);
@@ -506,6 +545,9 @@ public class MovieDetails extends MovieInfo implements Parcelable {
         result = 31 * result + Arrays.hashCode(spokenLanguages);
         result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (tagline != null ? tagline.hashCode() : 0);
+        result = 31 * result + (collection != null ? collection.hashCode() : 0);
+        result = 31 * result + (reviewList != null ? reviewList.hashCode() : 0);
+        result = 31 * result + (movieVideoList != null ? movieVideoList.hashCode() : 0);
         return result;
     }
 

@@ -17,6 +17,7 @@
 package ie.ianbuttimer.moviequest.tmdb;
 
 import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.TextUtils;
 
 import org.json.JSONArray;
@@ -32,7 +33,7 @@ import java.util.Locale;
 /**
  * Base class for TMDb-related objects
  */
-public abstract class TMDbObject {
+public abstract class TMDbObject implements Parcelable {
 
     private static Class[] stringParameterTypes;      // single string parameter
     private static Class[] intParameterTypes;         // single integer parameter
@@ -41,12 +42,12 @@ public abstract class TMDbObject {
     private static Class[] jsonObjectParameterTypes;  // single json object parameter
     private static Class[] jsonArrayParameterTypes;   // single json array parameter
 
-    static MemberEntry stringTemplate;    // string from json
-    static MemberEntry intTemplate;       // int from json
-    static MemberEntry boolTemplate;      // boolean from json
-    static MemberEntry dblTemplate;       // double from json
-    static MemberEntry jsonObjectTemplate;// object from json
-    static MemberEntry jsonArrayTemplate; // array from json
+    protected static MemberEntry stringTemplate;    // string from json
+    protected static MemberEntry intTemplate;       // int from json
+    protected static MemberEntry boolTemplate;      // boolean from json
+    protected static MemberEntry dblTemplate;       // double from json
+    protected static MemberEntry jsonObjectTemplate;// object from json
+    protected static MemberEntry jsonArrayTemplate; // array from json
 
     static SimpleDateFormat dateFormat;   // date format used by TMDb server
 
@@ -340,85 +341,6 @@ public abstract class TMDbObject {
      */
     public <T extends TMDbObject> void copy(T from) {
         copy(from, this, null);
-    }
-
-    /**
-     * Write an Integer object array to a Parcel
-     * @param parcel    Parcel to write to
-     * @param flags     Additional flags about how the object should be written.
-     * @param array     Array to write
-     */
-    public void writeIntegerArrayToParcel(Parcel parcel, int flags, Integer[] array) {
-        int len = array.length;
-        int[] intArray = new int[len];
-        for (int index = 0; index < len; index++) {
-            intArray[index] = array[index];
-        }
-        parcel.writeInt(len);
-        if (len > 0) {
-            parcel.writeIntArray(intArray);
-        }
-    }
-
-    /**
-     * Read an int array from a Parcel
-     * @param in    Parcel to read from
-     * @return  Integer object array
-     */
-    public int[] readIntArrayFromParcel(Parcel in) {
-        int len = in.readInt();
-        int[] intArray = new int[len];
-        if (len > 0) {
-            in.readIntArray(intArray);
-        }
-        return intArray;
-    }
-
-    /**
-     * Read an Integer object array from a Parcel
-     * @param in    Parcel to read from
-     * @return  Integer object array
-     */
-    public Integer[] readIntegerArrayFromParcel(Parcel in) {
-        int[] intArray = readIntArrayFromParcel(in);
-        int len = intArray.length;
-        Integer[] array = new Integer[len];
-        if (len > 0) {
-            for (int i = 0; i < len; i++) {
-                array[i] = intArray[i];
-            }
-        }
-        return array;
-    }
-
-    /**
-     * Read an array from a Parcel
-     * @param in            Parcel to read from
-     * @param loader        Class loader to create array elements
-     * @param arrayClass    Class of the copy to be returned
-     * @return Object array
-     */
-    public Object[] readArrayFromParcel(Parcel in, ClassLoader loader, Class arrayClass) {
-        Object[] objArray = in.readArray(loader);
-        return Arrays.copyOf(objArray, objArray.length, arrayClass);
-    }
-
-    /**
-     * Write the representation of a boolean to a parcel
-     * @param parcel    Parcel to write to
-     * @param bool      Valur to write
-     */
-    public void writeBooleanToParcel(Parcel parcel, Boolean bool) {
-        parcel.writeInt(bool ? 1 : 0);
-    }
-
-    /**
-     * Read a boolean from a Parcel
-     * @param in            Parcel to read from
-     * @return Boolean value
-     */
-    public boolean readBooleanFromParcel(Parcel in) {
-        return (in.readInt() == 1);
     }
 
     /**

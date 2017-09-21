@@ -15,18 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package ie.ianbuttimer.moviequest.utils;
+package ie.ianbuttimer.moviequest.data;
+
+import android.view.View;
 
 /**
- * Interface providing test methods for objects
+ * Interface to handle events for adapters
  */
 
-public interface ITester<T> {
+public interface IAdapterOnClickHandler {
 
     /**
-     * Test if the specified object matches
-     * @param obj   Object to test
-     * @return  <code>true</code> if matches criteria, <code>false</code> otherwise
+     * Process the click event
+     * @param view  View that was clicked
      */
-    boolean test(T obj);
+    void onItemClick(View view);
 }

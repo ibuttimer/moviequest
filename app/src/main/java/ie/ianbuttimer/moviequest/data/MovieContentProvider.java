@@ -59,14 +59,15 @@ import static ie.ianbuttimer.moviequest.data.MovieContract.PATH_POPULAR_MOVIES;
 import static ie.ianbuttimer.moviequest.data.MovieContract.PATH_TOP_RATED_MOVIES;
 import static ie.ianbuttimer.moviequest.data.MovieContract.PATH_WITH_ID;
 import static ie.ianbuttimer.moviequest.data.MovieContract.columnEqSelection;
-import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.MOVIE_PAGE;
-import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.MOVIE_RESULTS;
-import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.MOVIE_TOTAL_PAGES;
-import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.MOVIE_TOTAL_RESULTS;
-import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.RESULTS_PER_LIST;
-import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.RESULTS_PER_PAGES;
+import static ie.ianbuttimer.moviequest.tmdb.MovieList.LIST_PAGE;
+import static ie.ianbuttimer.moviequest.tmdb.MovieList.LIST_RESULTS;
+import static ie.ianbuttimer.moviequest.tmdb.MovieList.LIST_TOTAL_PAGES;
+import static ie.ianbuttimer.moviequest.tmdb.MovieList.LIST_TOTAL_RESULTS;
+import static ie.ianbuttimer.moviequest.tmdb.MovieList.RESULTS_PER_LIST;
+import static ie.ianbuttimer.moviequest.tmdb.AbstractList.RESULTS_PER_PAGE;
 import static ie.ianbuttimer.moviequest.data.ICallback.CONTENT_PROVIDER_RESULT_TYPE;
 import static ie.ianbuttimer.moviequest.utils.DbUtils.DB_RAW_BOOLEAN_TRUE;
+import static ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils.APPEND_REVIEWS_VIDEOS;
 
 /**
  * ContentProvider class for movies
@@ -268,7 +269,7 @@ public class MovieContentProvider extends ContentProvider {
                     }
                 }
                 if (id > 0) {
-                    url = TMDbNetworkUtils.buildGetDetailsUrl(context, id);
+                    url = TMDbNetworkUtils.buildGetDetailsUrl(context, id, APPEND_REVIEWS_VIDEOS);
                 }
                 break;
             default:
@@ -417,8 +418,8 @@ public class MovieContentProvider extends ContentProvider {
 
         if (cursor != null) {
             int count = cursor.getCount();
-            int perPage = extras.getInt(RESULTS_PER_PAGES, RESULTS_PER_LIST);
-            int page = extras.getInt(MOVIE_PAGE, 0);
+            int perPage = extras.getInt(RESULTS_PER_PAGE, RESULTS_PER_LIST);
+            int page = extras.getInt(LIST_PAGE, 0);
 
             if (count > 0) {
                 int idIndex = cursor.getColumnIndex(FavouriteEntry._ID);
@@ -470,10 +471,10 @@ public class MovieContentProvider extends ContentProvider {
                     }
 
                     // mimic the field in a TMDb server list response
-                    result.putInt(MOVIE_PAGE, page + 1);    // sever is 1-based
-                    result.putInt(MOVIE_TOTAL_RESULTS, count);
-                    result.putInt(MOVIE_TOTAL_PAGES, ((count + (perPage - 1)) / perPage));
-                    result.putStringArray(MOVIE_RESULTS, list);
+                    result.putInt(LIST_PAGE, page + 1);    // sever is 1-based
+                    result.putInt(LIST_TOTAL_RESULTS, count);
+                    result.putInt(LIST_TOTAL_PAGES, ((count + (perPage - 1)) / perPage));
+                    result.putStringArray(LIST_RESULTS, list);
                 }
             }
             cursor.close();

@@ -36,4 +36,13 @@
     <string name="moviedetails_countries">Production Countries</string>
     <string name="moviedetails_budget">Budget</string>
     <string name="favourite_badge">Favourite badge</string>
+    <string name="play_image_moviedetailsA">Play image</string>
+
+    <string name="trailer_heading_moviedetailsA">Trailer</string>
+    <string name="teaser_heading_moviedetailsA">Teaser</string>
+    <string name="clip_heading_moviedetailsA">Clip</string>
+    <string name="featurette_heading_moviedetailsA">Featurette</string>
+    <string name="reviews_heading_moviedetailsA">Reviews</string>
+    <string name="unable_to_play_moviedetailsA">Unable to play video</string>
+    <string name="unable_to_view_review_moviedetailsA">Unable to view review</string>
 </resources>

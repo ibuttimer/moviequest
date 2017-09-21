@@ -33,6 +33,10 @@ import java.util.HashMap;
 import ie.ianbuttimer.moviequest.utils.Utils;
 
 import static ie.ianbuttimer.moviequest.Constants.INVALID_DATE;
+import static ie.ianbuttimer.moviequest.utils.Utils.readBooleanFromParcel;
+import static ie.ianbuttimer.moviequest.utils.Utils.readIntegerArrayFromParcel;
+import static ie.ianbuttimer.moviequest.utils.Utils.writeBooleanToParcel;
+import static ie.ianbuttimer.moviequest.utils.Utils.writeIntegerArrayToParcel;
 
 /**
  * This class represents the movie details provided by TMDb as part of the popular & top rated movie lists
@@ -487,7 +491,6 @@ public class MovieInfo extends TMDbObject implements Parcelable {
             return false;
         if (releaseDate != null ? !releaseDate.equals(movieInfo.releaseDate) : movieInfo.releaseDate != null)
             return false;
-        // Probably incorrect - comparing Object[] arrays with Arrays.equals
         if (!Arrays.equals(genreIds, movieInfo.genreIds)) return false;
         if (popularity != null ? !popularity.equals(movieInfo.popularity) : movieInfo.popularity != null)
             return false;
@@ -533,7 +536,7 @@ public class MovieInfo extends TMDbObject implements Parcelable {
         parcel.writeSerializable(releaseDate);
         parcel.writeDouble(popularity);
         parcel.writeDouble(voteAverage);
-        writeIntegerArrayToParcel(parcel, flags, genreIds);
+        writeIntegerArrayToParcel(parcel, genreIds);
     }
 
     public static final Parcelable.Creator<MovieInfo> CREATOR

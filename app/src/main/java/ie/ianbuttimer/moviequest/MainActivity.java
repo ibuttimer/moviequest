@@ -48,11 +48,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import ie.ianbuttimer.moviequest.data.DbCacheIntentService;
-import ie.ianbuttimer.moviequest.data.MovieInfoAdapter;
+import ie.ianbuttimer.moviequest.data.IAdapterOnClickHandler;
+import ie.ianbuttimer.moviequest.data.adapter.MovieInfoAdapter;
 import ie.ianbuttimer.moviequest.tmdb.MovieDetails;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfo;
 import ie.ianbuttimer.moviequest.tmdb.MovieInfoModel;
-import ie.ianbuttimer.moviequest.tmdb.MovieListResponse;
+import ie.ianbuttimer.moviequest.tmdb.MovieList;
 import ie.ianbuttimer.moviequest.data.AbstractResultWrapper;
 import ie.ianbuttimer.moviequest.data.AsyncCallback;
 import ie.ianbuttimer.moviequest.utils.Dialog;
@@ -74,9 +75,9 @@ import static ie.ianbuttimer.moviequest.data.DbCacheIntentService.PURGE_EXPIRED;
 import static ie.ianbuttimer.moviequest.data.MovieContract.FavouriteEntry.COLUMN_FAVOURITE;
 import static ie.ianbuttimer.moviequest.data.MovieContract.MovieLists.GET_FAVOURITE_METHOD;
 import static ie.ianbuttimer.moviequest.data.MovieContract.MovieLists.MOVIE_LIST_CONTENT_URI;
-import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.MOVIE_PAGE;
-import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.RESULTS_PER_LIST;
-import static ie.ianbuttimer.moviequest.tmdb.MovieListResponse.RESULTS_PER_PAGES;
+import static ie.ianbuttimer.moviequest.tmdb.MovieList.LIST_PAGE;
+import static ie.ianbuttimer.moviequest.tmdb.MovieList.RESULTS_PER_LIST;
+import static ie.ianbuttimer.moviequest.tmdb.MovieList.RESULTS_PER_PAGE;
 import static ie.ianbuttimer.moviequest.utils.PreferenceControl.PreferenceTypes.BOOLEAN;
 import static ie.ianbuttimer.moviequest.utils.PreferenceControl.PreferenceTypes.STRING;
 
@@ -84,11 +85,11 @@ import static ie.ianbuttimer.moviequest.utils.PreferenceControl.PreferenceTypes.
  * Main application activity
  */
 public class MainActivity extends AppCompatActivity implements
-        MovieInfoAdapter.MovieInfoAdapterOnClickHandler, AdapterView.OnItemSelectedListener {
+        IAdapterOnClickHandler, AdapterView.OnItemSelectedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private MovieInfoAdapter<MovieInfoModel> mMovieAdapter;
+    private MovieInfoAdapter mMovieAdapter;
     private ArrayList<MovieInfoModel> mMovieList;  // movie data list
     private static String MOVIE_ARRAY = "movie_array";
 
@@ -189,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements
 //        mRecyclerView.setHasFixedSize(true);
 
         // get adapter to responsible for linking data with the Views that display it
-        mMovieAdapter = new MovieInfoAdapter<>(mMovieList, this);
+        mMovieAdapter = new MovieInfoAdapter(mMovieList, this);
 
         /* Setting the adapter attaches it to the RecyclerView in our layout. */
         mRecyclerView.setAdapter(mMovieAdapter);
@@ -236,8 +237,8 @@ public class MainActivity extends AppCompatActivity implements
         Bundle extras = null;
         if (isFavouritesList()) {
             extras = new Bundle();
-            extras.putInt(RESULTS_PER_PAGES, RESULTS_PER_LIST);
-            extras.putInt(MOVIE_PAGE, 0);   // TODO always requesting page 0
+            extras.putInt(RESULTS_PER_PAGE, RESULTS_PER_LIST);
+            extras.putInt(LIST_PAGE, 0);   // TODO always requesting page 0
         }
         responseHandler.call(this, MOVIE_LIST_LOADER_ID, MOVIE_LIST_CONTENT_URI, mListSelection, null, extras);
     }
@@ -289,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements
     public void onItemClick(View view) {
         Intent intent = new Intent(this, MovieDetailsActivity.class);
         // add the movie object to the intent so it doesn't have to be requested
-        MovieInfoModel movie = (MovieInfoModel) view.getTag(R.id.movie_id_tag);
+        MovieInfoModel movie = (MovieInfoModel) view.getTag(R.id.tmdb_obj_tag);
         intent.putExtra(MOVIE_ID, movie.getId());   // pass id to request movie details
         if (!movie.isPlaceHolder()) {
             intent.putExtra(MOVIE_OBJ, movie);          // pass movie info to at least display what we have
@@ -396,19 +397,19 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Asynchronous request and response handler
      */
-    private ICallback<MovieListResponse> responseHandler = new AsyncCallback<MovieListResponse>() {
+    private ICallback<MovieList> responseHandler = new AsyncCallback<MovieList>() {
 
         @Override
         public void onFailure(Call call, IOException e) {
             super.onFailure(call, e);
-            onListResponse(new MovieListResponse(), getErrorId(call, e));    // default list object will not pass valid range test
+            onListResponse(new MovieList(), getErrorId(call, e));    // default list object will not pass valid range test
         }
 
         @Override
-        public void onResponse(MovieListResponse result) {
+        public void onResponse(MovieList result) {
             int msgId = 0;
             if (result != null) {
-                if (result.getMovieCount() == 0) {
+                if (result.getResultCount() == 0) {
                     if (isFavouritesList()) {
                         msgId = R.string.no_movies_favourites;
                     } else if (result.isNonResponse()) {
@@ -422,12 +423,12 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         /**
-         * Convert the http response into a MovieListResponse object
+         * Convert the http response into a MovieList object
          * @param response  Response from the server
          * @return Response object or <code>null</code>
          */
         @Override
-        public MovieListResponse processUrlResponse(@NonNull URL request, @NonNull Response response) {
+        public MovieList processUrlResponse(@NonNull URL request, @NonNull Response response) {
             String jsonResponse = NetworkUtils.getResponseBodyString(response);
             return processUriResponse(new UrlProviderResultWrapper(request, jsonResponse));
         }
@@ -438,13 +439,13 @@ public class MainActivity extends AppCompatActivity implements
          * @return Response object or <code>null</code>
          */
         @Override
-        public MovieListResponse processUriResponse(@Nullable AbstractResultWrapper response) {
-            MovieListResponse movieList = null;
+        public MovieList processUriResponse(@Nullable AbstractResultWrapper response) {
+            MovieList movieList = null;
             if (response != null) {
                 if (response.isResultType(AbstractResultWrapper.ResultType.STRING)) {
-                    movieList = MovieListResponse.getMovieListFromJsonString(response.getStringResult());
+                    movieList = MovieList.getListFromJsonString(response.getStringResult());
                 } else if (response.isResultType(AbstractResultWrapper.ResultType.BUNDLE)) {
-                    movieList = MovieListResponse.getMovieListFromBundle(response.getBundleResult());
+                    movieList = MovieList.getListFromBundle(response.getBundleResult());
                 }
             }
             return movieList;
@@ -459,15 +460,15 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Class to update the ui with response list details
      */
-    private class ListResponseHandler extends ResponseHandler<MovieListResponse> implements Runnable {
+    private class ListResponseHandler extends ResponseHandler<MovieList> implements Runnable {
 
-        ListResponseHandler(Activity activity, MovieListResponse response, int errorId) {
+        ListResponseHandler(Activity activity, MovieList response, int errorId) {
             super(activity, response, errorId);
         }
 
         @Override
         public void run() {
-            MovieListResponse response = getResponse();
+            MovieList response = getResponse();
 
             super.run();
 
@@ -490,7 +491,7 @@ public class MainActivity extends AppCompatActivity implements
 
             mMovieAdapter.clear();
             if (response != null) {
-                mMovieAdapter.addAll(response.getMovies());
+                mMovieAdapter.addAll(response.getResults());
             }
             mMovieAdapter.notifyDataSetChanged();
         }
@@ -514,7 +515,7 @@ public class MainActivity extends AppCompatActivity implements
      * Handle a list response
      * @param response  Response object
      */
-    protected void onListResponse(MovieListResponse response, int msgId) {
+    protected void onListResponse(MovieList response, int msgId) {
         // ui updates need to be on ui thread
         MainActivity.this.runOnUiThread(new ListResponseHandler(MainActivity.this, response, msgId));
     }

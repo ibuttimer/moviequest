@@ -4,10 +4,14 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="colorCardviewBackground">#6697ec</color>
-    <color name="colorBadgeBackground">#000000</color>
-    <color name="colorBadgeText">#ffffff</color>
-    <color name="colorTitleBarBackground">#000000</color>
-    <color name="colorTitleBarText">#ffffff</color>
+    <color name="colorBadgeBackground">@android:color/black</color>
+    <color name="colorBadgeText">@android:color/white</color>
+    <color name="colorTitleBarBackground">@android:color/black</color>
+    <color name="colorTitleBarText">@android:color/white</color>
     <color name="colorBannerTitleBarBackground">#2f000000</color>
-    <color name="colorBannerTitleBarText">#ffffff</color>
+    <color name="colorBannerTitleBarText">@android:color/white</color>
+    <color name="colorVideoItemText">@android:color/black</color>
+    <color name="colorVideoItemBackground">#aec9f7</color>
+    <color name="colorReviewItemText">@android:color/black</color>
+    <color name="colorReviewItemBackground">#dfcde7</color>
 </resources>

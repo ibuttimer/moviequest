@@ -66,7 +66,7 @@ public class ProdCompany extends IdName implements Parcelable {
         return TMDbObject.getInstance(jsonMemberMap, jsonData, new ProdCompany());
     }
 
-    // just provide the creator and parcel constructor as other parcelable ,ethods are in super class
+    // just provide the creator and parcel constructor as other parcelable methods are in super class
 
     public static final Parcelable.Creator<ProdCompany> CREATOR
             = new Parcelable.Creator<ProdCompany>() {

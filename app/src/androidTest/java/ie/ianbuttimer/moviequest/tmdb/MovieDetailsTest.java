@@ -35,6 +35,7 @@ public class MovieDetailsTest extends MovieInfoTest {
 
     @Before
     public void createObject() {
+        super.createObject();
         movieDetails = provider.setupObject();
     }
 
