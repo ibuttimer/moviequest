@@ -31,7 +31,7 @@ import java.util.Comparator;
 
 import ie.ianbuttimer.moviequest.R;
 import ie.ianbuttimer.moviequest.data.IAdapterOnClickHandler;
-import ie.ianbuttimer.moviequest.data.adapter.AbstractTMDbAdapter;
+import ie.ianbuttimer.moviequest.data.adapter.AbstractTMDbRecycleViewAdapter;
 import ie.ianbuttimer.moviequest.tmdb.TMDbObject;
 
 /**
@@ -42,7 +42,7 @@ public abstract class AbstractRecyclerViewController<T extends TMDbObject> imple
 
     private RecyclerView mRecyclerView;
     private RecyclerView.LayoutManager mLayoutManager;
-    private AbstractTMDbAdapter<T> mAdapter;
+    private AbstractTMDbRecycleViewAdapter<T> mAdapter;
     private IRecyclerViewHost mHost;
 
     /**
@@ -57,7 +57,7 @@ public abstract class AbstractRecyclerViewController<T extends TMDbObject> imple
      * @param adapter       Adapter to use for RecyclerView
      */
     public AbstractRecyclerViewController(Activity activity, @IdRes int viewId, IRecyclerViewHost.LAYOUT_TYPE layout,
-            int orientation, boolean reverseLayout, boolean hasFixedSize, IRecyclerViewHost host, AbstractTMDbAdapter<T> adapter) {
+            int orientation, boolean reverseLayout, boolean hasFixedSize, IRecyclerViewHost host, AbstractTMDbRecycleViewAdapter<T> adapter) {
         // setup the recycler view
         mRecyclerView = activity.findViewById(viewId);
 
@@ -198,11 +198,11 @@ public abstract class AbstractRecyclerViewController<T extends TMDbObject> imple
         this.mLayoutManager = mLayoutManager;
     }
 
-    public AbstractTMDbAdapter<T> getAdapter() {
+    public AbstractTMDbRecycleViewAdapter<T> getAdapter() {
         return mAdapter;
     }
 
-    public void setAdapter(AbstractTMDbAdapter<T> adapter) {
+    public void setAdapter(AbstractTMDbRecycleViewAdapter<T> adapter) {
         // get adapter to responsible for linking data with the Views that display it
         mAdapter = adapter;
         mAdapter.setClickHandler(this);

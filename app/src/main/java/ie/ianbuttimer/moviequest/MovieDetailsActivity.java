@@ -68,7 +68,6 @@ import ie.ianbuttimer.moviequest.image.BackdropImageLoader;
 import ie.ianbuttimer.moviequest.data.DbContentValues;
 import ie.ianbuttimer.moviequest.tmdb.TMDbObject;
 import ie.ianbuttimer.moviequest.tmdb.review.BaseReview;
-import ie.ianbuttimer.moviequest.tmdb.review.Review;
 import ie.ianbuttimer.moviequest.tmdb.video.MovieVideoList;
 import ie.ianbuttimer.moviequest.tmdb.video.Video;
 import ie.ianbuttimer.moviequest.utils.AbstractRecyclerViewController;
@@ -696,11 +695,11 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
         int visibility;
         if (isFavourite) {
             textId = R.string.del_from_favourites;
-            imageId = R.drawable.ic_remove_circle_black_18dp;
+            imageId = R.drawable.ic_remove_circle_white_18dp;
             visibility = View.VISIBLE;
         } else {
             textId = R.string.add_to_favourites;
-            imageId = R.drawable.ic_favorite_black_18dp;
+            imageId = R.drawable.ic_favorite_white_18dp;
             visibility = View.INVISIBLE;
         }
         mFavouriteButton.setText(textId);
@@ -1105,7 +1104,7 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
         }
 
         void updateDataSet(@NonNull AbstractList<T> list, ITester<T> tester, @Nullable Comparator<Object> comparator) {
-            if ((list != null) && list.rangeIsValid()) {
+            if (list.rangeIsValid()) {
                 addAndNotify(list.getResults(), tester, comparator);
             } else {
                 clearAndNotify();

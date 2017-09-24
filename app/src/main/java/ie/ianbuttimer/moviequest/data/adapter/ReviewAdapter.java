@@ -33,7 +33,7 @@ import ie.ianbuttimer.moviequest.tmdb.review.BaseReview;
  * Adapter class for a RecyclerView of reviews
  */
 
-public class ReviewAdapter extends AbstractTMDbAdapter<BaseReview> {
+public class ReviewAdapter extends AbstractTMDbRecycleViewAdapter<BaseReview> {
 
     /**
      * Constructor

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2017  Ian Buttimer
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <Space
+        android:layout_weight=".75"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" />
+
+    <Button
+        android:id="@+id/b_refresh_moviedetailsA"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight=".25"
+        android:drawableLeft="@drawable/ic_refresh_white_18dp"
+        android:drawableStart="@drawable/ic_refresh_white_18dp"
+        android:layout_marginLeft="@dimen/sml_margin"
+        android:layout_marginStart="@dimen/sml_margin"
+        android:layout_marginRight="@dimen/sml_margin"
+        android:layout_marginEnd="@dimen/sml_margin"
+        android:layout_marginBottom="@dimen/sml_margin"
+        android:background="@color/colorAccent"
+        android:contentDescription="@string/refresh_image_movie_detailsA"
+        android:text="@string/refresh_movie_details"
+        android:textColor="@color/colorAccentText"
+        android:textAlignment="center"
+        android:textSize="@dimen/small_text" />
+
+</LinearLayout>

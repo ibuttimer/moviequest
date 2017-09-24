@@ -33,7 +33,7 @@ import ie.ianbuttimer.moviequest.tmdb.TMDbObject;
  * Adapter class for a RecyclerView of MovieInfoModel
  */
 
-public class MovieInfoAdapter extends AbstractTMDbAdapter<MovieInfoModel> {
+public class MovieInfoAdapter extends AbstractTMDbRecycleViewAdapter<MovieInfoModel> {
 
     /**
      * Constructor

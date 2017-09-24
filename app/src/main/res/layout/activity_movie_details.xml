@@ -173,30 +173,7 @@
                         android:layout_gravity="start"
                         android:text="@string/movie_rating_na" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal">
-
-                        <Button
-                            android:id="@+id/b_favourite_moviedetailsA"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="@dimen/sml_margin"
-                            android:layout_weight="0.5"
-                            android:background="@color/colorAccent"
-                            android:drawableLeft="@drawable/ic_favorite_black_18dp"
-                            android:drawableStart="@drawable/ic_favorite_black_18dp"
-                            android:padding="@dimen/sml_padding"
-                            android:text="@string/add_to_favourites"
-                            android:textAlignment="center"
-                            android:textSize="@dimen/small_text" />
-
-                        <Space
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0.5" />
-                    </LinearLayout>
+                    <include layout="@layout/add_to_fav_button_movie_details" />
 
                 </LinearLayout>
             </TableRow>
@@ -247,19 +224,12 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".30"
+                    style="@style/AppTheme.DetailsLabel"
                     android:text="@string/moviedetails_original_title"/>
 
                 <TextView
                     android:id="@+id/tv_originaltitle_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".70"
+                    style="@style/AppTheme.DetailsInfo"
                     android:text="@string/unavailable"/>
             </TableRow>
 
@@ -270,19 +240,12 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".30"
+                    style="@style/AppTheme.DetailsLabel"
                     android:text="@string/moviedetails_original_language"/>
 
                 <TextView
                     android:id="@+id/tv_originallang_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".70"
+                    style="@style/AppTheme.DetailsInfo"
                     android:text="@string/unavailable"/>
             </TableRow>
 
@@ -293,19 +256,12 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".30"
+                    style="@style/AppTheme.DetailsLabel"
                     android:text="@string/moviedetails_release_date"/>
 
                 <TextView
                     android:id="@+id/tv_releasedate_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".70"
+                    style="@style/AppTheme.DetailsInfo"
                     android:text="@string/unavailable"/>
             </TableRow>
 
@@ -316,19 +272,12 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".30"
+                    style="@style/AppTheme.DetailsLabel"
                     android:text="@string/moviedetails_genres"/>
 
                 <TextView
                     android:id="@+id/tv_genres_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".70"
+                    style="@style/AppTheme.DetailsInfo"
                     android:text="@string/unavailable"/>
             </TableRow>
 
@@ -339,19 +288,12 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".30"
+                    style="@style/AppTheme.DetailsLabel"
                     android:text="@string/moviedetails_homepage"/>
 
                 <TextView
                     android:id="@+id/tv_homepage_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".70"
+                    style="@style/AppTheme.DetailsInfo"
                     android:autoLink="web"
                     android:text="@string/unavailable"/>
             </TableRow>
@@ -363,19 +305,12 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".30"
+                    style="@style/AppTheme.DetailsLabel"
                     android:text="@string/moviedetails_languages"/>
 
                 <TextView
                     android:id="@+id/tv_languages_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".70"
+                    style="@style/AppTheme.DetailsInfo"
                     android:autoLink="web"
                     android:text="@string/unavailable"/>
 
@@ -388,19 +323,12 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".30"
+                    style="@style/AppTheme.DetailsLabel"
                     android:text="@string/moviedetails_revenue"/>
 
                 <TextView
                     android:id="@+id/tv_revenue_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".70"
+                    style="@style/AppTheme.DetailsInfo"
                     android:text="@string/unavailable"/>
             </TableRow>
 
@@ -411,19 +339,12 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".30"
+                    style="@style/AppTheme.DetailsLabel"
                     android:text="@string/moviedetails_budget"/>
 
                 <TextView
                     android:id="@+id/tv_budget_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".70"
+                    style="@style/AppTheme.DetailsInfo"
                     android:text="@string/unavailable"/>
             </TableRow>
 
@@ -434,19 +355,12 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".30"
+                    style="@style/AppTheme.DetailsLabel"
                     android:text="@string/moviedetails_companies"/>
 
                 <TextView
                     android:id="@+id/tv_companies_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".70"
+                    style="@style/AppTheme.DetailsInfo"
                     android:text="@string/unavailable"/>
             </TableRow>
 
@@ -457,19 +371,12 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:textStyle="bold|italic"
-                    android:layout_weight=".30"
+                    style="@style/AppTheme.DetailsLabel"
                     android:text="@string/moviedetails_countries"/>
 
                 <TextView
                     android:id="@+id/tv_countries_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight=".70"
+                    style="@style/AppTheme.DetailsInfo"
                     android:text="@string/unavailable"/>
             </TableRow>
 
@@ -487,19 +394,12 @@
                     android:layout_height="wrap_content">
 
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="end"
-                        android:textStyle="bold|italic"
-                        android:layout_weight=".30"
+                        style="@style/AppTheme.DetailsLabel"
                         android:text="@string/moviedetails_collection"/>
 
                     <TextView
                         android:id="@+id/tv_collection_moviedetailsA"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="start"
-                        android:layout_weight=".70"
+                        style="@style/AppTheme.DetailsInfo"
                         android:text="@string/unavailable"/>
 
                 </LinearLayout>
@@ -507,12 +407,12 @@
             </TableRow>
         </TableLayout>
 
-
         <LinearLayout
             android:id="@+id/ll_trailer_moviedetailsA"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
             <!-- trailer heading -->
             <TextView
                 android:id="@+id/tv_video_heading_moviedetailsA"
@@ -677,33 +577,7 @@
                 android:text="@string/movie_no_cache_details"
                 android:textAlignment="viewEnd" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <Space
-                    android:layout_weight=".75"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent" />
-
-                <Button
-                    android:id="@+id/b_refresh_moviedetailsA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight=".25"
-                    android:drawableLeft="@drawable/ic_refresh_black_18dp"
-                    android:drawableStart="@drawable/ic_refresh_black_18dp"
-                    android:layout_marginLeft="@dimen/sml_margin"
-                    android:layout_marginStart="@dimen/sml_margin"
-                    android:layout_marginRight="@dimen/sml_margin"
-                    android:layout_marginEnd="@dimen/sml_margin"
-                    android:background="@color/colorAccent"
-                    android:contentDescription="@string/refresh_image_movie_detailsA"
-                    android:text="@string/refresh_movie_details"
-                    android:textAlignment="center"
-                    android:textSize="@dimen/small_text" />
-
-            </LinearLayout>
+            <include layout="@layout/refresh_button_movie_details" />
         </LinearLayout>
 
     </LinearLayout>

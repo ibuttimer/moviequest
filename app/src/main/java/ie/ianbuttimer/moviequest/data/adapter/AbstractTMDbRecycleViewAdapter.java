@@ -42,7 +42,7 @@ import ie.ianbuttimer.moviequest.utils.ITester;
  * Adapter class for a RecyclerView of movies
  */
 @SuppressWarnings("unused")
-public abstract class AbstractTMDbAdapter<T extends TMDbObject> extends RecyclerView.Adapter<AbstractTMDbViewHolder> {
+public abstract class AbstractTMDbRecycleViewAdapter<T extends TMDbObject> extends RecyclerView.Adapter<AbstractTMDbViewHolder> {
 
     protected List<T> mList;         // list of objects represented by this adapter
     protected IAdapterOnClickHandler mClickHandler;
@@ -54,7 +54,7 @@ public abstract class AbstractTMDbAdapter<T extends TMDbObject> extends Recycler
      * @param clickHandler  Click handler for the views in this adapter
      * @param layoutId      Id of layout to inflate
      */
-    public AbstractTMDbAdapter(@NonNull List<T> objects, @Nullable IAdapterOnClickHandler clickHandler, @LayoutRes int layoutId) {
+    public AbstractTMDbRecycleViewAdapter(@NonNull List<T> objects, @Nullable IAdapterOnClickHandler clickHandler, @LayoutRes int layoutId) {
         mList = objects;
         mClickHandler = clickHandler;
         mLayoutId = layoutId;
@@ -65,7 +65,7 @@ public abstract class AbstractTMDbAdapter<T extends TMDbObject> extends Recycler
      * @param objects       The objects to represent in the list.
      * @param layoutId      Id of layout to inflate
      */
-    public AbstractTMDbAdapter(@NonNull List<T> objects, @LayoutRes int layoutId) {
+    public AbstractTMDbRecycleViewAdapter(@NonNull List<T> objects, @LayoutRes int layoutId) {
         this(objects, null, layoutId);
     }
 

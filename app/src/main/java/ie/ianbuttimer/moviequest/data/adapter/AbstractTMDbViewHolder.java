@@ -73,7 +73,7 @@ abstract class AbstractTMDbViewHolder<T extends TMDbObject> extends RecyclerView
      * Set the click handler
      * @param clickHandler  onClick handler for view
      */
-    public void setmClickHandler(IAdapterOnClickHandler clickHandler) {
+    public void setClickHandler(IAdapterOnClickHandler clickHandler) {
         this.mClickHandler = clickHandler;
     }
 }

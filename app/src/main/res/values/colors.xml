@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
-    <color name="colorCardviewBackground">#6697ec</color>
+    <!-- https://material.io/color/#!/?view.left=0&view.right=0&primary.color=E040FB&secondary.color=FFAB00 -->
+    <color name="colorPrimary">#e040fb</color>
+    <color name="colorPrimaryDark">#aa00c7</color>
+    <color name="colorPrimaryLight">#ff79ff</color>
+    <color name="colorPrimaryText">#000000</color>
+    <color name="colorAccent">#dd2c00</color>
+    <color name="colorAccentDark">#a30000</color>
+    <color name="colorAccentLight">#ff6434</color>
+    <color name="colorAccentText">#ffffff</color>
+    <color name="activated">@color/colorAccent</color>
+
+    <color name="colorCardviewBackground">@color/colorPrimaryDark</color>
     <color name="colorBadgeBackground">@android:color/black</color>
     <color name="colorBadgeText">@android:color/white</color>
     <color name="colorTitleBarBackground">@android:color/black</color>
@@ -11,7 +19,7 @@
     <color name="colorBannerTitleBarBackground">#2f000000</color>
     <color name="colorBannerTitleBarText">@android:color/white</color>
     <color name="colorVideoItemText">@android:color/black</color>
-    <color name="colorVideoItemBackground">#aec9f7</color>
+    <color name="colorVideoItemBackground">#ce93d8</color>
     <color name="colorReviewItemText">@android:color/black</color>
-    <color name="colorReviewItemBackground">#dfcde7</color>
+    <color name="colorReviewItemBackground">#e1bee7</color>
 </resources>
