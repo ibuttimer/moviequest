@@ -28,6 +28,7 @@ import android.os.Parcel;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
+import android.view.WindowManager;
 
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -163,8 +164,17 @@ public class Utils {
      * @return  screen metrics
      */
     public static DisplayMetrics getScreenMetrics(Activity activity) {
+        return getScreenMetrics(activity.getWindowManager());
+    }
+
+    /**
+     * Get the display metrics.
+     * @param manager  The current window manager
+     * @return  screen metrics
+     */
+    private static DisplayMetrics getScreenMetrics(WindowManager manager) {
         DisplayMetrics metrics = new DisplayMetrics();
-        activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        manager.getDefaultDisplay().getMetrics(metrics);
         return metrics;
     }
 
@@ -228,6 +238,18 @@ public class Utils {
     public static int getScreenDpHeight(Activity activity) {
         Point size = getScreenDp(activity);
         return size.y;
+    }
+
+    /**
+     * Convert density-independent pixels to pixels
+     * @param context   The current context
+     * @param dp        Dp to convert
+     * @return  pixel size
+     */
+    public static int convertDpToPixels(Context context, int dp) {
+        DisplayMetrics metrics = getScreenMetrics((WindowManager)context.getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
+        float pixels = dp * metrics.density;
+        return Float.valueOf(pixels).intValue();
     }
 
     /**

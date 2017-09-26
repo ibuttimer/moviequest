@@ -18,6 +18,7 @@
 package ie.ianbuttimer.moviequest.utils;
 
 import android.app.Activity;
+import android.text.TextUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.Date;
@@ -35,6 +36,7 @@ public abstract class ResponseHandler<T> implements Runnable {
 
     private T response;
     private int errorId;
+    private String errorMsg;
     private Date cacheDate;
     private WeakReference<Activity> activity;   // weak ref so won't prevent activity being garbage collected
 
@@ -43,7 +45,6 @@ public abstract class ResponseHandler<T> implements Runnable {
      * @param activity  The current activity
      * @param response  Response object
      */
-    @SuppressWarnings("unused")
     public ResponseHandler(Activity activity, T response) {
         this(activity, response, 0, null);
     }
@@ -54,8 +55,8 @@ public abstract class ResponseHandler<T> implements Runnable {
      * @param response  Response object
      * @param errorId   Resource id of error message
      */
-    public ResponseHandler(Activity activity, T response, int errorId) {
-        this(activity, response, errorId, null);
+    public ResponseHandler(Activity activity, T response, int errorId, String errorMsg) {
+        this(activity, response, errorId, errorMsg, null);
     }
 
     /**
@@ -65,7 +66,7 @@ public abstract class ResponseHandler<T> implements Runnable {
      * @param errorId   Resource id of error message
      * @param cacheDate Date response was cached
      */
-    public ResponseHandler(Activity activity, T response, int errorId, Date cacheDate) {
+    public ResponseHandler(Activity activity, T response, int errorId, String errorMsg, Date cacheDate) {
         this.activity = new WeakReference<>(activity);
         this.response = response;
         if (response == null) {
@@ -73,6 +74,7 @@ public abstract class ResponseHandler<T> implements Runnable {
         } else {
             this.errorId = errorId;
         }
+        this.errorMsg = errorMsg;
         if (cacheDate == null) {
             this.cacheDate = INVALID_DATE;
         } else {
@@ -83,7 +85,12 @@ public abstract class ResponseHandler<T> implements Runnable {
     @Override
     public void run() {
         if (hasDialog()) {
-            Dialog.showAlertDialog(activity.get(), errorId);
+            // display error, string takes precedence over resource
+            if (!TextUtils.isEmpty(errorMsg)) {
+                Dialog.showAlertDialog(activity.get(), errorMsg);
+            } else {
+                Dialog.showAlertDialog(activity.get(), errorId);
+            }
         }
     }
 
@@ -92,7 +99,7 @@ public abstract class ResponseHandler<T> implements Runnable {
      * @return  <code>true</code> if has dialog, <code>false</code> otherwise
      */
     protected boolean hasDialog() {
-        return (errorId > 0);
+        return ((errorId > 0) || !TextUtils.isEmpty(errorMsg));
     }
 
     public T getResponse() {
@@ -109,6 +116,14 @@ public abstract class ResponseHandler<T> implements Runnable {
 
     public void setErrorId(int errorId) {
         this.errorId = errorId;
+    }
+
+    public String getErrorMsg() {
+        return errorMsg;
+    }
+
+    public void setErrorMsg(String errorMsg) {
+        this.errorMsg = errorMsg;
     }
 
     public Date getCacheDate() {

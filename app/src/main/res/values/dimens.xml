@@ -12,4 +12,5 @@
     <dimen name="medium_text">15sp</dimen>
     <dimen name="separator_line">1dp</dimen>
     <dimen name="small_text">10sp</dimen>
+    <dimen name="small_progress_bar">21dp</dimen>
 </resources>

@@ -48,9 +48,9 @@ public class MovieReviewList extends AppendedReviewList implements Parcelable {
     }
 
     /**
-     * Create a AppendedReviewList object from a JSON string
+     * Create a MovieReviewList object from a JSON string
      * @param jsonString  The JSON string to read
-     * @return  A AppendedReviewList object
+     * @return  A MovieReviewList object
      */
     public static MovieReviewList getListFromJsonString(String jsonString) {
         return (MovieReviewList) getListFromJsonString(new MovieReviewList(), jsonString);
@@ -70,9 +70,9 @@ public class MovieReviewList extends AppendedReviewList implements Parcelable {
     }
 
     /**
-     * Create a AppendedReviewList object from a Bundle
+     * Create a MovieReviewList object from a Bundle
      * @param bundle    The bundle read
-     * @return  A AppendedReviewList object
+     * @return  A MovieReviewList object
      */
     public static MovieReviewList getListFromBundle(Bundle bundle) {
         return (MovieReviewList) getListFromBundle(new MovieReviewList(), bundle);
@@ -84,9 +84,9 @@ public class MovieReviewList extends AppendedReviewList implements Parcelable {
     }
 
     /**
-     * Create a AppendedReviewList object from JSON data
+     * Create a MovieReviewList object from JSON data
      * @param jsonData  JSON data object
-     * @return  new AppendedReviewList object or null if no data
+     * @return  new MovieReviewList object or null if no data
      */
     public static MovieReviewList getInstance(JSONObject jsonData) {
         return getListFromJsonString(jsonData.toString());

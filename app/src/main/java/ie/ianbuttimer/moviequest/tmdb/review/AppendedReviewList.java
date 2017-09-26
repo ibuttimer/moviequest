@@ -49,9 +49,9 @@ public class AppendedReviewList extends AbstractList<BaseReview> implements Parc
     }
 
     /**
-     * Create a AppendedReviewList object from a JSON string
+     * Create an AppendedReviewList object from a JSON string
      * @param jsonString  The JSON string to read
-     * @return  A AppendedReviewList object
+     * @return  An AppendedReviewList object
      */
     public static AppendedReviewList getListFromJsonString(String jsonString) {
         return (AppendedReviewList) getListFromJsonString(new AppendedReviewList(), jsonString);
@@ -63,9 +63,9 @@ public class AppendedReviewList extends AbstractList<BaseReview> implements Parc
     }
 
     /**
-     * Create a AppendedReviewList object from a Bundle
+     * Create an AppendedReviewList object from a Bundle
      * @param bundle    The bundle read
-     * @return  A AppendedReviewList object
+     * @return  An AppendedReviewList object
      */
     public static AppendedReviewList getListFromBundle(Bundle bundle) {
         return (AppendedReviewList) getListFromBundle(new AppendedReviewList(), bundle);
@@ -77,7 +77,7 @@ public class AppendedReviewList extends AbstractList<BaseReview> implements Parc
     }
 
     /**
-     * Create a AppendedReviewList object from JSON data
+     * Create an AppendedReviewList object from JSON data
      * @param jsonData  JSON data object
      * @return  new AppendedReviewList object or null if no data
      */

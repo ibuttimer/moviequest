@@ -14,27 +14,29 @@
   -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    android:orientation="horizontal"
+    app:valueProgressSize=""
+    app:valueTitle="">
 
-    <Button
-        android:id="@+id/b_favourite_moviedetailsA"
-        android:layout_width="0dp"
+    <ProgressBar
+        android:id="@+id/pb_titled_progress_bar"
+        style="@style/Widget.AppCompat.ProgressBar"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/sml_margin"
-        android:layout_weight="0.5"
-        android:background="@drawable/accent_touch_selector"
-        android:drawableLeft="@drawable/ic_favorite_white_18dp"
-        android:drawableStart="@drawable/ic_favorite_white_18dp"
-        android:padding="@dimen/sml_padding"
-        android:text="@string/add_to_favourites"
-        android:textColor="@color/colorAccentText"
-        android:textAlignment="center"
-        android:textSize="@dimen/small_text" />
+        android:layout_gravity="center_vertical|center" />
 
-    <Space
-        android:layout_width="0dp"
+    <TextView
+        android:id="@+id/tv_titled_progress_bar"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="0.5" />
+        android:layout_gravity="center_vertical|center"
+        android:layout_marginLeft="@dimen/sml_margin"
+        android:layout_marginStart="@dimen/sml_margin"
+        tools:text="@string/unavailable" />
 
 </LinearLayout>

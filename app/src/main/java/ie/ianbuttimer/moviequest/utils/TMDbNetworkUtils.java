@@ -61,6 +61,13 @@ public class TMDbNetworkUtils {
         See https://developers.themoviedb.org/3/movies/get-popular-movies */
     private static final String GET_POPULAR = "movie/popular";
 
+    /* API endpoint for Get movie reviews on TMDb.
+        See https://developers.themoviedb.org/3/movies/get-movie-reviews */
+    public final static String REVIEW_DETAILS = "reviews";
+    /* API endpoint for Get movie videos on TMDb.
+        See https://developers.themoviedb.org/3/movies/get-movie-videos */
+    public final static String VIDEO_DETAILS = "videos";
+
     // query arguments for movie endpoint of the TMDb API
     final static String LANGUAGE_PARAM = "language";
     final static String PAGE_PARAM = "page";

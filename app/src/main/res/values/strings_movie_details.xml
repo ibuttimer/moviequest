@@ -45,4 +45,10 @@
     <string name="reviews_heading_moviedetailsA">Reviews</string>
     <string name="unable_to_play_moviedetailsA">Unable to play video</string>
     <string name="unable_to_view_review_moviedetailsA">Unable to view review</string>
+
+    <string name="movie_details">movie details</string>
+    <string name="video_details">video details</string>
+    <string name="review_details">review details</string>
+    <string name="requesting_video_details">Requesting video details</string>
+    <string name="requesting_review_details">Requesting review details</string>
 </resources>

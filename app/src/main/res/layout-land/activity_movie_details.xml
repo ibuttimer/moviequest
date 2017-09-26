@@ -476,74 +476,114 @@
 
             </TableRow>
 
+            <!-- video info -->
             <TableRow
-                android:paddingBottom="@dimen/table_padding"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:paddingBottom="@dimen/table_padding">
 
-                <LinearLayout
-                    android:id="@+id/ll_trailer_moviedetailsA"
-                    android:orientation="vertical"
-                    android:layout_width="0dp"
+                <FrameLayout
+                    android:id="@+id/fl_videos_movie_detailsA"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight=".5">
-                    <!-- trailer heading -->
-                    <TextView
-                        android:id="@+id/tv_video_heading_moviedetailsA"
+                    android:layout_gravity="center">
+
+                    <ie.ianbuttimer.moviequest.widgets.TitledProgressBar
+                        android:id="@+id/tpb_videos_movie_detailsA"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:visibility="invisible"
+                        app:valueProgressSize="@dimen/small_progress_bar"
+                        app:valueTitle="@string/requesting_video_details" />
+
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_margin="@dimen/sml_margin"
-                        android:textStyle="bold|italic"
-                        android:layout_gravity="start|center_vertical"
-                        android:text="@string/trailer_heading_moviedetailsA"/>
+                        android:orientation="horizontal">
 
-                    <!-- separator line -->
-                    <View
-                        android:layout_marginLeft="@dimen/fab_margin"
-                        android:layout_marginRight="@dimen/fab_margin"
-                        android:background="@drawable/line_primary_dark"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/separator_line"/>
+                        <FrameLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight=".5" >
 
-                    <!-- video info -->
-                    <android.support.v7.widget.RecyclerView
-                        android:id="@+id/rv_trailer_movies_detailsA"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </LinearLayout>
+                            <Space
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
 
-                <LinearLayout
-                    android:id="@+id/ll_teaser_moviedetailsA"
-                    android:orientation="vertical"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight=".5">
+                            <LinearLayout
+                                android:id="@+id/ll_trailer_moviedetailsA"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical">
+                                <!-- trailer heading -->
+                                <TextView
+                                    android:id="@+id/tv_video_heading_moviedetailsA"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="start|center_vertical"
+                                    android:layout_margin="@dimen/sml_margin"
+                                    android:text="@string/trailer_heading_moviedetailsA"
+                                    android:textStyle="bold|italic" />
 
-                    <!-- teaser heading -->
-                    <TextView
-                        android:id="@+id/tv_teaser_heading_moviedetailsA"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="@dimen/sml_margin"
-                        android:textStyle="bold|italic"
-                        android:layout_gravity="start|center_vertical"
-                        android:text="@string/teaser_heading_moviedetailsA"/>
+                                <!-- separator line -->
+                                <View
+                                    android:layout_width="match_parent"
+                                    android:layout_height="@dimen/separator_line"
+                                    android:layout_marginLeft="@dimen/fab_margin"
+                                    android:layout_marginRight="@dimen/fab_margin"
+                                    android:background="@drawable/line_primary_dark" />
 
-                    <!-- separator line -->
-                    <View
-                        android:layout_marginLeft="@dimen/fab_margin"
-                        android:layout_marginRight="@dimen/fab_margin"
-                        android:background="@drawable/line_primary_dark"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/separator_line"/>
+                                <!-- video info -->
+                                <android.support.v7.widget.RecyclerView
+                                    android:id="@+id/rv_trailer_movies_detailsA"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent" />
+                            </LinearLayout>
+                        </FrameLayout>
 
-                    <!-- video info -->
-                    <android.support.v7.widget.RecyclerView
-                        android:id="@+id/rv_teaser_movies_detailsA"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </LinearLayout>
+                        <FrameLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight=".5" >
 
+                            <Space
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+
+                            <LinearLayout
+                                android:id="@+id/ll_teaser_moviedetailsA"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical">
+
+                                <!-- teaser heading -->
+                                <TextView
+                                    android:id="@+id/tv_teaser_heading_moviedetailsA"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="start|center_vertical"
+                                    android:layout_margin="@dimen/sml_margin"
+                                    android:text="@string/teaser_heading_moviedetailsA"
+                                    android:textStyle="bold|italic" />
+
+                                <!-- separator line -->
+                                <View
+                                    android:layout_width="match_parent"
+                                    android:layout_height="@dimen/separator_line"
+                                    android:layout_marginLeft="@dimen/fab_margin"
+                                    android:layout_marginRight="@dimen/fab_margin"
+                                    android:background="@drawable/line_primary_dark" />
+
+                                <!-- video info -->
+                                <android.support.v7.widget.RecyclerView
+                                    android:id="@+id/rv_teaser_movies_detailsA"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent" />
+                            </LinearLayout>
+                        </FrameLayout>
+                    </LinearLayout>
+                </FrameLayout>
             </TableRow>
 
             <TableRow
@@ -619,46 +659,69 @@
 
             <TableRow
                 android:paddingBottom="@dimen/table_padding"
+                android:layout_gravity="center_horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <LinearLayout
-                    android:id="@+id/ll_reviews_moviedetailsA"
-                    android:orientation="vertical"
-                    android:layout_width="0dp"
+                <!-- review info -->
+                <FrameLayout
+                    android:id="@+id/fl_reviews_movie_detailsA"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight=".5">
-                    <!-- review heading -->
-                    <TextView
-                        android:id="@+id/reviews_moviedetailsA"
+                    android:layout_gravity="center_horizontal">
+
+                    <ie.ianbuttimer.moviequest.widgets.TitledProgressBar
+                        android:id="@+id/tpb_reviews_movie_detailsA"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:visibility="invisible"
+                        app:valueProgressSize="@dimen/small_progress_bar"
+                        app:valueTitle="@string/requesting_review_details" />
+
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_margin="@dimen/sml_margin"
-                        android:textStyle="bold|italic"
-                        android:layout_gravity="start|center_vertical"
-                        android:text="@string/reviews_heading_moviedetailsA"/>
+                        android:orientation="horizontal">
 
-                    <!-- separator line -->
-                    <View
-                        android:layout_marginLeft="@dimen/fab_margin"
-                        android:layout_marginRight="@dimen/fab_margin"
-                        android:background="@drawable/line_primary_dark"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/separator_line"/>
+                        <LinearLayout
+                            android:id="@+id/ll_reviews_moviedetailsA"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight=".5"
+                            android:orientation="vertical">
+                            <!-- review heading -->
+                            <TextView
+                                android:id="@+id/reviews_moviedetailsA"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="start|center_vertical"
+                                android:layout_margin="@dimen/sml_margin"
+                                android:text="@string/reviews_heading_moviedetailsA"
+                                android:textStyle="bold|italic" />
 
-                    <!-- review info -->
-                    <android.support.v7.widget.RecyclerView
-                        android:id="@+id/rv_review_movies_detailsA"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </LinearLayout>
+                            <!-- separator line -->
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/separator_line"
+                                android:layout_marginLeft="@dimen/fab_margin"
+                                android:layout_marginRight="@dimen/fab_margin"
+                                android:background="@drawable/line_primary_dark" />
 
-                <Space
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight=".5">
-                </Space>
+                            <!-- review info -->
+                            <android.support.v7.widget.RecyclerView
+                                android:id="@+id/rv_review_movies_detailsA"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent" />
+                        </LinearLayout>
 
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight=".5"></Space>
+                    </LinearLayout>
+                </FrameLayout>
             </TableRow>
         </TableLayout>
 

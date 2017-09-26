@@ -27,6 +27,7 @@ import org.json.JSONObject;
 
 import java.util.Arrays;
 
+import ie.ianbuttimer.moviequest.data.IEmpty;
 import ie.ianbuttimer.moviequest.utils.FilterList;
 import ie.ianbuttimer.moviequest.utils.ITester;
 
@@ -37,7 +38,7 @@ import static ie.ianbuttimer.moviequest.utils.Utils.writeBooleanToParcel;
  * Class representing a TMDb server response to a list request
  */
 @SuppressWarnings("unused")
-public abstract class AbstractList<T extends TMDbObject> implements Parcelable {
+public abstract class AbstractList<T extends TMDbObject> implements Parcelable, IEmpty {
 
     /** The number of movie result per list response. This mirrors what the TMDb server currently returns */
     public static final int RESULTS_PER_LIST = 20;
@@ -302,14 +303,10 @@ public abstract class AbstractList<T extends TMDbObject> implements Parcelable {
         return end;
     }
 
-    /**
-     * Check if this object represents a valid response
-     * @return  <code>true</code> if represents a valid response
-     */
-    public boolean isNonResponse() {
+    @Override
+    public boolean isEmpty() {
         return nonResponse;
     }
-
 
     @Override
     public int describeContents() {

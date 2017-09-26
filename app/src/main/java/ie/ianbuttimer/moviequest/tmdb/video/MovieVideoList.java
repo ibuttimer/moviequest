@@ -62,7 +62,8 @@ public class MovieVideoList extends AbstractList<Video> implements Parcelable {
      * @return  A MovieVideoList object
      */
     public static MovieVideoList getListFromJsonString(String jsonString) {
-        return (MovieVideoList) getListFromJsonString(new MovieVideoList(), jsonString);
+        MovieVideoList response = (MovieVideoList) getListFromJsonString(new MovieVideoList(), jsonString);
+        return adjustNumbers(response);
     }
 
     @Override
@@ -87,7 +88,6 @@ public class MovieVideoList extends AbstractList<Video> implements Parcelable {
         return (MovieVideoList) getListFromBundle(new MovieVideoList(), bundle);
     }
 
-
     @Override
     protected void readExtraFields(Bundle bundle) {
         setMovieId(bundle.getInt(MOVIE_ID, 0));
@@ -100,7 +100,15 @@ public class MovieVideoList extends AbstractList<Video> implements Parcelable {
      */
     public static MovieVideoList getInstance(JSONObject jsonData) {
         MovieVideoList response = getListFromJsonString(jsonData.toString());
-        /* NOTE: a video list response differs slight from other list responses in that it doesn't have
+        return adjustNumbers(response);
+    }
+
+    /**
+     * Adjust range number to compensate from missing info in server response
+     * @param response  Object to adjust
+     */
+    protected static MovieVideoList adjustNumbers(MovieVideoList response) {
+        /* NOTE: a video list response differs slightly from other list responses in that it doesn't have
             the page/total_pages/total_results fields.
          */
         response.setPageNumber(1);

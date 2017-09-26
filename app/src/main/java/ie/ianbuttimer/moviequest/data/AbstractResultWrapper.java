@@ -35,7 +35,7 @@ public abstract class AbstractResultWrapper {
     public enum ResultType { STRING, STRING_ARRAY, INTEGER, CUSROR, URI, BUNDLE };
 
     private ICallback.ResponseHandler handler;  // type of handler required to process this object
-    protected UriURLPair request;       // uri/url  used to make request
+    protected UriURLPair request;           // uri/url used to make request
 
     protected String stringResult;          // returned from url & uri call
     protected String[] stringArrayResult;   // returned from uri call

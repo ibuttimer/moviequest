@@ -18,8 +18,14 @@
     <color name="colorTitleBarText">@android:color/white</color>
     <color name="colorBannerTitleBarBackground">#2f000000</color>
     <color name="colorBannerTitleBarText">@android:color/white</color>
+
     <color name="colorVideoItemText">@android:color/black</color>
-    <color name="colorVideoItemBackground">#ce93d8</color>
+    <color name="colorVideoItem">#ce93d8</color>
+    <color name="colorVideoItemDark">#9c64a6</color>
+    <color name="colorVideoItemLight">#ffc4ff</color>
+
     <color name="colorReviewItemText">@android:color/black</color>
-    <color name="colorReviewItemBackground">#e1bee7</color>
+    <color name="colorReviewItem">#e1bee7</color>
+    <color name="colorReviewItemDark">#af8eb5</color>
+    <color name="colorReviewItemLight">#fff1ff</color>
 </resources>

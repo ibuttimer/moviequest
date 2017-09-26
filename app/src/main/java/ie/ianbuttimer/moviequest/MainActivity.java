@@ -412,7 +412,7 @@ public class MainActivity extends AppCompatActivity implements
                 if (result.getResultCount() == 0) {
                     if (isFavouritesList()) {
                         msgId = R.string.no_movies_favourites;
-                    } else if (result.isNonResponse()) {
+                    } else if (result.isEmpty()) {
                         msgId = R.string.no_response;
                     } else {
                         msgId = R.string.no_movies_in_list;
@@ -463,7 +463,7 @@ public class MainActivity extends AppCompatActivity implements
     private class ListResponseHandler extends ResponseHandler<MovieList> implements Runnable {
 
         ListResponseHandler(Activity activity, MovieList response, int errorId) {
-            super(activity, response, errorId);
+            super(activity, response, errorId, null);
         }
 
         @Override

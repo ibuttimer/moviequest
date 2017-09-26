@@ -16,7 +16,6 @@
  */
 package ie.ianbuttimer.moviequest.tmdb;
 
-import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
 
@@ -26,14 +25,15 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
+
+import ie.ianbuttimer.moviequest.data.IEmpty;
 
 /**
  * Base class for TMDb-related objects
  */
-public abstract class TMDbObject implements Parcelable {
+public abstract class TMDbObject implements Parcelable, IEmpty {
 
     private static Class[] stringParameterTypes;      // single string parameter
     private static Class[] intParameterTypes;         // single integer parameter
@@ -342,12 +342,6 @@ public abstract class TMDbObject implements Parcelable {
     public <T extends TMDbObject> void copy(T from) {
         copy(from, this, null);
     }
-
-    /**
-     * Check if the object is empty
-     * @return  <code>true</code> if no meaningful data set
-     */
-    public abstract boolean isEmpty();
 
     /**
      * Check if the object is a placeholder, i.e. the minimal amount of info has been set

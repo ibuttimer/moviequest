@@ -51,6 +51,10 @@ public class MovieContract {
     static final String PATH_MOVIES = "movies";
     /** Individual item path for content provider */
     static final String PATH_WITH_ID = "/#";
+    /** Individual item reviews path for content provider */
+    static final String PATH_WITH_ID_REVIEWS = "/#/reviews";
+    /** Individual item videos path for content provider */
+    static final String PATH_WITH_ID_VIDEOS = "/#/videos";
 
     /** Favourites path for content provider */
     static final String PATH_FAVOURITES = "favourites";
@@ -96,6 +100,13 @@ public class MovieContract {
 
         /** Method name to get movies details */
         public static final String GET_DETAILS_METHOD = "getMovieDetails";;
+        /** Method name to get movies video details */
+        public static final String GET_VIDEOS_METHOD = "getMovieVideos";;
+        /** Method name to get movies review details */
+        public static final String GET_REVIEWS_METHOD = "getMovieReviews";;
+
+        /** Extra bundle key for append to response details */
+        public static final String APPEND_TO_RESPONSE = "appendToResponse";;
     }
 
     /**

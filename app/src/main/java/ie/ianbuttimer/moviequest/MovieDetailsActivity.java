@@ -55,6 +55,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import ie.ianbuttimer.moviequest.data.DbCacheIntentService;
+import ie.ianbuttimer.moviequest.data.IEmpty;
 import ie.ianbuttimer.moviequest.data.adapter.ReviewAdapter;
 import ie.ianbuttimer.moviequest.data.adapter.VideoAdapter;
 import ie.ianbuttimer.moviequest.tmdb.AbstractList;
@@ -67,7 +68,9 @@ import ie.ianbuttimer.moviequest.data.AsyncCallback;
 import ie.ianbuttimer.moviequest.image.BackdropImageLoader;
 import ie.ianbuttimer.moviequest.data.DbContentValues;
 import ie.ianbuttimer.moviequest.tmdb.TMDbObject;
+import ie.ianbuttimer.moviequest.tmdb.review.AppendedReviewList;
 import ie.ianbuttimer.moviequest.tmdb.review.BaseReview;
+import ie.ianbuttimer.moviequest.tmdb.review.MovieReviewList;
 import ie.ianbuttimer.moviequest.tmdb.video.MovieVideoList;
 import ie.ianbuttimer.moviequest.tmdb.video.Video;
 import ie.ianbuttimer.moviequest.utils.AbstractRecyclerViewController;
@@ -85,6 +88,7 @@ import ie.ianbuttimer.moviequest.utils.ResponseHandler;
 import ie.ianbuttimer.moviequest.image.ThumbnailImageLoader;
 import ie.ianbuttimer.moviequest.utils.UriUtils;
 import ie.ianbuttimer.moviequest.utils.Utils;
+import ie.ianbuttimer.moviequest.widgets.TitledProgressBar;
 import okhttp3.Call;
 import okhttp3.Response;
 
@@ -98,18 +102,34 @@ import static ie.ianbuttimer.moviequest.data.DbCacheIntentService.INSERT_OR_UPDA
 import static ie.ianbuttimer.moviequest.data.DbCacheIntentService.INSERT_OR_UPDATE_MOVIE;
 import static ie.ianbuttimer.moviequest.data.MovieContentProvider.FAVOURITE_WITH_ID;
 import static ie.ianbuttimer.moviequest.data.MovieContentProvider.MOVIE_WITH_ID;
+import static ie.ianbuttimer.moviequest.data.MovieContentProvider.MOVIE_WITH_REVIEWS;
+import static ie.ianbuttimer.moviequest.data.MovieContentProvider.MOVIE_WITH_VIDEOS;
 import static ie.ianbuttimer.moviequest.data.MovieContract.FavouriteEntry.COLUMN_FAVOURITE;
+import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry.APPEND_TO_RESPONSE;
 import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry.COLUMN_JSON;
+import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry.GET_REVIEWS_METHOD;
+import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry.GET_VIDEOS_METHOD;
 import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry._ID;
 import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry.GET_DETAILS_METHOD;
+import static ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils.APPEND_REVIEWS_VIDEOS;
+import static ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils.REVIEW_DETAILS;
+import static ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils.VIDEO_DETAILS;
 import static ie.ianbuttimer.moviequest.utils.UriUtils.matchMovieUri;
 
 /**
  * Activity to display the details for a movie
+ *
+ * TODO schedule job to update details cached time
+ * TODO update movie details layout; ExpandableListView?, compound views to reduce view count
  */
 public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapterOnClickHandler*/ {
 
     private static final String TAG = MovieDetailsActivity.class.getSimpleName();
+
+    /* Its more efficient to request video/review details appended to movie details response but
+        don't do for now as rubric requires separate requests for videos & reviews
+    */
+    private static final boolean REQUEST_APPENDED_INFO = false;
 
     private static final int TV_IDX = 0;        // text view id index
     private static final int PORTRAIT_IDX = 1;  // portrait orientation container id index
@@ -127,18 +147,18 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
     static {
         // ids of text views that can be populated from movie info placeholder
         mPlaceholderViewContainerIds = new int[][]{
-                // view id                              portrait container id               landscape contained id
-                {R.id.tv_banner_title_movie_detailsA, R.id.tv_banner_title_movie_detailsA, R.id.tv_banner_title_movie_detailsA}   // no container
+            // view id                              portrait container id               landscape contained id
+            {R.id.tv_banner_title_movie_detailsA, R.id.tv_banner_title_movie_detailsA, R.id.tv_banner_title_movie_detailsA}   // no container
         };
 
         // ids of text views that can be populated from movie info provided in intent excluding placeholder fields
         int[][] infoNonPlaceholderIds = new int[][]{
-                // view id                              portrait container id               landscape contained id
-                {R.id.tv_year_moviedetailsA, R.id.tv_year_moviedetailsA, R.id.tv_year_moviedetailsA},   // no container
-                {R.id.tv_plot_moviedetailsA, R.id.tv_plot_moviedetailsA, R.id.tv_plot_moviedetailsA},   // no container
-                {R.id.tv_releasedate_moviedetailsA, R.id.tr_releasedate_moviedetailsA, R.id.ll_releasedate_moviedetailsA},
-                {R.id.tv_rating_moviedetailsA, R.id.tv_rating_moviedetailsA, R.id.tv_rating_moviedetailsA}, // no container
-                {R.id.tv_originaltitle_moviedetailsA, R.id.tr_originaltitle_moviedetailsA, R.id.ll_originaltitle_moviedetailsA}
+            // view id                              portrait container id               landscape contained id
+            {R.id.tv_year_moviedetailsA, R.id.tv_year_moviedetailsA, R.id.tv_year_moviedetailsA},   // no container
+            {R.id.tv_plot_moviedetailsA, R.id.tv_plot_moviedetailsA, R.id.tv_plot_moviedetailsA},   // no container
+            {R.id.tv_releasedate_moviedetailsA, R.id.tr_releasedate_moviedetailsA, R.id.ll_releasedate_moviedetailsA},
+            {R.id.tv_rating_moviedetailsA, R.id.tv_rating_moviedetailsA, R.id.tv_rating_moviedetailsA}, // no container
+            {R.id.tv_originaltitle_moviedetailsA, R.id.tr_originaltitle_moviedetailsA, R.id.ll_originaltitle_moviedetailsA}
         };
 
         // ids of text views that can be populated from movie info provided in intent
@@ -148,19 +168,19 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
 
         // ids of text views that are populated from movie details info returned from server
         mDetailsViewContainerIds = new int[][]{
-                // view id                              portrait container id               landscape contained id
-                {R.id.tv_runningtime_moviedetailsA, R.id.tv_runningtime_moviedetailsA, R.id.tv_runningtime_moviedetailsA},    // no container
-                {R.id.tv_genres_moviedetailsA, R.id.tr_genres_moviedetailsA, R.id.ll_genres_moviedetailsA},
-                {R.id.tv_homepage_moviedetailsA, R.id.tr_homepage_moviedetailsA, R.id.ll_homepage_moviedetailsA},
-                {R.id.tv_revenue_moviedetailsA, R.id.tr_revenue_moviedetailsA, R.id.ll_revenue_moviedetailsA},
-                {R.id.tv_collection_moviedetailsA, R.id.tr_collection_moviedetailsA, R.id.ll_collection_moviedetailsA},
-                {R.id.tv_originallang_moviedetailsA, R.id.tr_originallang_moviedetailsA, R.id.ll_originallang_moviedetailsA},
-                {R.id.tv_budget_moviedetailsA, R.id.tr_budget_moviedetailsA, R.id.ll_budget_moviedetailsA},
-                {R.id.tv_languages_moviedetailsA, R.id.tr_languages_moviedetailsA, R.id.ll_languages_moviedetailsA},
-                {R.id.tv_companies_moviedetailsA, R.id.tr_companies_moviedetailsA, R.id.ll_companies_moviedetailsA},
-                {R.id.tv_countries_moviedetailsA, R.id.tr_countries_moviedetailsA, R.id.ll_countries_moviedetailsA},
-                {R.id.tv_tagline_movie_detailsA, R.id.tv_tagline_movie_detailsA, R.id.tv_tagline_movie_detailsA},   // no container
-                {R.id.tv_cache_moviedetailsA, R.id.ll_cache_moviedetailsA, R.id.ll_cache_moviedetailsA}
+            // view id                              portrait container id               landscape contained id
+            {R.id.tv_runningtime_moviedetailsA, R.id.tv_runningtime_moviedetailsA, R.id.tv_runningtime_moviedetailsA},    // no container
+            {R.id.tv_genres_moviedetailsA, R.id.tr_genres_moviedetailsA, R.id.ll_genres_moviedetailsA},
+            {R.id.tv_homepage_moviedetailsA, R.id.tr_homepage_moviedetailsA, R.id.ll_homepage_moviedetailsA},
+            {R.id.tv_revenue_moviedetailsA, R.id.tr_revenue_moviedetailsA, R.id.ll_revenue_moviedetailsA},
+            {R.id.tv_collection_moviedetailsA, R.id.tr_collection_moviedetailsA, R.id.ll_collection_moviedetailsA},
+            {R.id.tv_originallang_moviedetailsA, R.id.tr_originallang_moviedetailsA, R.id.ll_originallang_moviedetailsA},
+            {R.id.tv_budget_moviedetailsA, R.id.tr_budget_moviedetailsA, R.id.ll_budget_moviedetailsA},
+            {R.id.tv_languages_moviedetailsA, R.id.tr_languages_moviedetailsA, R.id.ll_languages_moviedetailsA},
+            {R.id.tv_companies_moviedetailsA, R.id.tr_companies_moviedetailsA, R.id.ll_companies_moviedetailsA},
+            {R.id.tv_countries_moviedetailsA, R.id.tr_countries_moviedetailsA, R.id.ll_countries_moviedetailsA},
+            {R.id.tv_tagline_movie_detailsA, R.id.tv_tagline_movie_detailsA, R.id.tv_tagline_movie_detailsA},   // no container
+            {R.id.tv_cache_moviedetailsA, R.id.ll_cache_moviedetailsA, R.id.ll_cache_moviedetailsA}
         };
 
         // all arrays need to be sorted in ascending order based on view id
@@ -194,9 +214,11 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
 
     // video related variables
     private VideoRecyclerViewController[] videoControllers;
+    private TitledProgressBar mVideosProgress;   // video progress bar
 
     // review related variables
     private ReviewRecyclerViewController reviewController;
+    private TitledProgressBar mReviewProgress;   // review progress bar
 
     private DateFormat mediumDF = DateFormat.getDateInstance(DateFormat.MEDIUM);
 
@@ -232,11 +254,11 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
 
         // setup the video recycler view
         int[][] videos = new int[][] {
-                // viewID                           containerId
-                { R.id.rv_trailer_movies_detailsA, R.id.ll_trailer_moviedetailsA },
-                { R.id.rv_teaser_movies_detailsA, R.id.ll_teaser_moviedetailsA },
-                { R.id.rv_clip_movies_detailsA, R.id.ll_clip_moviedetailsA },
-                { R.id.rv_featurette_movies_detailsA, R.id.ll_featurette_moviedetailsA }
+            // viewID                           containerId
+            { R.id.rv_trailer_movies_detailsA, R.id.ll_trailer_moviedetailsA },
+            { R.id.rv_teaser_movies_detailsA, R.id.ll_teaser_moviedetailsA },
+            { R.id.rv_clip_movies_detailsA, R.id.ll_clip_moviedetailsA },
+            { R.id.rv_featurette_movies_detailsA, R.id.ll_featurette_moviedetailsA }
         };
         videoControllers = new VideoRecyclerViewController[videos.length];
         for (int i = 0; i < videos.length; ++i) {
@@ -265,6 +287,10 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
         // setup the review recycler view
         reviewController = new ReviewRecyclerViewController(this);
         reviewController.setAdapter(new ReviewAdapter(new ArrayList<BaseReview>()));
+
+        // setup progress bars
+        mVideosProgress = (TitledProgressBar) findViewById(R.id.tpb_videos_movie_detailsA);
+        mReviewProgress = (TitledProgressBar) findViewById(R.id.tpb_reviews_movie_detailsA);
 
         if ((mDetails == null) && (mMovie != null)) {
             mDetails = mMovie.getDetails();
@@ -503,16 +529,39 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
             }
 
             // update video list
-            MovieVideoList list = mDetails.getMovieVideoList();
-            for (VideoRecyclerViewController controller : videoControllers) {
-                controller.updateDataSet(list);
+            if (!setVideoDetails(mDetails.getMovieVideoList())) {
+                // no valid info, request from server
+                requestVideosFromServer(mDetails.getId());
             }
 
             // update review list
-            reviewController.updateDataSet(mDetails.getReviewList());
+            if (!setReviewDetails(mDetails.getReviewList())) {
+                // no valid info, request from server
+                requestReviewsFromServer(mDetails.getId());
+            }
         } else {
             dimUnknown();
         }
+    }
+
+    /**
+     * Update Video details
+     * @param list  List of videos
+     */
+    private boolean setVideoDetails(MovieVideoList list) {
+        boolean valid = false;
+        for (VideoRecyclerViewController controller : videoControllers) {
+            valid = controller.updateDataSet(list);
+        }
+        return valid;
+    }
+
+    /**
+     * Update Review details
+     * @param list  List of reviewss
+     */
+    private boolean setReviewDetails(AppendedReviewList list) {
+        return reviewController.updateDataSet(list);
     }
 
     /**
@@ -734,7 +783,7 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
         if (PreferenceControl.getCachePreference(this)) {
             // caching enabled, try database first
             Uri uri = UriUtils.getMovieWithIdUri(id);
-            responseHandler.query(this, matchMovieUri(uri), uri);
+            movieDetailsResponseHandler.query(this, matchMovieUri(uri), uri);
         } else {
             // no cache request from server
             requestDetailsFromServer(id);
@@ -767,31 +816,79 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
     }
 
     /**
+     * Show/hide videos refresh in progress
+     */
+    private void setVideosInProgress(boolean inProgress) {
+        mVideosProgress.setVisibility(inProgress ? View.VISIBLE : View.GONE);
+    }
+
+    /**
+     * Show/hide reviews refresh in progress
+     */
+    private void setReviewsInProgress(boolean inProgress) {
+        mReviewProgress.setVisibility(inProgress ? View.VISIBLE : View.GONE);
+    }
+
+    /**
      * Request the movie details from the server
-     *
      * @param id Id of movie to request
      */
     private void requestDetailsFromServer(int id) {
         dimUnknown();
         showRefreshInProgress();
 
+        Uri uri = UriUtils.getMovieWithIdUri(id);
+        Bundle extras = null;
+        if (REQUEST_APPENDED_INFO) {
+            extras = new Bundle();
+            extras.putStringArray(APPEND_TO_RESPONSE, APPEND_REVIEWS_VIDEOS);
+        }
+        requestFromServer(movieDetailsResponseHandler, id, uri, GET_DETAILS_METHOD, extras);
+        // direct http request alternative is
+//        movieDetailsResponseHandler.request(TMDbNetworkUtils.buildGetDetailsUrl(this, id));
+    }
+
+    /**
+     * Request the movie details from the server
+     * @param handler   Handler to make request & process response
+     * @param id        Id of movie to request
+     * @param uri       Request uri
+     * @param method    Method to request
+     */
+    private void requestFromServer(AsyncCallback handler, int id, Uri uri, String method, Bundle extras) {
         if (NetworkUtils.isInternetAvailable(this)) {
-            // request current movie list via ContentProvider
-            Uri uri = UriUtils.getMovieWithIdUri(id);
-            responseHandler.call(this, matchMovieUri(uri), uri, GET_DETAILS_METHOD, String.valueOf(id), null);
-            // direct http request alternative is
-//            responseHandler.request(TMDbNetworkUtils.buildGetDetailsUrl(this, id));
+            // matcher result is used as loader id
+            handler.call(this, matchMovieUri(uri), uri, method, String.valueOf(id), extras);
         }
     }
 
     /**
+     * Request the movie video details from the server
+     * @param id Id of movie to request
+     */
+    private void requestVideosFromServer(int id) {
+        setVideosInProgress(true);
+        Uri uri = UriUtils.getMovieWithIdAdditionalInfoUri(id, VIDEO_DETAILS);
+        requestFromServer(videoListResponseHandler, id, uri, GET_VIDEOS_METHOD, null);
+    }
+
+    /**
+     * Request the movie review details from the server
+     * @param id Id of movie to request
+     */
+    private void requestReviewsFromServer(int id) {
+        setReviewsInProgress(true);
+        Uri uri = UriUtils.getMovieWithIdAdditionalInfoUri(id, REVIEW_DETAILS);
+        requestFromServer(reviewListResponseHandler, id, uri, GET_REVIEWS_METHOD, null);
+    }
+
+    /**
      * Request the movie favourite details
-     *
      * @param id Id of movie to request
      */
     private void requestFavouriteDetails(int id) {
         Uri uri = UriUtils.getFavouriteWithIdUri(id);
-        responseHandler.query(this, matchMovieUri(uri), uri);
+        movieDetailsResponseHandler.query(this, matchMovieUri(uri), uri);
     }
 
 
@@ -821,7 +918,7 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
             intent.putExtra(MOVIE_ID, mMovie.getId());
             intent.putExtra(COLUMN_FAVOURITE, mMovie.isFavourite());
         }
-        if (!mDetails.isEmpty()) {
+        if ((mDetails != null) && !mDetails.isEmpty()) {
             intent.putExtra(MOVIE_OBJ, mDetails);   // return details
         }
         return intent;
@@ -898,117 +995,6 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
     }
 
     /**
-     * Asynchronous request and response handler
-     */
-    private AsyncCallback<MovieDetails> responseHandler = new AsyncCallback<MovieDetails>() {
-
-        @Override
-        public void onFailure(Call call, IOException e) {
-            super.onFailure(call, e);
-            onMovieResponse(new MovieDetails(), getErrorId(call, e));
-        }
-
-        @Override
-        public void onResponse(MovieDetails result) {
-            int msgId = 0;
-            if ((result == null) || result.isEmpty()) {
-                msgId = R.string.movie_no_response;
-            }
-            onMovieResponse(result, msgId);
-        }
-
-        @Override
-        public void request(@NonNull URL url) {
-            super.request(url);
-        }
-
-        /**
-         * Convert the http response into a MovieDetails object
-         * @param response  Response from the server
-         * @return Response object or <code>null</code>
-         */
-        @Override
-        public MovieDetails processUrlResponse(@NonNull URL request, @NonNull Response response) {
-            String jsonResponse = NetworkUtils.getResponseBodyString(response);
-            return processUriResponse(new UrlProviderResultWrapper(request, jsonResponse));
-        }
-
-        /**
-         * Process the response from a {@link ICallback#call(AppCompatActivity, int, Uri, String, String, Bundle)} call
-         * @param response  Response from the content provider
-         * @return Response object or <code>null</code>
-         */
-        @Override
-        public MovieDetails processUriResponse(@Nullable AbstractResultWrapper response) {
-            MovieDetails movieDetails = null;
-            if (response != null) {
-                String stringResult = response.getStringResult();
-                if (!TextUtils.isEmpty(stringResult)) {
-                    movieDetails = MovieDetails.getInstance(stringResult);
-
-                    // if caching is enabled save details to db
-                    boolean cache = PreferenceControl.getCachePreference(getContext());
-                    if ((movieDetails != null) && cache) {
-                        int id = movieDetails.getId();
-                        if (id > 0) {
-                            startDbCacheIntentService(INSERT_OR_UPDATE_MOVIE,
-                                    MovieContentValues.builder()
-                                            .setJson(stringResult)
-                                            .setTimestamp(),
-                                    id);
-                        }
-                    }
-                }
-            }
-
-            return movieDetails;
-        }
-
-        @Override
-        public void processQueryResponse(@Nullable QueryResultWrapper response) {
-            if (response != null) {
-                Uri uriRequest = response.getUriRequest();
-                int match = matchMovieUri(uriRequest);
-                Cursor cursor = response.getCursorResult();
-
-                switch (match) {
-                    case MOVIE_WITH_ID:
-                        if (cursor.moveToNext()) {
-                            // got result
-                            int idxJson = cursor.getColumnIndex(COLUMN_JSON);
-                            setMovieDetails(MovieDetails.getInstance(cursor.getString(idxJson)), DbUtils.timestampToDate(cursor));
-                        } else {
-                            // details n/a in database
-                            int id;
-                            try {
-                                // request from server
-                                id = Integer.parseInt(UriUtils.getIdFromWithIdUri(uriRequest));
-                                requestDetailsFromServer(id);
-                            } catch (NumberFormatException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        break;
-                    case FAVOURITE_WITH_ID:
-                        mFavourite = false;
-                        if (cursor.moveToNext()) {
-                            // got result
-                            int idxFav = cursor.getColumnIndex(COLUMN_FAVOURITE);
-                            mFavourite = (cursor.getInt(idxFav) == 1);
-                        }
-                        setFavouriteButton(mFavourite);
-                        break;
-                }
-            }
-        }
-
-        @Override
-        public Context getContext() {
-            return MovieDetailsActivity.this;
-        }
-    };
-
-    /**
      * Start the DbCacheIntentService
      *
      * @param action  Service action to perform
@@ -1027,13 +1013,184 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
         this.startService(intent);
     }
 
+    /* Movie details related classes
+     * ----------------------------- */
+
+    /**
+     * Abstract base class for asynchronous request and response handling
+     */
+    private abstract class AsyncResponseHandler<T> extends AsyncCallback<T> {
+
+        @Override
+        public void onFailure(Call call, IOException e) {
+            super.onFailure(call, e);
+            onResponseResult(newResponseResult(), getErrorId(call, e));
+        }
+
+        @Override
+        public void onResponse(T result) {
+            int msgId = 0;
+            boolean empty = false;
+            if (result instanceof IEmpty) {
+                empty = ((IEmpty)result).isEmpty();
+            }
+            if ((result == null) || empty) {
+                msgId = R.string.movie_no_response;
+            }
+            onResponseResult(result, msgId);
+        }
+
+        public abstract void onResponseResult(T result, int msgId);
+
+        public abstract T newResponseResult();
+
+        @Override
+        public T processUrlResponse(@NonNull URL request, @NonNull Response response) {
+            String jsonResponse = NetworkUtils.getResponseBodyString(response);
+            return processUriResponse(new UrlProviderResultWrapper(request, jsonResponse));
+        }
+
+        /**
+         * Process the response from a {@link ICallback#call(AppCompatActivity, int, Uri, String, String, Bundle)} call
+         * @param response  Response from the content provider
+         * @return Response object or <code>null</code>
+         */
+        @Override
+        public T processUriResponse(@Nullable AbstractResultWrapper response) {
+            T result = null;
+            if (response != null) {
+                String stringResult = response.getStringResult();
+                if (!TextUtils.isEmpty(stringResult)) {
+                    int match = matchMovieUri(response.getUriRequest());
+                    result = processUriResponse(response, stringResult, match);
+                }
+            }
+            return result;
+        }
+
+        /**
+         * Process the response from a {@link ICallback#call(AppCompatActivity, int, Uri, String, String, Bundle)} call
+         * @param response      Response from the content provider
+         * @param stringResult  Response content
+         * @param match         Uri matcher result
+         * @return Response object or <code>null</code>
+         */
+        public abstract T processUriResponse(@Nullable AbstractResultWrapper response, String stringResult, int match);
+
+        @Override
+        public void processQueryResponse(@Nullable QueryResultWrapper response) {
+            if (response != null) {
+                Uri uriRequest = response.getUriRequest();
+                int match = matchMovieUri(uriRequest);
+                Cursor cursor = response.getCursorResult();
+
+                processQueryResponse(response, uriRequest, match, cursor);
+            }
+        }
+
+        /**
+         * Process the response from a query request
+         * @param response      Response from the content provider
+         * @param uriRequest    Uri used for request
+         * @param match         Uri matcher result
+         * @param cursor        Result of query
+         */
+        public abstract void processQueryResponse(@Nullable QueryResultWrapper response, Uri uriRequest, int match, Cursor cursor);
+
+        @Override
+        public Context getContext() {
+            return MovieDetailsActivity.this;
+        }
+    }
+
+    /**
+     * Asynchronous request and response handler
+     */
+    private AsyncCallback<MovieDetails> movieDetailsResponseHandler = new AsyncResponseHandler<MovieDetails>() {
+
+        @Override
+        public void onResponseResult(MovieDetails result, int msgId) {
+            onMovieResponse(result, msgId);
+        }
+
+        @Override
+        public MovieDetails newResponseResult() {
+            return new MovieDetails();
+        }
+
+        /**
+         * Process the response from a {@link ICallback#call(AppCompatActivity, int, Uri, String, String, Bundle)} call
+         * @param response  Response from the content provider
+         * @return Response object or <code>null</code>
+         */
+        @Override
+        public MovieDetails processUriResponse(@Nullable AbstractResultWrapper response, String stringResult, int match) {
+            MovieDetails movieDetails = null;
+            switch (match) {
+                case MOVIE_WITH_ID:
+                    movieDetails = MovieDetails.getInstance(stringResult);
+
+                    // if caching is enabled save details to db
+                    boolean cache = PreferenceControl.getCachePreference(getContext());
+                    if ((movieDetails != null) && cache) {
+                        int id = movieDetails.getId();
+                        if (id > 0) {
+                            startDbCacheIntentService(INSERT_OR_UPDATE_MOVIE,
+                                    MovieContentValues.builder()
+                                            .setJson(stringResult)
+                                            .setTimestamp(),
+                                    id);
+                        }
+                    }
+                    break;
+            }
+            return movieDetails;
+        }
+
+        @Override
+        public void processQueryResponse(@Nullable QueryResultWrapper response, Uri uriRequest, int match, Cursor cursor) {
+            switch (match) {
+                case MOVIE_WITH_ID:
+                    if (cursor.moveToNext()) {
+                        // got result
+                        int idxJson = cursor.getColumnIndex(COLUMN_JSON);
+                        setMovieDetails(MovieDetails.getInstance(cursor.getString(idxJson)), DbUtils.timestampToDate(cursor));
+                    } else {
+                        // details n/a in database
+                        int id;
+                        try {
+                            // request from server
+                            id = Integer.parseInt(UriUtils.getIdFromWithIdUri(uriRequest));
+                            requestDetailsFromServer(id);
+                        } catch (NumberFormatException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+                case FAVOURITE_WITH_ID:
+                    mFavourite = false;
+                    if (cursor.moveToNext()) {
+                        // got result
+                        int idxFav = cursor.getColumnIndex(COLUMN_FAVOURITE);
+                        mFavourite = (cursor.getInt(idxFav) == 1);
+                    }
+                    setFavouriteButton(mFavourite);
+                    break;
+            }
+        }
+    };
+
     /**
      * Class to update the ui with response details
      */
     private class MovieResponseHandler extends ResponseHandler<MovieDetails> implements Runnable {
 
         MovieResponseHandler(Activity activity, MovieDetails response, int errorId, Date cacheDate) {
-            super(activity, response, errorId, cacheDate);
+            super(activity, response, errorId, null, cacheDate);
+            if (response == null) {
+                // set custom error message
+                setErrorMsg(MessageFormat.format(getString(R.string.no_type_response), getString(R.string.movie_details)));
+            }
         }
 
         @Override
@@ -1059,13 +1216,23 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
     }
 
     /**
-     * Handle a list response
-     *
+     * Handle a movie details response
      * @param response Response object
      */
     protected void onMovieResponse(MovieDetails response, int msgId) {
         hideRefreshInProgress();
 
+        Date cacheDate = getCacheDate(response);
+        // ui updates need to be on ui thread
+        MovieDetailsActivity.this.runOnUiThread(new MovieResponseHandler(MovieDetailsActivity.this, response, msgId, cacheDate));
+    }
+
+    /**
+     * Get the cache date
+     * @param response Response object
+     * @return  Cache date
+     */
+    protected Date getCacheDate(IEmpty response) {
         Date cacheDate = INVALID_DATE;
         if ((response != null) && !response.isEmpty()) {
             if (PreferenceControl.getCachePreference(this)) {
@@ -1073,9 +1240,164 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
                 cacheDate = new Date(); // assume successful
             }
         }
-        // ui updates need to be on ui thread
-        MovieDetailsActivity.this.runOnUiThread(new MovieResponseHandler(MovieDetailsActivity.this, response, msgId, cacheDate));
+        return cacheDate;
     }
+
+    /* Video/Review related classes
+     * ---------------------------- */
+
+    /**
+     * Asynchronous request and response handler
+     */
+    private AsyncCallback<AbstractList> videoListResponseHandler = new AsyncResponseHandler<AbstractList>() {
+
+        @Override
+        public void onResponseResult(AbstractList result, int msgId) {
+            onVideoListResponse((MovieVideoList)result, msgId);
+        }
+
+        @Override
+        public AbstractList newResponseResult() {
+            return new MovieVideoList();
+        }
+
+        @Override
+        public AbstractList processUriResponse(@Nullable AbstractResultWrapper response, String stringResult, int match) {
+            AbstractList listDetails = null;
+            switch (match) {
+                case MOVIE_WITH_VIDEOS:
+                    listDetails = MovieVideoList.getListFromJsonString(stringResult);
+                    break;
+            }
+            return listDetails;
+        }
+
+        @Override
+        public void processQueryResponse(@Nullable QueryResultWrapper response, Uri uriRequest, int match, Cursor cursor) {
+            // noop
+        }
+    };
+
+    /**
+     * Asynchronous request and response handler
+     */
+    private AsyncCallback<AbstractList> reviewListResponseHandler = new AsyncResponseHandler<AbstractList>() {
+
+        @Override
+        public void onResponseResult(AbstractList result, int msgId) {
+            onReviewListResponse(result, msgId);
+        }
+
+        @Override
+        public AbstractList newResponseResult() {
+            return new MovieReviewList();
+        }
+
+        @Override
+        public AbstractList processUriResponse(@Nullable AbstractResultWrapper response, String stringResult, int match) {
+            AbstractList listDetails = null;
+            switch (match) {
+                case MOVIE_WITH_REVIEWS:
+                    listDetails = MovieReviewList.getListFromJsonString(stringResult);
+                    break;
+            }
+            return listDetails;
+        }
+
+        @Override
+        public void processQueryResponse(@Nullable QueryResultWrapper response, Uri uriRequest, int match, Cursor cursor) {
+            // noop
+        }
+    };
+
+    /**
+     * Class to update the ui with response details
+     */
+    private class ListResponseHandler extends ResponseHandler<AbstractList> implements Runnable {
+
+        int type;
+
+        ListResponseHandler(Activity activity, int type, AbstractList response, int errorId, Date cacheDate) {
+            super(activity, response, errorId, null, cacheDate);
+            this.type = type;
+            if (response == null) {
+                // set custom error message
+                @StringRes int typeId = 0;
+                switch (type) {
+                    case MOVIE_WITH_VIDEOS:
+                        typeId = R.string.video_details;
+                        break;
+                    case MOVIE_WITH_REVIEWS:
+                        typeId = R.string.review_details;
+                        break;
+                }
+                if (typeId > 0) {
+                    setErrorMsg(MessageFormat.format(getString(R.string.no_type_response), getString(typeId)));
+                }
+            }
+        }
+
+        @Override
+        public void run() {
+            super.run();
+            switch (type) {
+                case MOVIE_WITH_VIDEOS:
+                    setVideoListDetails((MovieVideoList)getResponse());
+                    break;
+                case MOVIE_WITH_REVIEWS:
+                    setReviewListDetails((MovieReviewList)getResponse());
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Set video details from a request
+     * @param list Details to set
+     */
+    private void setVideoListDetails(MovieVideoList list) {
+//        // update video list
+        setVideoDetails(list);
+
+        mDetails.setMovieVideoList(list);
+    }
+
+    /**
+     * Set video details from a request
+     * @param list Details to set
+     */
+    private void setReviewListDetails(MovieReviewList list) {
+        // update review list
+        setReviewDetails(list);
+
+        mDetails.setReviewList(list);
+    }
+
+    /**
+     * Handle a video list response
+     * @param response Response object
+     */
+    protected void onVideoListResponse(MovieVideoList response, int msgId) {
+        setVideosInProgress(false);
+        Date cacheDate = getCacheDate(response);
+        // ui updates need to be on ui thread
+        MovieDetailsActivity.this.runOnUiThread(new ListResponseHandler(MovieDetailsActivity.this, MOVIE_WITH_VIDEOS, response, msgId, cacheDate));
+    }
+
+    /**
+     * Handle a review list response
+     * @param response Response object
+     */
+    protected void onReviewListResponse(AbstractList response, int msgId) {
+        setReviewsInProgress(false);
+        Date cacheDate = getCacheDate(response);
+        // ui updates need to be on ui thread
+        MovieDetailsActivity.this.runOnUiThread(new ListResponseHandler(MovieDetailsActivity.this, MOVIE_WITH_REVIEWS, response, msgId, cacheDate));
+    }
+
+
+    /* RecyclerView related classes
+     * ---------------------------- */
 
     /**
      * Abstract base class to handle the RecyclerView for AbstractList
@@ -1103,21 +1425,26 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
             setContainerVisibility();
         }
 
-        void updateDataSet(@NonNull AbstractList<T> list, ITester<T> tester, @Nullable Comparator<Object> comparator) {
-            if (list.rangeIsValid()) {
+        public boolean updateDataSet(@NonNull AbstractList<T> list, ITester<T> tester, @Nullable Comparator<Object> comparator) {
+            boolean valid = false;
+            if (list != null) {
+                valid = list.rangeIsValid();
+            }
+            if (valid) {
                 addAndNotify(list.getResults(), tester, comparator);
             } else {
                 clearAndNotify();
             }
             setContainerVisibility();
+            return valid;
         }
 
-        public void updateDataSet(@NonNull AbstractList<T> list, ITester<T> tester) {
-            updateDataSet(list, tester, null);
+        public boolean updateDataSet(@NonNull AbstractList<T> list, ITester<T> tester) {
+            return updateDataSet(list, tester, null);
         }
 
-        public void updateDataSet(@NonNull AbstractList<T> list) {
-            updateDataSet(list, null);
+        public boolean updateDataSet(@NonNull AbstractList<T> list) {
+            return updateDataSet(list, null);
         }
 
         private void setContainerVisibility() {
@@ -1149,8 +1476,8 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
         }
 
         @Override
-        public void updateDataSet(@NonNull AbstractList<Video> list) {
-            super.updateDataSet(list, tester, Video.COMPARATOR);
+        public boolean updateDataSet(@NonNull AbstractList<Video> list) {
+            return super.updateDataSet(list, tester, Video.COMPARATOR);
         }
 
         @Override

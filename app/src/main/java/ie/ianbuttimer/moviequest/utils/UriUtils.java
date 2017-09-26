@@ -48,6 +48,16 @@ public class UriUtils {
     }
 
     /**
+     * Make a movie with id uri
+     * @param id    Id of movie
+     * @return  Uri
+     */
+    public static Uri getMovieWithIdAdditionalInfoUri(int id, String info) {
+        return ContentUris.withAppendedId(MovieEntry.CONTENT_URI, id).buildUpon()
+                .appendPath(info).build();
+    }
+
+    /**
      * Make a favourite with id uri
      * @param id    Id of movie
      * @return  Uri

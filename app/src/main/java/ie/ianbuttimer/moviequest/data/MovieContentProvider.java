@@ -49,7 +49,10 @@ import static ie.ianbuttimer.moviequest.data.MovieContract.FavouriteEntry;
 import static ie.ianbuttimer.moviequest.data.MovieContract.FavouriteEntry.COLUMN_FAVOURITE;
 import static ie.ianbuttimer.moviequest.data.MovieContract.ID_EQ_SELECTION;
 import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry;
+import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry.APPEND_TO_RESPONSE;
 import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry.GET_DETAILS_METHOD;
+import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry.GET_REVIEWS_METHOD;
+import static ie.ianbuttimer.moviequest.data.MovieContract.MovieEntry.GET_VIDEOS_METHOD;
 import static ie.ianbuttimer.moviequest.data.MovieContract.MovieLists.GET_FAVOURITE_METHOD;
 import static ie.ianbuttimer.moviequest.data.MovieContract.MovieLists.GET_POPULAR_METHOD;
 import static ie.ianbuttimer.moviequest.data.MovieContract.MovieLists.GET_TOP_RATED_METHOD;
@@ -58,6 +61,8 @@ import static ie.ianbuttimer.moviequest.data.MovieContract.PATH_MOVIES;
 import static ie.ianbuttimer.moviequest.data.MovieContract.PATH_POPULAR_MOVIES;
 import static ie.ianbuttimer.moviequest.data.MovieContract.PATH_TOP_RATED_MOVIES;
 import static ie.ianbuttimer.moviequest.data.MovieContract.PATH_WITH_ID;
+import static ie.ianbuttimer.moviequest.data.MovieContract.PATH_WITH_ID_REVIEWS;
+import static ie.ianbuttimer.moviequest.data.MovieContract.PATH_WITH_ID_VIDEOS;
 import static ie.ianbuttimer.moviequest.data.MovieContract.columnEqSelection;
 import static ie.ianbuttimer.moviequest.tmdb.MovieList.LIST_PAGE;
 import static ie.ianbuttimer.moviequest.tmdb.MovieList.LIST_RESULTS;
@@ -67,7 +72,8 @@ import static ie.ianbuttimer.moviequest.tmdb.MovieList.RESULTS_PER_LIST;
 import static ie.ianbuttimer.moviequest.tmdb.AbstractList.RESULTS_PER_PAGE;
 import static ie.ianbuttimer.moviequest.data.ICallback.CONTENT_PROVIDER_RESULT_TYPE;
 import static ie.ianbuttimer.moviequest.utils.DbUtils.DB_RAW_BOOLEAN_TRUE;
-import static ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils.APPEND_REVIEWS_VIDEOS;
+import static ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils.REVIEW_DETAILS;
+import static ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils.VIDEO_DETAILS;
 
 /**
  * ContentProvider class for movies
@@ -88,6 +94,10 @@ public class MovieContentProvider extends ContentProvider {
     public static final int MOVIES = 200;
     /** Individual movie constant */
     public static final int MOVIE_WITH_ID = MOVIES + 1;
+    /** Individual movie reviews constant */
+    public static final int MOVIE_WITH_REVIEWS = MOVIES + 2;
+    /** Individual movie videos constant */
+    public static final int MOVIE_WITH_VIDEOS = MOVIES + 3;
     /** Movie directory constant */
     public static final int FAVOURITES = 300;
     /** Individual movie constant */
@@ -105,6 +115,8 @@ public class MovieContentProvider extends ContentProvider {
         UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
 
         matcher.addURI(AUTHORITY, PATH_MOVIES, MOVIES);
+        matcher.addURI(AUTHORITY, PATH_MOVIES + PATH_WITH_ID_REVIEWS, MOVIE_WITH_REVIEWS);
+        matcher.addURI(AUTHORITY, PATH_MOVIES + PATH_WITH_ID_VIDEOS, MOVIE_WITH_VIDEOS);
         matcher.addURI(AUTHORITY, PATH_MOVIES + PATH_WITH_ID, MOVIE_WITH_ID);
         matcher.addURI(AUTHORITY, PATH_FAVOURITES, FAVOURITES);
         matcher.addURI(AUTHORITY, PATH_FAVOURITES + PATH_WITH_ID, FAVOURITE_WITH_ID);
@@ -260,6 +272,8 @@ public class MovieContentProvider extends ContentProvider {
                 bundleResult = getFavouritesList(extras);
                 break;
             case GET_DETAILS_METHOD:    // request individual movie details
+            case GET_VIDEOS_METHOD:
+            case GET_REVIEWS_METHOD:
                 int id = 0;
                 if (arg != null) {
                     try {
@@ -269,7 +283,21 @@ public class MovieContentProvider extends ContentProvider {
                     }
                 }
                 if (id > 0) {
-                    url = TMDbNetworkUtils.buildGetDetailsUrl(context, id, APPEND_REVIEWS_VIDEOS);
+                    switch (method) {
+                        case GET_DETAILS_METHOD:    // request individual movie details
+                            String[] appendToResponse = null;
+                            if (extras != null) {
+                                appendToResponse = extras.getStringArray(APPEND_TO_RESPONSE);
+                            }
+                            url = TMDbNetworkUtils.buildGetDetailsUrl(context, id, appendToResponse);
+                            break;
+                        case GET_VIDEOS_METHOD:
+                            url = TMDbNetworkUtils.buildGetAdditionalUrl(context, id, VIDEO_DETAILS);
+                            break;
+                        case GET_REVIEWS_METHOD:
+                            url = TMDbNetworkUtils.buildGetAdditionalUrl(context, id, REVIEW_DETAILS);
+                            break;
+                    }
                 }
                 break;
             default:

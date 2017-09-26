@@ -34,7 +34,7 @@
         android:layout_marginRight="@dimen/sml_margin"
         android:layout_marginEnd="@dimen/sml_margin"
         android:layout_marginBottom="@dimen/sml_margin"
-        android:background="@color/colorAccent"
+        android:background="@drawable/accent_touch_selector"
         android:contentDescription="@string/refresh_image_movie_detailsA"
         android:text="@string/refresh_movie_details"
         android:textColor="@color/colorAccentText"
