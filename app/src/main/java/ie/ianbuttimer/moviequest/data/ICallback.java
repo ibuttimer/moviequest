@@ -79,6 +79,10 @@ public interface ICallback<T> extends Callback {
 
     /** Type of result returned */
     String CONTENT_PROVIDER_RESULT_TYPE = "result_type";
+    /** Error code of result returned */
+    String CONTENT_PROVIDER_ERROR_CODE = "result_error_code";
+    /** Error string of result returned */
+    String CONTENT_PROVIDER_ERROR_STRING = "result_error_string";
 
 
 
@@ -203,6 +207,13 @@ public interface ICallback<T> extends Callback {
     void onResponse(T result);
 
     /**
+     * Handle a failure response from a request
+     * @param code
+     * @param message
+     */
+    void onFailure(int code, String message);
+
+    /**
      * Response class for a Http request
      */
     class UrlResultWrapper extends AbstractResultWrapper {
@@ -217,7 +228,7 @@ public interface ICallback<T> extends Callback {
     }
 
     /**
-     * Response class for a Uri http request
+     * Response class for a Url http request
      */
     class UrlProviderResultWrapper extends AbstractResultWrapper {
         /**
@@ -243,6 +254,24 @@ public interface ICallback<T> extends Callback {
          */
         public UrlProviderResultWrapper(URL urlRequest, String stringResult) {
             super(URL_PROVIDER_HANDLER, urlRequest, stringResult);
+        }
+        /**
+         * Constructor
+         * @param urlRequest    Original request URL
+         * @param errorCode     Error code
+         * @param errorString   Error string
+         */
+        public UrlProviderResultWrapper(URL urlRequest, int errorCode, String errorString) {
+            super(URL_PROVIDER_HANDLER, urlRequest, errorCode, errorString);
+        }
+        /**
+         * Constructor
+         * @param uriRequest    Original request Uri
+         * @param errorCode     Error code
+         * @param errorString   Error string
+         */
+        public UrlProviderResultWrapper(Uri uriRequest, int errorCode, String errorString) {
+            super(URL_PROVIDER_HANDLER, uriRequest, errorCode, errorString);
         }
     }
 

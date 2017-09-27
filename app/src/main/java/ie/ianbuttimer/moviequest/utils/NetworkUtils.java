@@ -86,7 +86,11 @@ public class NetworkUtils {
             response = call.execute();
 
             if (!response.isSuccessful()) {
-                throw new IOException("Unexpected code " + response);
+                if (HttpException.isUnauthorised(response.code())) {
+                    throw new HttpException("Unauthorised access " + response, response);
+                } else {
+                    throw new IOException("Unexpected code " + response);
+                }
             }
 
             logHeaders(response);

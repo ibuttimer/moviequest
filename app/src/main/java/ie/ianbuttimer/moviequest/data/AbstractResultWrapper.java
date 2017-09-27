@@ -21,6 +21,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.util.Pair;
 
 import java.net.URL;
 
@@ -32,7 +33,7 @@ import ie.ianbuttimer.moviequest.utils.UriURLPair;
 @SuppressWarnings("unused")
 public abstract class AbstractResultWrapper {
 
-    public enum ResultType { STRING, STRING_ARRAY, INTEGER, CUSROR, URI, BUNDLE };
+    public enum ResultType { STRING, STRING_ARRAY, INTEGER, CURSOR, URI, BUNDLE, ERROR };
 
     private ICallback.ResponseHandler handler;  // type of handler required to process this object
     protected UriURLPair request;           // uri/url used to make request
@@ -44,6 +45,10 @@ public abstract class AbstractResultWrapper {
     protected Uri uriResult;                // returned from insert
     protected Bundle bundleResult;          // returned from uri call
 
+    // members for error result
+    protected int errorCode;                // error result code
+    protected String errorString;           // error result string
+
     private ResultType resultType;
 
 
@@ -54,10 +59,37 @@ public abstract class AbstractResultWrapper {
      * @param stringResult  String response
      */
     public AbstractResultWrapper(@NonNull ICallback.ResponseHandler handler, @NonNull URL urlRequest, String stringResult) {
-        this.handler = handler;
-        this.request = new UriURLPair(urlRequest);
+        initUrl(handler, urlRequest);
         this.stringResult = stringResult;
         this.resultType = ResultType.STRING;
+    }
+
+    /**
+     * Constructor
+     * @param handler       Type of handler required to process this object
+     * @param urlRequest    Original request URL
+     * @param errorCode     Error code
+     * @param errorString   Error string
+     */
+    public AbstractResultWrapper(@NonNull ICallback.ResponseHandler handler, @NonNull URL urlRequest, int errorCode, String errorString) {
+        initUrl(handler, urlRequest);
+        this.errorCode = errorCode;
+        this.errorString = errorString;
+        this.resultType = ResultType.ERROR;
+    }
+
+    /**
+     * Constructor
+     * @param handler       Type of handler required to process this object
+     * @param uriRequest    Original request Uri
+     * @param errorCode     Error code
+     * @param errorString   Error string
+     */
+    public AbstractResultWrapper(@NonNull ICallback.ResponseHandler handler, @NonNull Uri uriRequest, int errorCode, String errorString) {
+        initUri(handler, uriRequest);
+        this.errorCode = errorCode;
+        this.errorString = errorString;
+        this.resultType = ResultType.ERROR;
     }
 
     /**
@@ -95,6 +127,16 @@ public abstract class AbstractResultWrapper {
     }
 
     /**
+     * Initialise the handler & URL
+     * @param handler       Type of handler required to process this object
+     * @param urlRequest    Original request URL
+     */
+    protected void initUrl(@NonNull ICallback.ResponseHandler handler, @NonNull URL urlRequest) {
+        this.handler = handler;
+        this.request = new UriURLPair(urlRequest);
+    }
+
+    /**
      * Constructor
      * @param handler       Type of handler required to process this object
      * @param uriRequest    Original request Uri
@@ -115,7 +157,7 @@ public abstract class AbstractResultWrapper {
     public AbstractResultWrapper(@NonNull ICallback.ResponseHandler handler, @NonNull Uri uriRequest, Cursor cursorResult) {
         initUri(handler, uriRequest);
         this.cursorResult = cursorResult;
-        this.resultType = ResultType.CUSROR;
+        this.resultType = ResultType.CURSOR;
     }
 
     /**
@@ -143,23 +185,52 @@ public abstract class AbstractResultWrapper {
     }
 
     public String getStringResult() {
+        if (resultType != ResultType.STRING) {
+            throw new IllegalStateException("Not string result");
+        }
         return stringResult;
     }
 
     public String[] getStringArrayResult() {
+        if (resultType != ResultType.STRING_ARRAY) {
+            throw new IllegalStateException("Not string array result");
+        }
         return stringArrayResult;
     }
 
     public int getIntResult() {
+        if (resultType != ResultType.INTEGER) {
+            throw new IllegalStateException("Not integer result");
+        }
         return intResult;
     }
 
     public Cursor getCursorResult() {
+        if (resultType != ResultType.CURSOR) {
+            throw new IllegalStateException("Not cursor result");
+        }
         return cursorResult;
     }
 
     public Uri getUriResult() {
+        if (resultType != ResultType.URI) {
+            throw new IllegalStateException("Not uri result");
+        }
         return uriResult;
+    }
+
+    public Bundle getBundleResult() {
+        if (resultType != ResultType.BUNDLE) {
+            throw new IllegalStateException("Not bundle result");
+        }
+        return bundleResult;
+    }
+
+    public Pair<Integer, String> getErrorResult() {
+        if (resultType != ResultType.ERROR) {
+            throw new IllegalStateException("Not error result");
+        }
+        return new Pair<>(errorCode, errorString);
     }
 
     public ICallback.ResponseHandler getHandler() {
@@ -178,9 +249,6 @@ public abstract class AbstractResultWrapper {
         return resultType;
     }
 
-    public Bundle getBundleResult() {
-        return bundleResult;
-    }
 
     /**
      * Check if this object represents a result of the specified type
@@ -189,6 +257,62 @@ public abstract class AbstractResultWrapper {
      */
     public boolean isResultType(ResultType type) {
         return (resultType == type);
+    }
+
+    /**
+     * Check if this object represents a string result
+     * @return  <code>true</code> if this object is a string result, <code>false</code> otherwise
+     */
+    public boolean isString() {
+        return isResultType(ResultType.STRING);
+    }
+
+    /**
+     * Check if this object represents a string array result
+     * @return  <code>true</code> if this object is a string array result, <code>false</code> otherwise
+     */
+    public boolean isStringArray() {
+        return isResultType(ResultType.STRING_ARRAY);
+    }
+
+    /**
+     * Check if this object represents an integer result
+     * @return  <code>true</code> if this object is an integer result, <code>false</code> otherwise
+     */
+    public boolean isInteger() {
+        return isResultType(ResultType.INTEGER);
+    }
+
+    /**
+     * Check if this object represents a cursor result
+     * @return  <code>true</code> if this object is a cursor result, <code>false</code> otherwise
+     */
+    public boolean isCursor() {
+        return isResultType(ResultType.CURSOR);
+    }
+
+    /**
+     * Check if this object represents a uri result
+     * @return  <code>true</code> if this object is a uri result, <code>false</code> otherwise
+     */
+    public boolean isUri() {
+        return isResultType(ResultType.URI);
+    }
+
+    /**
+     * Check if this object represents a bundle result
+     * @return  <code>true</code> if this object is a bundle result, <code>false</code> otherwise
+     */
+    public boolean isBundle() {
+        return isResultType(ResultType.BUNDLE);
+    }
+
+    /**
+     * Check if this object represents an error result
+     * @return  <code>true</code> if this object is an error result, <code>false</code> otherwise
+     */
+    public boolean isError() {
+        return isResultType(ResultType.ERROR);
     }
 
 }

@@ -24,6 +24,8 @@ import android.text.TextUtils;
 
 
 import static ie.ianbuttimer.moviequest.data.ICallback.CONTENT_PROVIDER_ARG;
+import static ie.ianbuttimer.moviequest.data.ICallback.CONTENT_PROVIDER_ERROR_CODE;
+import static ie.ianbuttimer.moviequest.data.ICallback.CONTENT_PROVIDER_ERROR_STRING;
 import static ie.ianbuttimer.moviequest.data.ICallback.CONTENT_PROVIDER_EXTRAS;
 import static ie.ianbuttimer.moviequest.data.ICallback.CONTENT_PROVIDER_METHOD;
 import static ie.ianbuttimer.moviequest.data.ICallback.CONTENT_PROVIDER_RESULT_TYPE;
@@ -73,6 +75,9 @@ public class ContentProviderCallLoader extends ContentProviderLoader {
                 result = new ICallback.UrlProviderResultWrapper(uri, bundle.getString(method));
             } else if (resultType == AbstractResultWrapper.ResultType.BUNDLE.ordinal()) {
                 result = new ICallback.UrlProviderResultWrapper(uri, bundle.getBundle(method));
+            } else if (resultType == AbstractResultWrapper.ResultType.ERROR.ordinal()) {
+                result = new ICallback.UrlProviderResultWrapper(uri, bundle.getInt(CONTENT_PROVIDER_ERROR_CODE),
+                        bundle.getString(CONTENT_PROVIDER_ERROR_STRING));
             }
         }
         return result;

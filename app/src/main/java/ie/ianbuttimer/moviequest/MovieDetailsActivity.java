@@ -1040,6 +1040,11 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
             onResponseResult(result, msgId);
         }
 
+        @Override
+        public void onFailure(int code, String message) {
+            onResponseResult(newResponseResult(), getErrorId(code));
+        }
+
         public abstract void onResponseResult(T result, int msgId);
 
         public abstract T newResponseResult();
@@ -1059,10 +1064,12 @@ public class MovieDetailsActivity extends AppCompatActivity /*implements IAdapte
         public T processUriResponse(@Nullable AbstractResultWrapper response) {
             T result = null;
             if (response != null) {
-                String stringResult = response.getStringResult();
-                if (!TextUtils.isEmpty(stringResult)) {
-                    int match = matchMovieUri(response.getUriRequest());
-                    result = processUriResponse(response, stringResult, match);
+                if (response.isString()) {
+                    String stringResult = response.getStringResult();
+                    if (!TextUtils.isEmpty(stringResult)) {
+                        int match = matchMovieUri(response.getUriRequest());
+                        result = processUriResponse(response, stringResult, match);
+                    }
                 }
             }
             return result;

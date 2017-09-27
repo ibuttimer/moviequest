@@ -26,15 +26,19 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Pair;
 
 import java.io.IOException;
 import java.net.URL;
 import java.net.UnknownHostException;
 
 import ie.ianbuttimer.moviequest.R;
+import ie.ianbuttimer.moviequest.utils.HttpException;
 import ie.ianbuttimer.moviequest.utils.NetworkUtils;
 import okhttp3.Call;
 import okhttp3.Response;
+
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 
 /**
  * Class providing basic handling of both okhttp3 and content provider responses.<br>
@@ -252,7 +256,12 @@ public abstract class AsyncCallback<T> implements ICallback<T>, LoaderManager.Lo
             ResponseHandler handler = data.getHandler();
             switch (handler) {
                 case URL_PROVIDER_HANDLER:
-                    onResponse(processUriResponse(data));
+                    if (data.isError()) {
+                        Pair<Integer, String> pair = data.getErrorResult();
+                        onFailure(pair.first, pair.second);
+                    } else {
+                        onResponse(processUriResponse(data));
+                    }
                     break;
                 case INSERT_HANDLER:
                     processInsertResponse((ICallback.InsertResultWrapper)data);
@@ -309,11 +318,32 @@ public abstract class AsyncCallback<T> implements ICallback<T>, LoaderManager.Lo
      * @param e     Exception
      * @return resource id
      */
-    @SuppressWarnings("unused")
     protected int getErrorId(Call call, IOException e) {
         int msgId = 0;
         if (e instanceof UnknownHostException) {
             msgId = R.string.cant_contact_server;
+        } else if (e instanceof HttpException) {
+            if (((HttpException) e).isUnauthorised()) {
+                msgId = R.string.unauthorised_access;
+            }
+        }
+        return msgId;
+    }
+
+    /**
+     * Get the resource id of the error message corresponding to an error code
+     * @param code  Error code
+     * @return resource id
+     */
+    protected int getErrorId(int code) {
+        int msgId;
+        switch (code) {
+            case HTTP_UNAUTHORIZED:
+                msgId = R.string.unauthorised_access;
+                break;
+            default:
+                msgId = 0;
+                break;
         }
         return msgId;
     }

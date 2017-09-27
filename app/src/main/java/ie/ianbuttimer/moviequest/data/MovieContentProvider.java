@@ -31,6 +31,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Pair;
 
 
 import com.google.gson.Gson;
@@ -39,10 +40,13 @@ import java.io.IOException;
 import java.net.URL;
 
 import ie.ianbuttimer.moviequest.tmdb.MovieDetails;
+import ie.ianbuttimer.moviequest.utils.HttpException;
 import ie.ianbuttimer.moviequest.utils.NetworkUtils;
 import ie.ianbuttimer.moviequest.utils.TMDbNetworkUtils;
 import ie.ianbuttimer.moviequest.utils.UriUtils;
 
+import static ie.ianbuttimer.moviequest.data.ICallback.CONTENT_PROVIDER_ERROR_CODE;
+import static ie.ianbuttimer.moviequest.data.ICallback.CONTENT_PROVIDER_ERROR_STRING;
 import static ie.ianbuttimer.moviequest.data.MovieContract.AUTHORITY;
 import static ie.ianbuttimer.moviequest.data.MovieContract.BASE_CONTENT_URI;
 import static ie.ianbuttimer.moviequest.data.MovieContract.FavouriteEntry;
@@ -305,8 +309,21 @@ public class MovieContentProvider extends ContentProvider {
         }
         if (url != null) {
             // put the response from the url into the bundle
-            bundle.putInt(CONTENT_PROVIDER_RESULT_TYPE, AbstractResultWrapper.ResultType.STRING.ordinal());
-            bundle.putString(method, getHttpResponseStringSync(url));
+            ICallback.UrlProviderResultWrapper result = getHttpResponseStringSync(url);
+            if (result.isError()) {
+                bundle.putInt(CONTENT_PROVIDER_RESULT_TYPE, AbstractResultWrapper.ResultType.ERROR.ordinal());
+                Pair<Integer, String> pair = result.getErrorResult();
+                bundle.putInt(CONTENT_PROVIDER_ERROR_CODE, pair.first);
+                bundle.putString(CONTENT_PROVIDER_ERROR_STRING, pair.second);
+            } else {
+                bundle.putInt(CONTENT_PROVIDER_RESULT_TYPE, AbstractResultWrapper.ResultType.STRING.ordinal());
+                if (result.isString()) {
+                    bundle.putString(method, result.getStringResult());
+                } else {
+                    bundle.putString(method, "");
+                }
+            }
+
         } else if (bundleResult != null) {
             // put list into the bundle
             bundle.putInt(CONTENT_PROVIDER_RESULT_TYPE, AbstractResultWrapper.ResultType.BUNDLE.ordinal());
@@ -388,11 +405,15 @@ public class MovieContentProvider extends ContentProvider {
      * @return The contents of the HTTP response, or <code>null</code>
      * @see NetworkUtils#getHttpResponseStringSync
      */
-    private String getHttpResponseStringSync(URL url) {
-        String result = "";
+    private ICallback.UrlProviderResultWrapper getHttpResponseStringSync(URL url) {
+        ICallback.UrlProviderResultWrapper result;
         try {
-            result = NetworkUtils.getHttpResponseStringSync(url);
+            result = new ICallback.UrlProviderResultWrapper(url, NetworkUtils.getHttpResponseStringSync(url));
+        } catch (HttpException e) {
+            result = new ICallback.UrlProviderResultWrapper(url, e.getCode(), e.getResponseMessage());
+            e.printStackTrace();
         } catch (IOException e) {
+            result = new ICallback.UrlProviderResultWrapper(url, -1, e.getMessage());
             e.printStackTrace();
         }
         return result;

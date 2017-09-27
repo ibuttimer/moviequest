@@ -422,6 +422,11 @@ public class MainActivity extends AppCompatActivity implements
             onListResponse(result, msgId);
         }
 
+        @Override
+        public void onFailure(int code, String message) {
+            onListResponse(new MovieList(), getErrorId(code));    // default list object will not pass valid range test
+        }
+
         /**
          * Convert the http response into a MovieList object
          * @param response  Response from the server
