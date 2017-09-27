@@ -6,7 +6,7 @@ The development environment may be configured as follows:
 * Clone the repository (https://github.com/ibuttimer/moviequest) from GitHib in Android Studio
 * When prompted to create a Studio project, choose yes and Import the project using the default Gradle wrapper.
 * After the build has finished, open the <code>keystore.properties</code> file in the project root folder.
-* Update the following line with a valid TMDb API key; <code>theMovieDbApiKey=*ReplaceWithYourApiKey*</code>, e.g. <code>theMovieDbApiKey=MyApiKeyWithNoSurroundingQuotesBracesEtc</coce>
+* Update the following line with a valid TMDb API key; <code>theMovieDbApiKey=*ReplaceWithYourApiKey*</code>, e.g. <code>theMovieDbApiKey=MyApiKeyWithNoSurroundingQuotesBracesEtc</code>
 * Rebuild the project
 
 **NOTE:** If you receive '*Server access is not authorised*' errors, please verify that the TMDb API key is entered correctly in the <code>keystore.properties</code> file.
